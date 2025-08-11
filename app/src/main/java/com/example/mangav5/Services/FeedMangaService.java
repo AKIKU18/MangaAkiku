@@ -51,7 +51,6 @@ public class FeedMangaService {
                 try {
                     JSONObject json = new JSONObject(response.body().string());
                     JSONArray data = json.getJSONArray("data");
-                    Log.e("data", "data: " + data.toString());
 
                     List<MangaItemModel> mangaList = new ArrayList<>();
 

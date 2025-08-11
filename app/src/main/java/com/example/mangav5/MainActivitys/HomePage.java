@@ -22,8 +22,11 @@ import com.example.mangav5.Adapters.BookmarksAdapter;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Models.ChapterListModel;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.Services.ChaptersService;
 import com.example.mangav5.Services.FeedMangaService;
 import com.example.mangav5.Services.SearchService;
 
@@ -80,8 +83,6 @@ public class HomePage extends AppCompatActivity {
         BookmarkButtonGoTo();
         HistoryButtonGoTo();
         CheckIfStillBookmarked();
-
-
     }
 
     private void CheckIfStillBookmarked(){
