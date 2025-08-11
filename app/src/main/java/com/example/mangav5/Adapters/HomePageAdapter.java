@@ -1,6 +1,8 @@
 package com.example.mangav5.Adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
@@ -17,6 +19,7 @@ import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.MainActivitys.HomePage;
+import com.example.mangav5.MainActivitys.MangaPage;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.Services.BookmarkService;
@@ -48,7 +51,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MangaViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MangaViewHolder holder, @SuppressLint("RecyclerView") int position) {
         MangaItemModel manga = mangaList.get(position);
         holder.title.setText(manga.getTitle());
         holder.description.setText(manga.getDescription());
@@ -65,9 +68,23 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
         holder.bookmarkStar.setImageResource(manga.getIsBookmarked() ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
-
         //Toggle bookmark star icon and delete or insert bookmark in database
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, manga, bookmarkDao);
+
+        holder.title.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               GoToMangaItem(position);
+            }
+        });
+
+    }
+
+    public void GoToMangaItem(int position){
+        MangaItemModel manga = mangaList.get(position);
+        Intent intent = new Intent(context, MangaPage.class);
+        intent.putExtra("mangaId", manga.getMangaId());
+        context.startActivity(intent);
     }
 
 

@@ -23,7 +23,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
-                android:id="@+id/mangaCoverImage"
+                android:id="@+id/mangaCoverImagePage"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:contentDescription="manga cover"
@@ -46,7 +46,7 @@
 
         <!-- Title and Bookmark -->
         <LinearLayout
-            android:id="@+id/titleWithBookmark"
+            android:id="@+id/titleWithBookmarkPage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -57,7 +57,7 @@
             app:layout_constraintTop_toBottomOf="@id/coverContainer">
 
             <TextView
-                android:id="@+id/mangaTitle"
+                android:id="@+id/mangaTitlePage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -66,7 +66,7 @@
                 android:textStyle="bold" />
 
             <ImageButton
-                android:id="@+id/bookmarkButton"
+                android:id="@+id/bookmarkButtonPage"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="8dp"
@@ -84,14 +84,14 @@
         android:layout_marginTop="8dp">
 
         <androidx.core.widget.NestedScrollView
-            android:id="@+id/descriptionScroll"
+            android:id="@+id/descriptionScrollPage"
             android:layout_width="match_parent"
             android:layout_height="150dp"
             android:fillViewport="true"
             android:scrollbars="vertical">
 
             <TextView
-                android:id="@+id/mangaDescription"
+                android:id="@+id/mangaDescriptionPage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Full manga description here, can be long..."
@@ -100,7 +100,7 @@
         </androidx.core.widget.NestedScrollView>
 
         <ProgressBar
-            android:id="@+id/descriptionLoading"
+            android:id="@+id/descriptionLoadingPage"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="center"
@@ -109,20 +109,20 @@
 
     <!-- Chapters container with RecyclerView and Scroll Button -->
     <FrameLayout
-        android:id="@+id/chaptersContainer"
+        android:id="@+id/chaptersContainerPage"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chaptersRecyclerView"
+            android:id="@+id/chaptersRecyclerViewPage"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
         <!-- Floating Scroll-to-Bottom Button at bottom right of chapters area -->
         <ImageButton
-            android:id="@+id/scrollToBottomButton"
+            android:id="@+id/scrollToBottomButtonPage"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="bottom|end"
@@ -134,7 +134,7 @@
 
         <!-- Chapters loading spinner centered -->
         <ProgressBar
-            android:id="@+id/chaptersLoading"
+            android:id="@+id/chaptersLoadingPage"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="center"
@@ -150,7 +150,7 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/firstChapterButton"
+            android:id="@+id/firstChapterButtonPage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -162,7 +162,7 @@
             android:textSize="16sp" />
 
         <Button
-            android:id="@+id/lastChapterButton"
+            android:id="@+id/lastChapterButtonPage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"

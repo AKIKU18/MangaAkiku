@@ -42,7 +42,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     public BookmarkMangaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.activity_bookmark_item, parent, false);
-        return new BookmarksAdapter.BookmarkMangaViewHolder(itemView);
+        return new BookmarkMangaViewHolder(itemView);
     }
 
     @Override
