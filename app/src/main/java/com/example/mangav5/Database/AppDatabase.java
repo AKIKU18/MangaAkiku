@@ -8,7 +8,7 @@ import android.content.Context;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Entity.BookmarkEntity;
 
-@Database(entities = {BookmarkEntity.class}, version = 2)
+@Database(entities = {BookmarkEntity.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase INSTANCE;
 

@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/mangaPageLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:fitsSystemWindows="true">
+    android:padding="16dp">
 
     <!-- Cover + Title Section -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -29,20 +28,20 @@
                 android:layout_height="0dp"
                 android:contentDescription="manga cover"
                 android:scaleType="centerCrop"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ProgressBar
                 android:id="@+id/coverLoading"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:visibility="gone"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Title and Bookmark -->
@@ -50,12 +49,12 @@
             android:id="@+id/titleWithBookmark"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginTop="12dp"
             android:gravity="center_vertical"
-            app:layout_constraintTop_toBottomOf="@id/coverContainer"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/coverContainer">
 
             <TextView
                 android:id="@+id/mangaTitle"
@@ -72,8 +71,8 @@
                 android:layout_height="40dp"
                 android:layout_marginStart="8dp"
                 android:background="@android:color/transparent"
-                android:src="@android:drawable/btn_star_big_off"
-                android:contentDescription="Bookmark" />
+                android:contentDescription="Bookmark"
+                android:src="@android:drawable/btn_star_big_off" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -113,8 +112,8 @@
         android:id="@+id/chaptersContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="16dp"
+        android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/chaptersRecyclerView"
@@ -129,9 +128,9 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:backgroundTint="@color/teal_700"
             android:contentDescription="Scroll to bottom"
-            android:src="@drawable/ic_arrow_downward"
-            android:backgroundTint="@color/teal_700"/>
+            android:src="@drawable/ic_arrow_downward" />
 
         <!-- Chapters loading spinner centered -->
         <ProgressBar
@@ -139,27 +138,27 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="center"
-            android:visibility="gone"/>
+            android:visibility="gone" />
     </FrameLayout>
 
     <!-- Bottom Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
         android:gravity="center"
-        android:layout_marginTop="8dp">
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/firstChapterButton"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="First Chapter"
+            android:layout_weight="1"
             android:background="@drawable/btn_rounded"
             android:backgroundTint="#2196F3"
-            android:textColor="#FFFFFF"
+            android:text="First Chapter"
             android:textAllCaps="false"
+            android:textColor="#FFFFFF"
             android:textSize="16sp" />
 
         <Button

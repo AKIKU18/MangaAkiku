@@ -3,6 +3,7 @@ package com.example.mangav5.Adapters;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,28 +64,32 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         }
 
         //Toggle bookmark star icon and delete or insert bookmark in database
-        TooggleBookmark(holder.bookmarkStar, manga, bookmarkDao,position);
+        TooggleBookmark(holder, manga, bookmarkDao,position);
         StarToggle(holder.bookmarkStar);
     }
 
 
 
-    private void TooggleBookmark(ImageView holder, BookmarkEntity manga, BookmarkDao bookmarkDao, int position){
+    private void TooggleBookmark(BookmarkMangaViewHolder holder, BookmarkEntity manga, BookmarkDao bookmarkDao, int position){
         MangaItemModel mangaItemModel = new MangaItemModel();
         mangaItemModel.setMangaId(manga.getMangaId());
         mangaItemModel.setTitle(manga.getTitle());
         mangaItemModel.setCoverImageUrl(manga.getCoverUrl());
         mangaItemModel.setDescription(manga.getDescription());
-        BookmarkService.OnClickToggleBookmark(holder, mangaItemModel, bookmarkDao);
-        holder.setOnClickListener(v -> {
+        BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, mangaItemModel, bookmarkDao);
+        holder.bookmarkStar.setOnClickListener(v -> {
             new Thread(() -> {
                 bookmarkDao.delete(manga); // remove from DB
 
                 // Update UI on main thread
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    bookmarkList.remove(position); // remove from list
-                    notifyItemRemoved(position);   // update UI
-
+                    int indexOfTheMangaToBeDeleted = bookmarkList.indexOf(manga);
+                    if(indexOfTheMangaToBeDeleted != -1){
+                        bookmarkList.remove(indexOfTheMangaToBeDeleted); // remove from list
+                        notifyItemRemoved(indexOfTheMangaToBeDeleted);   // update UI
+                    }else{
+                        Log.w("BookmarksAdapter", "Item to remove was not found in the list (main kotlin.concurrent.thread). It might have been removed by another operation.");
+                    }
                 });
             }).start();
         });
