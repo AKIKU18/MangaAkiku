@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Cover Image -->
+        <ImageView
+            android:id="@+id/mangaCoverImage"
+            android:layout_width="80dp"
+            android:layout_height="110dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <!-- Manga Title -->
+            <TextView
+                android:id="@+id/mangaTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Manga Title"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <!-- Scrollable Manga Description -->
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_marginTop="4dp"
+                android:fillViewport="true">
+
+                <TextView
+                    android:id="@+id/mangaDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Long manga description goes here..."
+                    android:textSize="14sp"
+                    android:textColor="#666" />
+            </androidx.core.widget.NestedScrollView>
+
+            <!-- Chapters container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:gravity="start">
+
+                <TextView
+                    android:id="@+id/latestChapter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Latest Chapter: -"
+                    android:textSize="13sp"
+                    android:textColor="#1E88E5"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"/>
+
+                <TextView
+                    android:id="@+id/lastReadChapter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Last Read: -"
+                    android:textSize="13sp"
+                    android:textColor="#43A047"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Bookmark star icon -->
+        <ImageView
+            android:id="@+id/bookmarkStar"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="12dp"
+            android:contentDescription="rk"
+            android:src="@drawable/ic_star_border"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
