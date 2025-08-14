@@ -29,16 +29,24 @@ public class ChaptersService {
         void onError(String message);
     }
 
+
+
     public interface PagesCallback {
         void onSuccess(List<String> chapters);
         void onError(String message);
     }
 
-    public static void fetchChapterList(String mangaId, ChapterListCallback callback) {
-        int limit = 100;
-        int offset = 0;
+    public static void fetchAllChapters(String mangaId,String descAsc,int offset,int limit, ChapterListCallback callback) {
+        //desc → newest first
+        //asc → oldest first
+
+        List<ChapterModel> allChapters = new ArrayList<>();
+        fetchChaptersRecursive(mangaId, offset,limit,descAsc, allChapters, callback);
+    }
+
+    public static void fetchChaptersRecursive(String mangaId, int offset,int limit,String descAsc ,List<ChapterModel> allChapters, ChapterListCallback callback) {
         String url = "https://api.mangadex.org/chapter?manga=" + mangaId +
-                "&translatedLanguage[]=en&order[chapter]=asc&limit=" + limit + "&offset=" + offset;
+                "&translatedLanguage[]=en&order[chapter]="+descAsc +"&limit=" + limit + "&offset=" + offset;
 
         Request request = new Request.Builder().url(url).build();
 
@@ -79,9 +87,9 @@ public class ChaptersService {
                             displayTitle = title + (chapterNumber.isEmpty() ? "" : ": " + chapterNumber);
                         }
 
-                        chapterList.add(new ChapterModel(id, displayTitle, chapterNumber));
+                        allChapters.add(new ChapterModel(id, displayTitle, chapterNumber));
                     }
-                    callback.onSuccess(chapterList);
+                    callback.onSuccess(allChapters);
 
                 } catch (JSONException e) {
                     callback.onError("Parse error: " + e.getMessage());

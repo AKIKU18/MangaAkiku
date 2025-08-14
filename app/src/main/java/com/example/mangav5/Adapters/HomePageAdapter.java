@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,13 +34,15 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     private final Context context;
     private BookmarkDao bookmarkDao;
 
+    private ActivityResultLauncher<Intent> mangaPageLauncher;
 
 
-    public HomePageAdapter(List<MangaItemModel> mangaList, Context context) {
+    public HomePageAdapter(List<MangaItemModel> mangaList, Context context, ActivityResultLauncher<Intent> launcher) {
         this.mangaList = mangaList;
         this.context = context;
+        this.mangaPageLauncher = launcher;
         AppDatabase db = AppDatabase.getInstance(context);
-        this.bookmarkDao =db.bookmarkDao();
+        this.bookmarkDao = db.bookmarkDao();
     }
 
     @NonNull
@@ -84,7 +87,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         MangaItemModel manga = mangaList.get(position);
         Intent intent = new Intent(context, MangaPage.class);
         intent.putExtra("mangaId", manga.getMangaId());
-        context.startActivity(intent);
+        mangaPageLauncher.launch(intent);
     }
 
 

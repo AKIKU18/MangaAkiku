@@ -65,7 +65,7 @@
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
-            <ImageButton
+            <ImageView
                 android:id="@+id/bookmarkButtonPage"
                 android:layout_width="40dp"
                 android:layout_height="40dp"

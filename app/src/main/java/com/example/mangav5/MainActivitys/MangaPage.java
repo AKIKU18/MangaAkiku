@@ -1,27 +1,39 @@
 package com.example.mangav5.MainActivitys;
 
+
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.mangav5.Adapters.BookmarksAdapter;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Adapters.MangaPageAdapter;
+import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.Services.BookmarkService;
 import com.example.mangav5.Services.ChaptersService;
 import com.example.mangav5.Services.FeedMangaService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class MangaPage extends AppCompatActivity {
     RecyclerView chapterRecyclerView;
@@ -30,11 +42,26 @@ public class MangaPage extends AppCompatActivity {
     ImageView cover;
     ImageView bookmarkStar;
     TextView title, description;
+    Button firstChapterButtonPage, lastChapterButtonPage;
+
+
+    Boolean isLoading = false;
+    private int offset = 0;
+    private final int LIMIT = 100;
     private MangaItemModel mangaItem;
+    private String getMangaId;
+    private BookmarksAdapter bookmarkAdapter;
+    private BookmarkDao bookmarkDao;
+    private List<BookmarkEntity> bookmarkList = new ArrayList<>();
+    private boolean bookmarkChanged = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manga_page);
+
+        AppDatabase db = AppDatabase.getInstance(this);
+        this.bookmarkDao =db.bookmarkDao();
         chapterList = new ArrayList<>();
         chapterRecyclerView = findViewById(R.id.chaptersRecyclerViewPage);
         chapterRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -45,13 +72,97 @@ public class MangaPage extends AppCompatActivity {
         bookmarkStar = findViewById(R.id.bookmarkButtonPage);
         title = findViewById(R.id.mangaTitlePage);
         description = findViewById(R.id.mangaDescriptionPage);
+        firstChapterButtonPage = findViewById(R.id.firstChapterButtonPage);
+        lastChapterButtonPage = findViewById(R.id.lastChapterButtonPage);
+
+        getMangaId = getIntent().getStringExtra("mangaId");
 
 
-
-
-
+        ScrollLoadChapterList();
         loadMangaItem();
         loadChapterList();
+        PrevOrNextChapter();
+        handleBackPress();
+        OnClickToggleMangaPage(bookmarkStar,mangaItem,bookmarkDao);
+        CheckIfStillBookmarked();
+    }
+
+    private void CheckIfStillBookmarked() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            boolean isBookmarked = bookmarkDao.isBookmarked(getMangaId); // DB query in background
+
+            // Update UI on main thread
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (isBookmarked) {
+                    bookmarkStar.setImageResource(R.drawable.ic_star_filled);
+                } else {
+                    bookmarkStar.setImageResource(R.drawable.ic_star_border);
+                }
+            });
+        });
+    }
+
+    private  void OnClickToggleMangaPage(ImageView holder, MangaItemModel manb, BookmarkDao bookmarkDao){
+            FeedMangaService.fetchMangaById(getMangaId, new FeedMangaService.MangaCallback() {
+                @Override
+                public void onSuccess(MangaItemModel manga) {
+                        runOnUiThread(() -> {
+                            holder.setOnClickListener(v -> {
+                                Executors.newSingleThreadExecutor().execute(() -> {
+                                    ToggleBookmarkMangaPage(manga, bookmarkDao); // safely runs in background
+                                    boolean isBookmarked = bookmarkDao.isBookmarked(manga.getMangaId());
+                                    // Update UI on main thread
+                                    new Handler(Looper.getMainLooper()).post(() -> {
+                                        if (isBookmarked) {
+                                            holder.setImageResource(R.drawable.ic_star_filled);
+                                        } else {
+                                            holder.setImageResource(R.drawable.ic_star_border);
+                                        }
+                                    });
+                                });
+                            });
+                            mangaItem = manga;
+                        });
+                }
+                @Override
+                public void onError(String errorMessage) {
+
+                };
+            });
+    }
+
+    private  void ToggleBookmarkMangaPage(MangaItemModel manga, BookmarkDao bookmarkDao) {
+        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription());
+        bookmark.setMangaId(manga.getMangaId());
+        bookmark.setTitle(manga.getTitle());
+        bookmark.setCoverUrl(manga.getCoverImageUrl());
+        bookmark.setDescription(manga.getDescription());
+        //If exist in database bookmark than delete
+        if (bookmarkDao.isBookmarked(manga.getMangaId())) {
+            bookmarkDao.delete(bookmark);
+            manga.setIsBookmarked(false);
+            Log.e("Bookmark deleted", String.valueOf(bookmarkDao.getAllBookmarks().size()));
+        } else {
+            //Else insert in database as a new bookmark
+            bookmarkDao.insert(bookmark);
+            manga.setIsBookmarked(true);
+            Log.e("Bookmark Inserted", String.valueOf(bookmarkDao.getAllBookmarks().size()));
+
+        }
+        bookmarkChanged = true; // mark that something changed
+    }
+    private void ScrollLoadChapterList(){
+        chapterRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager != null && layoutManager.findLastVisibleItemPosition() >= chapterList.size() - 5) {
+                    loadChapterList();
+                }
+            }
+        });
     }
 
     private void loadMangaItem() {
@@ -61,6 +172,7 @@ public class MangaPage extends AppCompatActivity {
 
             @Override
             public void onSuccess(MangaItemModel manga) {
+
                 runOnUiThread(() -> {
                     mangaItem = manga;
                     if (mangaItem != null && mangaItem.getCoverImageUrl() != null) {
@@ -84,17 +196,24 @@ public class MangaPage extends AppCompatActivity {
         });
     }
 
-    private void loadChapterList() {
-        String mangaId = getIntent().getStringExtra("mangaId");
-        ChaptersService.fetchChapterList(mangaId, new ChaptersService.ChapterListCallback(){
+    private void PrevOrNextChapter(){
+        firstChapterButtonPage.setOnClickListener(v -> {
+            GetFirstOrLastChapter("asc");
+        });
+
+        lastChapterButtonPage.setOnClickListener(v -> {
+            GetFirstOrLastChapter("desc");
+        });
+    }
+
+    private void GetFirstOrLastChapter(String descAsc){
+        ChaptersService.fetchAllChapters(getMangaId, descAsc, 0, 1, new ChaptersService.ChapterListCallback() {
             @Override
-            public void onSuccess(List<ChapterModel> chapters) {
-                runOnUiThread(() -> {
-                    chapterList.clear();
-                    chapterList.addAll(chapters);
-                    mangaPageAdapter.notifyDataSetChanged();
-                    Log.e("MangaPage", "Chapters fetched successfully:" + chapters.size());
-                });
+            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                Intent intent = new Intent(MangaPage.this, ChapterPage.class);
+                intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
+                MangaPage.this.startActivity(intent);
+                Log.e("MangaPage", "Chapters fetched: " + fetchedChapters.size() + " total: " + chapterList.size());
             }
 
             @Override
@@ -102,6 +221,45 @@ public class MangaPage extends AppCompatActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(MangaPage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
                 });
+            }
+        });
+    }
+
+    private void loadChapterList() {
+        if (isLoading) return;
+        isLoading = true;
+
+        String mangaId = getIntent().getStringExtra("mangaId");
+        ChaptersService.fetchAllChapters(mangaId, "desc", offset, LIMIT, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                runOnUiThread(() -> {
+                    chapterList.addAll(fetchedChapters); // append instead of clear
+                    mangaPageAdapter.notifyDataSetChanged();
+                    Log.e("MangaPage", "Chapters fetched: " + fetchedChapters.size() + " total: " + chapterList.size());
+                    offset += LIMIT;
+                    isLoading = false;
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> {
+                    Toast.makeText(MangaPage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                    isLoading = false;
+                });
+            }
+        });
+    }
+
+    private void handleBackPress() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("bookmarkChanged", bookmarkChanged);
+                setResult(RESULT_OK, resultIntent);
+                finish();
             }
         });
     }

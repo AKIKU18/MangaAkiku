@@ -64,6 +64,7 @@ public class BookmarksPage extends AppCompatActivity {
             public void handleOnBackPressed() {
                 Intent resultIntent = new Intent();
                 setResult(RESULT_OK, resultIntent);
+                Log.e("BookmarksPage", "Back pressed");
                 finish();
             }
         });
@@ -88,6 +89,8 @@ public class BookmarksPage extends AppCompatActivity {
             public void handleOnBackPressed() {
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("unbookmarked", true); // or false if nothing changed
+                Log.e("BookmarksPage", "Back pressed2");
+
                 setResult(RESULT_OK, resultIntent);
                 finish(); // close the activity
             }

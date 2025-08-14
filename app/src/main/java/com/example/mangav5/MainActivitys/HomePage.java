@@ -50,6 +50,7 @@ public class HomePage extends AppCompatActivity {
     private static final int LIMIT = 10;
     private boolean hasMore = true; // Optional, in case the API tells you there are no more items
     private ActivityResultLauncher<Intent> bookmarkLauncher;
+    private ActivityResultLauncher<Intent> mangaPageLauncher;
     private BookmarkDao bookmarkDao;
 
     @Override
@@ -64,10 +65,12 @@ public class HomePage extends AppCompatActivity {
         searchView = findViewById(R.id.search_bar);
         bookmarkPageButton = findViewById(R.id.button_bookmarks);
         historyPageButton = findViewById(R.id.button_history);
+        CheckIfStillBookmarked();
 
-        searchResultAdapter = new HomePageAdapter(searchMangaList, this);
-        homeListAdapter = new HomePageAdapter(mangaList, this);
 
+        searchResultAdapter = new HomePageAdapter(searchMangaList, this,mangaPageLauncher);
+
+        homeListAdapter = new HomePageAdapter(mangaList, this,mangaPageLauncher);
         searchResultView.setAdapter(searchResultAdapter);
         mangaListView.setAdapter(homeListAdapter);
 
@@ -82,7 +85,8 @@ public class HomePage extends AppCompatActivity {
         loadMangaOffset();
         BookmarkButtonGoTo();
         HistoryButtonGoTo();
-        CheckIfStillBookmarked();
+
+
     }
 
     private void CheckIfStillBookmarked(){
@@ -90,8 +94,31 @@ public class HomePage extends AppCompatActivity {
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK) {
-                        Log.e("CameBack,", "CameBack");
+                        Intent data = result.getData();
+                        boolean bookmarkChanged = false;
+                        if (data != null) {
+                            bookmarkChanged = data.getBooleanExtra("bookmarkChanged", false);
+                        }
+                        // Always refresh bookmarks to reflect current DB
                         homeListAdapter.refreshBookmarkStates();
+                        if (bookmarkChanged) {
+                            Log.e("HomePage", "Bookmark changed detected!");
+                        }
+                    }
+                }
+        );
+
+        mangaPageLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            boolean bookmarkChanged = data.getBooleanExtra("bookmarkChanged", false);
+                            if (bookmarkChanged) {
+                                homeListAdapter.refreshBookmarkStates();
+                            }
+                        }
                     }
                 }
         );
@@ -211,6 +238,8 @@ public class HomePage extends AppCompatActivity {
                 }
                 offset += LIMIT;
                 isLoading = false;
+                homeListAdapter.refreshBookmarkStates();
+
             });
         }
 

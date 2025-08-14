@@ -24,6 +24,9 @@
             android:name=".MainActivitys.MangaPage"
             android:exported="true"/>
         <activity
+            android:name=".MainActivitys.ChapterPage"
+            android:exported="true"/>
+        <activity
             android:name=".MainActivitys.HomePage"
             android:exported="true">
 
