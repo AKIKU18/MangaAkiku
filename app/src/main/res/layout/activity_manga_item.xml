@@ -77,7 +77,8 @@
                     android:focusable="true"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:gravity="start" />
+                    android:gravity="start"
+                    android:descendantFocusability="blocksDescendants"/>
 
             </LinearLayout>
 

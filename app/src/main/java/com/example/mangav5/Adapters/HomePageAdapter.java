@@ -19,11 +19,14 @@ import com.bumptech.glide.Glide;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.MainActivitys.HomePage;
 import com.example.mangav5.MainActivitys.MangaPage;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.Services.BookmarkService;
+import com.example.mangav5.Services.ChaptersService;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -33,8 +36,9 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     private final List<MangaItemModel> mangaList;
     private final Context context;
     private BookmarkDao bookmarkDao;
-
+    private String chapterId;
     private ActivityResultLauncher<Intent> mangaPageLauncher;
+
 
 
     public HomePageAdapter(List<MangaItemModel> mangaList, Context context, ActivityResultLauncher<Intent> launcher) {
@@ -60,6 +64,18 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         holder.description.setText(manga.getDescription());
         // Load cover image using Picasso or Glide
         // Load manga cover image with Glide
+        ChaptersService.fetchAllChapters(manga.getMangaId(),"desc",0,1, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> chapters) {
+                holder.lastChapter.setText("Last Chapter: "+chapters.get(0).getTitle());
+                chapterId = chapters.get(0).getChapterId();
+            }
+
+            @Override
+            public void onError(String message) {
+
+            }
+        });
         String coverUrl = manga.getCoverImageUrl();
         if (coverUrl != null && !coverUrl.isEmpty()) {
             Glide.with(context)
@@ -74,20 +90,46 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         //Toggle bookmark star icon and delete or insert bookmark in database
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, manga, bookmarkDao);
 
+        holder.lastChapter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                GoToMangaItem(manga);
+            }
+        });
+
+
         holder.title.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               GoToMangaItem(position);
+                GoToChapterPage();
             }
         });
 
     }
 
-    public void GoToMangaItem(int position){
-        MangaItemModel manga = mangaList.get(position);
-        Intent intent = new Intent(context, MangaPage.class);
-        intent.putExtra("mangaId", manga.getMangaId());
-        mangaPageLauncher.launch(intent);
+    public void GoToMangaItem(MangaItemModel manga){
+        ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> chapters) {
+                if (chapters.size() > 0) {
+                    String lastChapterId = chapters.get(0).getChapterId();
+                    Intent intent = new Intent(context, ChapterPage.class);
+                    intent.putExtra("chapterId", lastChapterId);
+                    intent.putExtra("chapterTitle", chapters.get(0).getTitle());
+                    context.startActivity(intent);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                // Optional: show a toast or log
+            }
+        });
+    }
+
+    public void GoToChapterPage(){
+        Intent intent = new Intent(context, ChapterPage.class);
+        intent.putExtra("chapterId", chapterId);
     }
 
 
@@ -116,7 +158,8 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     public static class MangaViewHolder extends RecyclerView.ViewHolder {
         ImageView cover;
         ImageView bookmarkStar;
-        TextView title, description;
+        TextView title, description,lastChapter;
+
 
         public MangaViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -124,6 +167,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             bookmarkStar = itemView.findViewById(R.id.bookmarkStar);
             title = itemView.findViewById(R.id.mangaTitle);
             description = itemView.findViewById(R.id.mangaDescription);
+            lastChapter = itemView.findViewById(R.id.lastChapter);
         }
     }
 }
