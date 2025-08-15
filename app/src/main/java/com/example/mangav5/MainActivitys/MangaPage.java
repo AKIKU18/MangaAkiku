@@ -59,13 +59,14 @@ public class MangaPage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manga_page);
+        getMangaId = getIntent().getStringExtra("mangaId");
 
         AppDatabase db = AppDatabase.getInstance(this);
         this.bookmarkDao =db.bookmarkDao();
         chapterList = new ArrayList<>();
         chapterRecyclerView = findViewById(R.id.chaptersRecyclerViewPage);
         chapterRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mangaPageAdapter = new MangaPageAdapter(chapterList, this);
+        mangaPageAdapter = new MangaPageAdapter(chapterList, this,getMangaId);
         chapterRecyclerView.setAdapter(mangaPageAdapter);
 
         cover = findViewById(R.id.mangaCoverImagePage);
@@ -75,7 +76,6 @@ public class MangaPage extends AppCompatActivity {
         firstChapterButtonPage = findViewById(R.id.firstChapterButtonPage);
         lastChapterButtonPage = findViewById(R.id.lastChapterButtonPage);
 
-        getMangaId = getIntent().getStringExtra("mangaId");
 
 
         loadMangaItem();
@@ -245,6 +245,8 @@ public class MangaPage extends AppCompatActivity {
                 Intent intent = new Intent(MangaPage.this, ChapterPage.class);
                 intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
                 intent.putExtra("chapterTitle", fetchedChapters.get(0).getTitle());
+                String id = getIntent().getStringExtra("mangaId");
+                intent.putExtra("mangaId", id);
                 MangaPage.this.startActivity(intent);
                 Log.e("MangaPage", "Chapters fetched: " + fetchedChapters.size() + " total: " + chapterList.size());
             }

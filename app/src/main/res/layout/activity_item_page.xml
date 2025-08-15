@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
+        android:textColor="?attr/colorOnBackground"
         android:scaleType="fitCenter"
         android:contentDescription="Manga page" />
 </FrameLayout>

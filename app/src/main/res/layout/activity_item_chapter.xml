@@ -15,8 +15,9 @@
         android:layout_height="wrap_content"
         android:text="Chapter Title"
         android:textSize="15sp"
-        android:textColor="#212121"
+        android:textColor="?attr/colorOnBackground"
         android:textStyle="bold"
+
         android:maxLines="1"
         android:ellipsize="end" />
 

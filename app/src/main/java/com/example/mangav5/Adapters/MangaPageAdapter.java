@@ -32,12 +32,16 @@ import java.util.List;
 public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.MangaViewHolder> {
     private List<ChapterModel> chapters;
     private final Context context;
+    private final String mangaId;
     private BookmarkDao bookmarkDao;
     private BookmarksAdapter bookmarkAdapter;
 
-    public MangaPageAdapter(List<ChapterModel> chapters, Context context) {
+    public MangaPageAdapter(List<ChapterModel> chapters, Context context,String mangaId) {
         this.chapters = chapters;
         this.context = context;
+        this.mangaId = mangaId;
+        AppDatabase db = AppDatabase.getInstance(context);
+        this.bookmarkDao = db.bookmarkDao();
     }
 
     @NonNull
@@ -67,6 +71,7 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
             Intent intent = new Intent(context, ChapterPage.class);
             intent.putExtra("chapterId", chapterId);
             intent.putExtra("chapterTitle", chapterTitle);
+            intent.putExtra("mangaId", mangaId);
             Log.e("MangaPageAdapter", "chapterTitle " + chapterTitle);
             context.startActivity(intent);
         });

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,8 @@ import com.bumptech.glide.Glide;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.Entity.ChapterItemEntity;
+import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.MainActivitys.HomePage;
 import com.example.mangav5.MainActivitys.MangaPage;
@@ -29,6 +32,7 @@ import com.example.mangav5.R;
 import com.example.mangav5.Services.BookmarkService;
 import com.example.mangav5.Services.ChaptersService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -100,7 +104,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             @Override
             public void onClick(View v) {
                 GoToChapterPage(manga);
-
+                updateLoadChapterList(0,manga.getMangaId());
             }
         });
 
@@ -114,7 +118,56 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
 
     }
 
+    private void updateLoadChapterList(int offset,String mangaId) {
+        int LIMIT = 100;
+        AppDatabase db = AppDatabase.getInstance(context);
+
+        ChaptersService.fetchAllChapters(mangaId, "desc", offset, LIMIT, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                if (fetchedChapters.isEmpty()) return; // stop recursion
+
+                // Save/update in Room
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    List<ChapterItemEntity> entities = new ArrayList<>();
+                    for (ChapterModel c : fetchedChapters) {
+                        entities.add(new ChapterItemEntity(
+                                c.getChapterId(), // primary key
+                                mangaId,
+                                c.getTitle(),
+                                c.getNumber()
+                        ));
+                    }
+                    db.chapterDao().insertChapters(entities);
+                });
+
+
+                // Load next batch recursively
+                // Fetch next batch only if we got full LIMIT
+                if (fetchedChapters.size() == LIMIT) {
+                    updateLoadChapterList(offset + LIMIT,mangaId);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e("ChapterService", "Error: " + message);
+            }
+        });
+    }
+
     public void GoToChapterPage(MangaItemModel manga){
+        AppDatabase db = AppDatabase.getInstance(context);
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            MangaItemEntity mangaEntity = new MangaItemEntity(
+                    manga.getMangaId(),
+                    manga.getTitle(),
+                    manga.getCoverImageUrl(),
+                    manga.getDescription()
+            );
+            db.mangaItemDao().insertManga(mangaEntity);
+        });
         ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
@@ -123,6 +176,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                     Intent intent = new Intent(context, ChapterPage.class);
                     intent.putExtra("chapterId", lastChapterId);
                     intent.putExtra("chapterTitle", chapters.get(0).getTitle());
+                    intent.putExtra("mangaId", manga.getMangaId());
                     context.startActivity(intent);
                 } else {
                     // Maybe show a toast

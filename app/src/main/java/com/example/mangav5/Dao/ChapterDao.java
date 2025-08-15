@@ -27,4 +27,9 @@ public interface ChapterDao {
 
     @Query("DELETE FROM chapterItem WHERE chapterId = :chapterId")
     void deleteChapterById(String chapterId);
+    @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId AND CAST(number AS REAL) > (SELECT CAST(number AS REAL) FROM chapterItem WHERE chapterId = :chapterId) ORDER BY CAST(number AS REAL) ASC LIMIT 1")
+    ChapterItemEntity getNextChapter(String mangaId, String chapterId);
+
+    @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId AND CAST(number AS REAL) < (SELECT CAST(number AS REAL) FROM chapterItem WHERE chapterId = :chapterId) ORDER BY CAST(number AS REAL) DESC LIMIT 1")
+    ChapterItemEntity getPrevChapter(String mangaId, String chapterId);
 }
