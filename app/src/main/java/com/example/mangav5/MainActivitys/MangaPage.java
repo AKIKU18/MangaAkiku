@@ -78,9 +78,8 @@ public class MangaPage extends AppCompatActivity {
         getMangaId = getIntent().getStringExtra("mangaId");
 
 
-        ScrollLoadChapterList();
         loadMangaItem();
-        loadChapterList();
+        loadChapterList(100,true);
         PrevOrNextChapter();
         handleBackPress();
         OnClickToggleMangaPage(bookmarkStar,mangaItem,bookmarkDao);
@@ -159,7 +158,7 @@ public class MangaPage extends AppCompatActivity {
 
                 LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
                 if (layoutManager != null && layoutManager.findLastVisibleItemPosition() >= chapterList.size() - 5) {
-                    loadChapterList();
+                    //loadChapterList(100,true);
                 }
             }
         });
@@ -212,6 +211,7 @@ public class MangaPage extends AppCompatActivity {
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 Intent intent = new Intent(MangaPage.this, ChapterPage.class);
                 intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
+                intent.putExtra("chapterTitle", fetchedChapters.get(0).getTitle());
                 MangaPage.this.startActivity(intent);
                 Log.e("MangaPage", "Chapters fetched: " + fetchedChapters.size() + " total: " + chapterList.size());
             }
@@ -225,7 +225,7 @@ public class MangaPage extends AppCompatActivity {
         });
     }
 
-    private void loadChapterList() {
+    private void loadChapterList(int targetCount, boolean continueAfterTarget) {
         if (isLoading) return;
         isLoading = true;
 
@@ -234,11 +234,26 @@ public class MangaPage extends AppCompatActivity {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 runOnUiThread(() -> {
-                    chapterList.addAll(fetchedChapters); // append instead of clear
+                    if (fetchedChapters.isEmpty()) {
+                        Log.e("MangaPage", "No more chapters available, stopping load.");
+                        isLoading = false;
+                        return; // break recursion
+                    }
+
+
+                    chapterList.addAll(fetchedChapters);
                     mangaPageAdapter.notifyDataSetChanged();
                     Log.e("MangaPage", "Chapters fetched: " + fetchedChapters.size() + " total: " + chapterList.size());
                     offset += LIMIT;
                     isLoading = false;
+
+                    if (chapterList.size() < targetCount) {
+                        // Keep loading until we hit the first 100
+                        loadChapterList(targetCount, continueAfterTarget);
+                    } else if (continueAfterTarget && fetchedChapters.size() > 0) {
+                        // Background load the rest without blocking UI
+                        new Thread(() -> loadChapterList(Integer.MAX_VALUE, true)).start();
+                    }
                 });
             }
 
@@ -250,6 +265,7 @@ public class MangaPage extends AppCompatActivity {
                 });
             }
         });
+
     }
 
     private void handleBackPress() {

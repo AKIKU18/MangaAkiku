@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
@@ -67,8 +68,13 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         ChaptersService.fetchAllChapters(manga.getMangaId(),"desc",0,1, new ChaptersService.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
-                holder.lastChapter.setText("Last Chapter: "+chapters.get(0).getTitle());
-                chapterId = chapters.get(0).getChapterId();
+                if (chapters != null && !chapters.isEmpty()) {
+                    holder.lastChapter.setText("Last Chapter: " + chapters.get(0).getTitle());
+                    chapterId = chapters.get(0).getChapterId();
+                } else {
+                    holder.lastChapter.setText("No chapters");
+                    chapterId = null;
+                }
             }
 
             @Override
@@ -93,7 +99,8 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         holder.lastChapter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GoToMangaItem(manga);
+                GoToChapterPage(manga);
+
             }
         });
 
@@ -101,22 +108,25 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         holder.title.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GoToChapterPage();
+                GoToMangaItem(manga);
             }
         });
 
     }
 
-    public void GoToMangaItem(MangaItemModel manga){
+    public void GoToChapterPage(MangaItemModel manga){
         ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
-                if (chapters.size() > 0) {
+                if (chapters != null && !chapters.isEmpty()) {
                     String lastChapterId = chapters.get(0).getChapterId();
                     Intent intent = new Intent(context, ChapterPage.class);
                     intent.putExtra("chapterId", lastChapterId);
                     intent.putExtra("chapterTitle", chapters.get(0).getTitle());
                     context.startActivity(intent);
+                } else {
+                    // Maybe show a toast
+                    Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -127,9 +137,10 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         });
     }
 
-    public void GoToChapterPage(){
-        Intent intent = new Intent(context, ChapterPage.class);
-        intent.putExtra("chapterId", chapterId);
+    public void GoToMangaItem(MangaItemModel manga){
+        Intent intent = new Intent(context, MangaPage.class);
+        intent.putExtra("mangaId", manga.getMangaId());
+        mangaPageLauncher.launch(intent);
     }
 
 
