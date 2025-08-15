@@ -19,15 +19,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.mangav5.Adapters.BookmarksAdapter;
-import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Adapters.MangaPageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.Entity.ChapterItemEntity;
+import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.Services.BookmarkService;
 import com.example.mangav5.Services.ChaptersService;
 import com.example.mangav5.Services.FeedMangaService;
 
@@ -79,11 +79,13 @@ public class MangaPage extends AppCompatActivity {
 
 
         loadMangaItem();
-        loadChapterList(100,true);
+        //loadChapterList(0);
         PrevOrNextChapter();
         handleBackPress();
         OnClickToggleMangaPage(bookmarkStar,mangaItem,bookmarkDao);
         CheckIfStillBookmarked();
+
+
     }
 
     private void CheckIfStillBookmarked() {
@@ -172,6 +174,37 @@ public class MangaPage extends AppCompatActivity {
             @Override
             public void onSuccess(MangaItemModel manga) {
 
+                if (manga == null) return;
+
+                AppDatabase db = AppDatabase.getInstance(MangaPage.this);
+
+                // Save manga to Room
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    MangaItemEntity mangaEntity = new MangaItemEntity(
+                            manga.getMangaId(),
+                            manga.getTitle(),
+                            manga.getCoverImageUrl(),
+                            manga.getDescription()
+                    );
+                    db.mangaItemDao().insertManga(mangaEntity);
+                    // Load chapters from Room first
+                    List<ChapterItemEntity> savedChapters = db.chapterDao().getChaptersByMangaId(mangaId);
+                    Log.e("MangaPage", "Loaded chapters: " + savedChapters.size());
+                    runOnUiThread(() -> {
+                        for (ChapterItemEntity c : savedChapters) {
+                            if (chapterList.stream().noneMatch(ch -> ch.getChapterId().equals(c.getChapterId()))) {
+                                ChapterModel ch = new ChapterModel(c.getChapterId(), c.getTitle(), c.getNumber());
+                                chapterList.add(ch);
+                                Log.e("MangaPage", "Loaded chapter FROM DB: " + c.getTitle());
+                            }
+                        }
+                        mangaPageAdapter.notifyDataSetChanged();
+                    });
+
+                    // Then fetch remaining chapters from API
+                    updateLoadChapterList(0); // start offset after existing chapters
+                });
+
                 runOnUiThread(() -> {
                     mangaItem = manga;
                     if (mangaItem != null && mangaItem.getCoverImageUrl() != null) {
@@ -225,48 +258,57 @@ public class MangaPage extends AppCompatActivity {
         });
     }
 
-    private void loadChapterList(int targetCount, boolean continueAfterTarget) {
-        if (isLoading) return;
-        isLoading = true;
 
+    private void updateLoadChapterList(int offset) {
         String mangaId = getIntent().getStringExtra("mangaId");
+        int LIMIT = 100;
+        AppDatabase db = AppDatabase.getInstance(this);
+
         ChaptersService.fetchAllChapters(mangaId, "desc", offset, LIMIT, new ChaptersService.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
-                runOnUiThread(() -> {
-                    if (fetchedChapters.isEmpty()) {
-                        Log.e("MangaPage", "No more chapters available, stopping load.");
-                        isLoading = false;
-                        return; // break recursion
+                if (fetchedChapters.isEmpty()) return; // stop recursion
+
+                // Save/update in Room
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    List<ChapterItemEntity> entities = new ArrayList<>();
+                    for (ChapterModel c : fetchedChapters) {
+                        entities.add(new ChapterItemEntity(
+                                c.getChapterId(), // primary key
+                                mangaId,
+                                c.getTitle(),
+                                c.getNumber()
+                        ));
                     }
-
-
-                    chapterList.addAll(fetchedChapters);
-                    mangaPageAdapter.notifyDataSetChanged();
-                    Log.e("MangaPage", "Chapters fetched: " + fetchedChapters.size() + " total: " + chapterList.size());
-                    offset += LIMIT;
-                    isLoading = false;
-
-                    if (chapterList.size() < targetCount) {
-                        // Keep loading until we hit the first 100
-                        loadChapterList(targetCount, continueAfterTarget);
-                    } else if (continueAfterTarget && fetchedChapters.size() > 0) {
-                        // Background load the rest without blocking UI
-                        new Thread(() -> loadChapterList(Integer.MAX_VALUE, true)).start();
-                    }
+                    db.chapterDao().insertChapters(entities);
                 });
+
+                // Update UI
+                runOnUiThread(() -> {
+                    for (ChapterModel c : fetchedChapters) {
+                        if (chapterList.stream().noneMatch(ch -> ch.getChapterId().equals(c.getChapterId()))) {
+                            chapterList.add(c);
+
+                        }
+                    }
+                    mangaPageAdapter.notifyDataSetChanged();
+                });
+
+
+                // Load next batch recursively
+                // Fetch next batch only if we got full LIMIT
+                if (fetchedChapters.size() == LIMIT) {
+                    updateLoadChapterList(offset + LIMIT);
+                }
             }
 
             @Override
             public void onError(String message) {
-                runOnUiThread(() -> {
-                    Toast.makeText(MangaPage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
-                    isLoading = false;
-                });
+                runOnUiThread(() -> Toast.makeText(MangaPage.this, "Error loading chapters: " + message, Toast.LENGTH_SHORT).show());
             }
         });
-
     }
+
 
     private void handleBackPress() {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {

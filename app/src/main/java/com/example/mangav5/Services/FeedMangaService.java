@@ -2,6 +2,10 @@ package com.example.mangav5.Services;
 
 import android.util.Log;
 
+import com.example.mangav5.Dao.BookmarkDao;
+import com.example.mangav5.Dao.MangaItemDao;
+import com.example.mangav5.Entity.MangaItemEntity;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 
 import org.json.JSONArray;
@@ -161,5 +165,11 @@ public class FeedMangaService {
         } catch (Exception ignored) {
         }
         return defaultValue;
+    }
+
+
+    private static void SaveMangaItem(MangaItemModel manga, MangaItemDao mangaItemDao, List<ChapterModel> chapters){
+
+
     }
 }

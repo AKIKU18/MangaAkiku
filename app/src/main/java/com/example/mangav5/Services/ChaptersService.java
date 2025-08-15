@@ -66,7 +66,6 @@ public class ChaptersService {
                 try {
                     JSONObject json = new JSONObject(response.body().string());
                     JSONArray data = json.getJSONArray("data");
-                    Log.e("data", "data: " + data.toString());
                     final int totalChapters = data.length();
                     List<ChapterModel> chapterList = new ArrayList<>();
 

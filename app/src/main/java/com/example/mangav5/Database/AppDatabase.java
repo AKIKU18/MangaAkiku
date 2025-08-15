@@ -6,13 +6,23 @@ import androidx.room.RoomDatabase;
 import android.content.Context;
 
 import com.example.mangav5.Dao.BookmarkDao;
+import com.example.mangav5.Dao.ChapterDao;
+import com.example.mangav5.Dao.MangaItemDao;
 import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.Entity.ChapterItemEntity;
+import com.example.mangav5.Entity.MangaItemEntity;
 
-@Database(entities = {BookmarkEntity.class}, version = 1)
+@Database(
+        entities = {BookmarkEntity.class, ChapterItemEntity.class, MangaItemEntity.class},
+        version = 1,
+        exportSchema = false
+)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase INSTANCE;
 
     public abstract BookmarkDao bookmarkDao();
+    public abstract ChapterDao chapterDao();
+    public abstract MangaItemDao mangaItemDao();
 
     public static synchronized AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
