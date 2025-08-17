@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <!-- Cover image -->
+        <ImageView
+            android:id="@+id/historyCover"
+            android:layout_width="90dp"
+            android:layout_height="120dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="Manga cover"
+            android:clipToOutline="true"
+            android:layout_marginEnd="12dp" />
+
+        <!-- Text content -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/historyMangaTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Manga Title"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="@android:color/black" />
+
+            <!-- Highlighted Chapter Title (Clickable) -->
+            <TextView
+                android:id="@+id/historyChapterTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chapter 12: The Beginning"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/purple_700"
+                android:layout_marginTop="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/historyTimestamp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="12 Feb 2025, 14:32"
+                android:textSize="12sp"
+                android:textStyle="italic"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

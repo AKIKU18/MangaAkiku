@@ -1,6 +1,7 @@
 package com.example.mangav5.Adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.mangav5.MainActivitys.MangaPage;
+import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 
 import java.util.List;
@@ -44,7 +47,11 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .error(android.R.drawable.ic_dialog_alert)
                 .into(holder.imageContainer);
+
+
     }
+
+
 
     @Override
     public int getItemCount() {
@@ -54,11 +61,13 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     public static class ChapterPageViewer extends RecyclerView.ViewHolder {
        ImageView imageContainer;
        TextView tvChapterNumber;
+       TextView tvMangaTitle;
 
        public ChapterPageViewer(@NonNull View itemView) {
            super(itemView);
            imageContainer = itemView.findViewById(R.id.imageContainer);
            tvChapterNumber = itemView.findViewById(R.id.chapterNumber);
+           tvMangaTitle = itemView.findViewById(R.id.mangaTitle);
        }
 
    }

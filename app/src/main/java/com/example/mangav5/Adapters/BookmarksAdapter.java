@@ -1,6 +1,7 @@
 package com.example.mangav5.Adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,15 +20,20 @@ import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.MainActivitys.BookmarksPage;
+import com.example.mangav5.MainActivitys.ChapterPage;
+import com.example.mangav5.MainActivitys.MangaPage;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.Services.BookmarkService;
+import com.example.mangav5.Services.ChaptersService;
 
 import java.util.List;
 
 public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.BookmarkMangaViewHolder>{
 
     private final List<BookmarkEntity> bookmarkList;
+    private List<MangaItemModel> mangaList;
     private final Context context;
     private BookmarkDao bookmarkDao;
     private BookmarksAdapter bookmarkAdapter;
@@ -48,6 +55,13 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     @Override
     public void onBindViewHolder(@NonNull BookmarkMangaViewHolder holder, int position) {
         BookmarkEntity manga = bookmarkList.get(position);
+        MangaItemModel mangaItemModel = new MangaItemModel();
+        mangaItemModel.setMangaId(manga.getMangaId());
+        mangaItemModel.setTitle(manga.getTitle());
+        mangaItemModel.setCoverImageUrl(manga.getCoverUrl());
+        mangaItemModel.setDescription(manga.getDescription());
+
+
         holder.title.setText(manga.getTitle());
         holder.description.setText(manga.getDescription());
         // Load cover image using Picasso or Glide
@@ -62,12 +76,60 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
+        GetLastChapterTitle(mangaItemModel,holder.lastChapter);
 
         //Toggle bookmark star icon and delete or insert bookmark in database
         TooggleBookmark(holder, manga, bookmarkDao,position);
         StarToggle(holder.bookmarkStar);
+
+        holder.itemView.setOnClickListener(v -> {
+            GoToMangaItem(mangaItemModel);
+        });
+
+        holder.lastChapter.setOnClickListener(v -> {
+            GetLastChapter(mangaItemModel);
+        });
     }
 
+    private void GetLastChapter(MangaItemModel mangaItem) {
+        ChaptersService.fetchAllChapters(mangaItem.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                Intent intent = new Intent(context, ChapterPage.class);
+                intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
+                intent.putExtra("chapterTitle", fetchedChapters.get(0).getTitle());
+                intent.putExtra("mangaId", mangaItem.getMangaId());
+                context.startActivity(intent);
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(context, "Error: " + message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void GetLastChapterTitle(MangaItemModel mangaItem, TextView itemView) {
+        ChaptersService.fetchAllChapters(mangaItem.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                if (fetchedChapters.isEmpty()) return; // stop recursion
+                itemView.setText(fetchedChapters.get(0).getTitle());
+
+            }
+
+            @Override
+            public void onError(String message) {
+
+            }
+        });
+    }
+
+    public void GoToMangaItem(MangaItemModel manga){
+        Intent intent = new Intent(context, MangaPage.class);
+        intent.putExtra("mangaId", manga.getMangaId());
+        BookmarksPage.mangaPageLauncher.launch(intent);
+    }
 
 
     private void TooggleBookmark(BookmarkMangaViewHolder holder, BookmarkEntity manga, BookmarkDao bookmarkDao, int position){
@@ -109,7 +171,8 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     public static class BookmarkMangaViewHolder extends RecyclerView.ViewHolder {
         ImageView cover;
         ImageView bookmarkStar;
-        TextView title, description;
+        TextView title, description, lastChapter;
+
 
         public BookmarkMangaViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -117,6 +180,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             bookmarkStar = itemView.findViewById(R.id.bookmarkStar);
             title = itemView.findViewById(R.id.mangaTitle);
             description = itemView.findViewById(R.id.mangaDescription);
+            lastChapter = itemView.findViewById(R.id.lastChapter);
         }
     }
 }

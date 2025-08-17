@@ -28,4 +28,7 @@ public interface MangaItemDao {
     // Insert chapters
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertChapters(List<ChapterItemEntity> chapters);
+
+    @Query("SELECT * FROM mangaItem WHERE mangaId = :id")
+    MangaItemEntity getMangaById(String id);
 }
