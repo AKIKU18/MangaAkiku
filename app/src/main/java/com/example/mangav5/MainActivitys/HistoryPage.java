@@ -1,8 +1,10 @@
 package com.example.mangav5.MainActivitys;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,6 +22,7 @@ public class HistoryPage extends AppCompatActivity {
 
     private HistoryAdapter historyAdapter;
     private RecyclerView historyRecyclerView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

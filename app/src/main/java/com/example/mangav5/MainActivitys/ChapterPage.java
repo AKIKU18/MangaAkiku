@@ -31,6 +31,7 @@ public class ChapterPage extends AppCompatActivity {
     private RecyclerView recycleViewPage;
     private TextView tvChapterNumber;
     private Button btnPrevious;
+    private Button btnHome;
     private Button btnNext;
     private TextView tvMangaTitle;
     ChapterPageAdapter chapterPageAdapter;
@@ -60,12 +61,15 @@ public class ChapterPage extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         String chapterTitle = getIntent().getStringExtra("chapterTitle");
         String mangaId = getIntent().getStringExtra("mangaId");
         String chapterId = getIntent().getStringExtra("chapterId"); // initial chapter
+
         setCurrentChapterId(chapterId);
         setCurrentChapterTitle(chapterTitle); // <-- add this
         setContentView(R.layout.activity_chapter_page);
+
         recycleViewPage = findViewById(R.id.recyclerPages);
         recycleViewPage.setLayoutManager(new LinearLayoutManager(this));
         chapterPageAdapter = new ChapterPageAdapter(chapters ,ChapterPage.this,chapterTitle);
@@ -75,6 +79,9 @@ public class ChapterPage extends AppCompatActivity {
         btnPrevious = findViewById(R.id.btnPrevious);
         btnNext = findViewById(R.id.btnNext);
         tvMangaTitle = findViewById(R.id.mangaTitle);
+        btnHome = findViewById(R.id.btnHome);
+
+
 
         tvChapterNumber.setText(chapterTitle);
         GetChapterPages(chapterId);
@@ -82,6 +89,7 @@ public class ChapterPage extends AppCompatActivity {
         PrevChapter();
         InsertChapterIntoHistory();
         SetMangaTitle();
+        GoToHomePage();
     }
 
 
@@ -108,6 +116,13 @@ public class ChapterPage extends AppCompatActivity {
         Intent intent = new Intent(this, MangaPage.class);
         intent.putExtra("mangaId",mangaId);
         this.startActivity(intent);
+    }
+
+    private void GoToHomePage(){
+        btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(ChapterPage.this, HomePage.class);
+            startActivity(intent);
+        });
     }
 
     private void NextChapter() {

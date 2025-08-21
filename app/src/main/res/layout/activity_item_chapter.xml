@@ -3,31 +3,29 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
+    android:padding="8dp"
+    android:background="?attr/selectableItemBackground"
     >
 
-    <TextView
-        android:id="@+id/chapterTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Chapter Title"
-        android:textSize="15sp"
-        android:textColor="?attr/colorOnBackground"
-        android:textStyle="bold"
+    <!-- Container with rounded card-like look -->
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="vertical"
+android:padding="12dp"
+android:background="@drawable/chapter_item_bg">
 
-        android:maxLines="1"
-        android:ellipsize="end" />
-
-    <!-- Thin divider line -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginTop="8dp"
-        android:background="#E0E0E0" />
+<TextView
+    android:id="@+id/chapterTitle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Chapter Title"
+    android:textSize="16sp"
+    android:textColor="?attr/colorOnBackground"
+    android:textStyle="bold"
+    android:maxLines="1"
+    android:ellipsize="end" />
 
 </LinearLayout>
+
+    </LinearLayout>

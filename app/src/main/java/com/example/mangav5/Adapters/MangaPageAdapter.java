@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -35,6 +36,7 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
     private final String mangaId;
     private BookmarkDao bookmarkDao;
     private BookmarksAdapter bookmarkAdapter;
+
 
     public MangaPageAdapter(List<ChapterModel> chapters, Context context,String mangaId) {
         this.chapters = chapters;

@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,6 +55,7 @@ public class MangaPage extends AppCompatActivity {
     private BookmarkDao bookmarkDao;
     private List<BookmarkEntity> bookmarkList = new ArrayList<>();
     private boolean bookmarkChanged = false;
+    ImageButton scrollToBottomButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +77,7 @@ public class MangaPage extends AppCompatActivity {
         description = findViewById(R.id.mangaDescriptionPage);
         firstChapterButtonPage = findViewById(R.id.firstChapterButtonPage);
         lastChapterButtonPage = findViewById(R.id.lastChapterButtonPage);
-
+        scrollToBottomButton = findViewById(R.id.scrollToBottomButtonPage);
 
 
         loadMangaItem();
@@ -84,8 +86,18 @@ public class MangaPage extends AppCompatActivity {
         handleBackPress();
         OnClickToggleMangaPage(bookmarkStar,mangaItem,bookmarkDao);
         CheckIfStillBookmarked();
+        ScrollButton();
 
+    }
 
+    private void ScrollButton(){
+        scrollToBottomButton.setOnClickListener(v -> {
+            assert chapterRecyclerView.getAdapter() != null;
+            int itemCount = chapterRecyclerView.getAdapter().getItemCount();
+            if (itemCount > 0) {
+                chapterRecyclerView.smoothScrollToPosition(itemCount - 1); // scroll to bottom
+            }
+        });
     }
 
     private void CheckIfStillBookmarked() {

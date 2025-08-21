@@ -24,6 +24,7 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     private final Context context;
     private String chapterNumber;
 
+
     public ChapterPageAdapter(List<String> pages, Context context, String chapterNumber) {
         this.pages = pages;
         this.context = context;

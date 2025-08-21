@@ -18,10 +18,12 @@ import com.example.mangav5.Adapters.BookmarksAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.R;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BookmarksPage extends AppCompatActivity {
@@ -130,5 +132,11 @@ public class BookmarksPage extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBookmarks();
     }
 }

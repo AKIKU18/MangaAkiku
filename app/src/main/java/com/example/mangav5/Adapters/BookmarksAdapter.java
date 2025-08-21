@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.MainActivitys.BookmarksPage;
 import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.MainActivitys.MangaPage;
@@ -137,13 +138,18 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                 if (fetchedChapters.isEmpty()) return; // stop recursion
                 AppDatabase db = AppDatabase.getInstance(context);
                 Executors.newSingleThreadExecutor().execute(() -> {
-                    String viewedChaptertTitle = db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterTitle;
-                    if (viewedChaptertTitle != null) {
-                        viewedChapterView.setText("Viewed: " + viewedChaptertTitle);
-                    }else{
-                        viewedChapterView.setText("Viewed: -");
-                    }
+                    HistoryEntity history = db.historyDao().getHistoryItem(mangaItem.getMangaId());
 
+                    if (history != null && history.chapterTitle != null) {
+                        String viewedChapterTitle = history.chapterTitle;
+                        viewedChapterView.post(() ->
+                                viewedChapterView.setText("Viewed: " + viewedChapterTitle)
+                        );
+                    } else {
+                        viewedChapterView.post(() ->
+                                viewedChapterView.setText("Viewed: -")
+                        );
+                    }
                 });
                 currentItemView.setText("Current: " + fetchedChapters.get(0).getTitle());
 

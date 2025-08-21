@@ -9,6 +9,7 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivitys.HomePage">
 
+
     <androidx.appcompat.widget.SearchView
         android:id="@+id/search_bar"
         android:layout_width="0dp"

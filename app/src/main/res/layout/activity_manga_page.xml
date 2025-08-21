@@ -4,110 +4,74 @@
     android:id="@+id/mangaPageLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:fitsSystemWindows="true">
 
-    <!-- Cover + Title Section -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <!-- Manga Cover -->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/coverContainer"
-            android:layout_width="379dp"
-            android:layout_height="189dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:id="@+id/mangaCoverImagePage"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:contentDescription="manga cover"
-                android:scaleType="centerCrop"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ProgressBar
-                android:id="@+id/coverLoading"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <!-- Title and Bookmark -->
-        <LinearLayout
-            android:id="@+id/titleWithBookmarkPage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/coverContainer">
-
-            <TextView
-                android:id="@+id/mangaTitlePage"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Manga Title"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:id="@+id/bookmarkButtonPage"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="8dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Bookmark"
-                android:src="@android:drawable/btn_star_big_off" />
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Description -->
-    <FrameLayout
+    <!-- Top Section: Cover + Info -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp">
+        android:orientation="horizontal">
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/descriptionScrollPage"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:fillViewport="true"
-            android:scrollbars="vertical">
+        <!-- Manga Cover -->
+        <ImageView
+            android:id="@+id/mangaCoverImagePage"
+            android:layout_width="140dp"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="manga cover" />
 
-            <TextView
-                android:id="@+id/mangaDescriptionPage"
+        <!-- Title + Star + Description -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <!-- Title + Star -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Full manga description here, can be long..."
-                android:textColor="#666"
-                android:textSize="16sp" />
-        </androidx.core.widget.NestedScrollView>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <ProgressBar
-            android:id="@+id/descriptionLoadingPage"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-    </FrameLayout>
+                <TextView
+                    android:id="@+id/mangaTitlePage"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Manga Title"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
 
-    <!-- Chapters container with RecyclerView and Scroll Button -->
+                <ImageView
+                    android:id="@+id/bookmarkButtonPage"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="Bookmark"
+                    android:src="@android:drawable/btn_star_big_off" />
+            </LinearLayout>
+
+            <!-- Description -->
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fillViewport="true">
+
+                <TextView
+                    android:id="@+id/mangaDescriptionPage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Full manga description here, can be long..."
+                    android:textColor="#666"
+                    android:textSize="14sp" />
+            </ScrollView>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Chapters container with RecyclerView -->
     <FrameLayout
         android:id="@+id/chaptersContainerPage"
         android:layout_width="match_parent"
@@ -120,7 +84,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!-- Floating Scroll-to-Bottom Button at bottom right of chapters area -->
+        <!-- Floating Scroll-to-Bottom Button -->
         <ImageButton
             android:id="@+id/scrollToBottomButtonPage"
             android:layout_width="48dp"
@@ -128,17 +92,8 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:backgroundTint="@color/teal_700"
             android:contentDescription="Scroll to bottom"
             android:src="@drawable/ic_arrow_downward" />
-
-        <!-- Chapters loading spinner centered -->
-        <ProgressBar
-            android:id="@+id/chaptersLoadingPage"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="center"
-            android:visibility="gone" />
     </FrameLayout>
 
     <!-- Bottom Buttons -->
