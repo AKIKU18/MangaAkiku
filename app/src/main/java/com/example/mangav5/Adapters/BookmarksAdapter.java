@@ -29,6 +29,7 @@ import com.example.mangav5.Services.BookmarkService;
 import com.example.mangav5.Services.ChaptersService;
 
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.BookmarkMangaViewHolder>{
 
@@ -63,7 +64,6 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
 
         holder.title.setText(manga.getTitle());
-        holder.description.setText(manga.getDescription());
         // Load cover image using Picasso or Glide
         // Load manga cover image with Glide
         String coverUrl = manga.getCoverUrl();
@@ -76,7 +76,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
-        GetLastChapterTitle(mangaItemModel,holder.lastChapter);
+        GetLastChapterTitle(mangaItemModel,holder.lastChapter,holder.viewedChapter);
 
         //Toggle bookmark star icon and delete or insert bookmark in database
         TooggleBookmark(holder, manga, bookmarkDao,position);
@@ -88,6 +88,27 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
         holder.lastChapter.setOnClickListener(v -> {
             GetLastChapter(mangaItemModel);
+        });
+
+        holder.viewedChapter.setOnClickListener(v -> {
+            GetViewdChapter(mangaItemModel);
+        });
+    }
+
+    private void GetViewdChapter(MangaItemModel mangaItem) {
+        Intent intent = new Intent(context, ChapterPage.class);
+
+
+        AppDatabase db = AppDatabase.getInstance(context);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            String viewedChaptertTitle = db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterTitle;
+            String viewdChapterId = db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterId;
+            if (viewedChaptertTitle != null) {
+                intent.putExtra("chapterId", viewdChapterId);
+                intent.putExtra("chapterTitle", viewedChaptertTitle);
+                intent.putExtra("mangaId", mangaItem.getMangaId());
+                context.startActivity(intent);
+            }
         });
     }
 
@@ -109,12 +130,22 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         });
     }
 
-    private void GetLastChapterTitle(MangaItemModel mangaItem, TextView itemView) {
+    private void GetLastChapterTitle(MangaItemModel mangaItem, TextView currentItemView,TextView viewedChapterView) {
         ChaptersService.fetchAllChapters(mangaItem.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 if (fetchedChapters.isEmpty()) return; // stop recursion
-                itemView.setText(fetchedChapters.get(0).getTitle());
+                AppDatabase db = AppDatabase.getInstance(context);
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    String viewedChaptertTitle = db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterTitle;
+                    if (viewedChaptertTitle != null) {
+                        viewedChapterView.setText("Viewed: " + viewedChaptertTitle);
+                    }else{
+                        viewedChapterView.setText("Viewed: -");
+                    }
+
+                });
+                currentItemView.setText("Current: " + fetchedChapters.get(0).getTitle());
 
             }
 
@@ -171,7 +202,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     public static class BookmarkMangaViewHolder extends RecyclerView.ViewHolder {
         ImageView cover;
         ImageView bookmarkStar;
-        TextView title, description, lastChapter;
+        TextView title, lastChapter, viewedChapter;
 
 
         public BookmarkMangaViewHolder(@NonNull View itemView) {
@@ -179,8 +210,8 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             cover = itemView.findViewById(R.id.mangaCoverImage);
             bookmarkStar = itemView.findViewById(R.id.bookmarkStar);
             title = itemView.findViewById(R.id.mangaTitle);
-            description = itemView.findViewById(R.id.mangaDescription);
-            lastChapter = itemView.findViewById(R.id.lastChapter);
+            lastChapter = itemView.findViewById(R.id.currentChapter);
+            viewedChapter = itemView.findViewById(R.id.viewedChapter);
         }
     }
 }

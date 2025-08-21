@@ -41,56 +41,36 @@
                 android:maxLines="1"
                 android:ellipsize="end" />
 
-            <!-- Scrollable Manga Description -->
-            <androidx.core.widget.NestedScrollView
-                android:layout_width="match_parent"
-                android:layout_height="80dp"
-                android:layout_marginTop="4dp"
-                android:fillViewport="true">
-
-                <TextView
-                    android:id="@+id/mangaDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Long manga description goes here..."
-                    android:textSize="14sp"
-                    android:textColor="#666" />
-            </androidx.core.widget.NestedScrollView>
-
-            <!-- Chapters container -->
+            <!-- Viewed and Current Chapters -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:gravity="start">
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
 
                 <TextView
-                    android:id="@+id/latestChapter"
-                    android:layout_width="0dp"
+                    android:id="@+id/viewedChapter"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Latest Chapter: -"
-                    android:textSize="13sp"
-                    android:textColor="#1E88E5"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:ellipsize="end"
-                    android:maxLines="1"/>
-
-                <TextView
-                    android:id="@+id/lastChapter"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Last Read: -"
-                    android:textSize="13sp"
+                    android:text="Viewed: -"
+                    android:textSize="14sp"
                     android:textColor="#43A047"
                     android:clickable="true"
                     android:focusable="true"
                     android:ellipsize="end"
-                    android:maxLines="1"
-                    android:gravity="end" />
+                    android:maxLines="1" />
+
+                <TextView
+                    android:id="@+id/currentChapter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Current: -"
+                    android:textSize="14sp"
+                    android:textColor="#1E88E5"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
 
             </LinearLayout>
 
