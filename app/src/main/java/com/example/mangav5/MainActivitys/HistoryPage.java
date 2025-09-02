@@ -29,6 +29,11 @@ public class HistoryPage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history_page);
 
+        // Remove title bar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         historyRecyclerView = findViewById(R.id.historyRecyclerView);
         historyRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 

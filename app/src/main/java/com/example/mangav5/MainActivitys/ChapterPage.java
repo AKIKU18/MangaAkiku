@@ -62,6 +62,11 @@ public class ChapterPage extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Remove title bar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         String chapterTitle = getIntent().getStringExtra("chapterTitle");
         String mangaId = getIntent().getStringExtra("mangaId");
         String chapterId = getIntent().getStringExtra("chapterId"); // initial chapter

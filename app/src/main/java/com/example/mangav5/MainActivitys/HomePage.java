@@ -83,6 +83,11 @@ public class HomePage extends AppCompatActivity {
         AppDatabase db = AppDatabase.getInstance(this);
         this.bookmarkDao =db.bookmarkDao();
 
+        // Remove title bar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         setupSearchView();
         loadMangaList();
         loadMangaOffset();

@@ -41,6 +41,11 @@ public class BookmarksPage extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Remove title bar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         setContentView(R.layout.activity_bookmarks_page);
         bookmarkRecyclerView = findViewById(R.id.recycler_bookmarks);
         homePageButton = findViewById(R.id.btn_home);

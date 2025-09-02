@@ -61,6 +61,11 @@ public class MangaPage extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Remove title bar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
         setContentView(R.layout.activity_manga_page);
         getMangaId = getIntent().getStringExtra("mangaId");
 
