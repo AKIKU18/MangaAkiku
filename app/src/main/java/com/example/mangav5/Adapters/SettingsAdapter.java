@@ -1,10 +1,8 @@
 package com.example.mangav5.Adapters;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,108 +19,87 @@ import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.R;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Executors;
 
 public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.SettingsViewHolder> {
-    private final List<MangaItemEntity> dbManga;
+
+    private final List<MangaItemEntity> mangaList;
     private final Context context;
     private final TextView textTotalSize;
-    public SettingsAdapter(List<MangaItemEntity> dbManga, Context context, TextView textTotalSize) {
-        this.dbManga = dbManga;
+
+    public SettingsAdapter(List<MangaItemEntity> mangaList, Context context, TextView textTotalSize) {
+        this.mangaList = mangaList;
         this.context = context;
         this.textTotalSize = textTotalSize;
     }
 
     @NonNull
     @Override
-    public SettingsAdapter.SettingsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.activity_settings_item, parent, false);
-        return new SettingsAdapter.SettingsViewHolder(itemView);
+    public SettingsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_settings_item, parent, false);
+        return new SettingsViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SettingsAdapter.SettingsViewHolder holder, @SuppressLint("RecyclerView") int position) {
-        MangaItemEntity manga = dbManga.get(position);
+    public void onBindViewHolder(@NonNull SettingsViewHolder holder, int position) {
+        MangaItemEntity manga = mangaList.get(position);
         holder.text_title.setText(manga.getTitle());
-        // Load cover
+
         Glide.with(context)
                 .load(manga.getCoverUrl())
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .into(holder.image_cover);
 
-        holder.button_delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        calculateMetadataSize(holder.text_size, manga.getMangaId());
 
-                double total_size = Double.parseDouble(textTotalSize.getText().toString().replace(" MB", ""));
-                double holder_size = Double.parseDouble(holder.text_size.getText().toString().replace(" MB", ""));
-                double calculate = total_size - holder_size;
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    if(calculate <=0){
-                        textTotalSize.setText(String.format("%.3f MB", 0.0));
+        holder.button_delete.setOnClickListener(v -> {
+            // Safe parsing with comma replacement
+            double total_size = parseTextSize(textTotalSize.getText().toString());
+            double holder_size = parseTextSize(holder.text_size.getText().toString());
+            double calculate = Math.max(total_size - holder_size, 0);
 
-                    }else{
-                        textTotalSize.setText(String.format("%.3f MB", calculate));
-                    }
-                });
-                DeleteManga(manga);
-            }
+            textTotalSize.setText(String.format("%.3f MB", calculate));
+            deleteManga(manga);
         });
-        calculateMetadataSize(holder.text_size,context, manga.getMangaId());
-
     }
 
-    public static void calculateMetadataSize(TextView holder, Context context, String mangaId) {
+    private double parseTextSize(String text) {
+        try {
+            return Double.parseDouble(text.replace(" MB", "").replace(",", "."));
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    private void calculateMetadataSize(TextView holder, String mangaId) {
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(context);
-
             List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(mangaId);
-
             long totalBytes = 0;
 
             for (ChapterItemEntity chapter : chapters) {
-                // Chapter ID size (if stored as string)
-                if (chapter.getChapterId() != null)
-                    totalBytes += chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length;
-
-                // Manga ID size (int)
-                totalBytes += mangaId.getBytes(StandardCharsets.UTF_8).length;;
-
-                // Title size
-                if (chapter.getTitle() != null)
-                    totalBytes += chapter.getTitle().getBytes(StandardCharsets.UTF_8).length;
-
-                // Number size (int)
-                totalBytes += chapter.getNumber().getBytes(StandardCharsets.UTF_8).length;;
+                totalBytes += chapter.getChapterId() != null ? chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += chapter.getNumber() != null ? chapter.getNumber().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += chapter.getTitle() != null ? chapter.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
             }
 
-            double sizeKB = totalBytes / 1024.0;
-            double sizeMB = sizeKB / 1024.0;
-            // <-- POST TO MAIN THREAD
-            new Handler(Looper.getMainLooper()).post(() -> {
-                holder.setText(String.format("%.3f MB", sizeMB));
-            });
-            Log.d("ROOM_SIZE", "Manga ID " + mangaId + " metadata size: " + String.format("%.2f MB", sizeMB));
+            double sizeMB = totalBytes / 1024.0 / 1024.0;
+            new Handler(Looper.getMainLooper()).post(() -> holder.setText(String.format("%.3f MB", sizeMB)));
         });
     }
 
-
-    private void DeleteManga(MangaItemEntity manga){
-        AppDatabase db = AppDatabase.getInstance(context);
+    private void deleteManga(MangaItemEntity manga) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            // Delete from DB
-            db.mangaItemDao().deleteManga(manga);
+            AppDatabase db = AppDatabase.getInstance(context);
             db.chapterDao().deleteChaptersByMangaId(manga.getMangaId());
+            db.mangaItemDao().deleteManga(manga);
 
-            // UI updates on main thread
             new Handler(Looper.getMainLooper()).post(() -> {
-                int index = dbManga.indexOf(manga);
+                int index = mangaList.indexOf(manga);
                 if (index != -1) {
-                    dbManga.remove(index);
+                    mangaList.remove(index);
                     notifyItemRemoved(index);
                 }
             });
@@ -131,18 +108,16 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
 
     @Override
     public int getItemCount() {
-        return dbManga.size();
+        return mangaList.size();
     }
 
-    public static class SettingsViewHolder extends RecyclerView.ViewHolder{
+    static class SettingsViewHolder extends RecyclerView.ViewHolder {
         ImageView image_cover;
         ImageButton button_delete;
-        TextView text_title;
-        TextView text_size;
+        TextView text_title, text_size;
 
         public SettingsViewHolder(@NonNull View itemView) {
             super(itemView);
-
             image_cover = itemView.findViewById(R.id.image_cover);
             button_delete = itemView.findViewById(R.id.button_delete);
             text_title = itemView.findViewById(R.id.text_title);

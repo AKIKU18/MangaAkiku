@@ -1,11 +1,9 @@
 package com.example.mangav5.MainActivitys;
-import android.annotation.SuppressLint;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -15,11 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mangav5.Adapters.SettingsAdapter;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.R;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -29,12 +25,11 @@ public class SettingsPage extends AppCompatActivity {
     private RecyclerView recyclerView;
     private SettingsAdapter adapter;
     private List<MangaItemEntity> mangaList = new ArrayList<>();
-    private Button button_home;
-    private Button button_clear_all;
+    private Button button_home, button_clear_all;
     private TextView text_total_size;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings_page);
 
@@ -49,99 +44,57 @@ public class SettingsPage extends AppCompatActivity {
         button_clear_all = findViewById(R.id.button_clear_all);
 
         loadDataFromDB();
-        HomeButtonGoTo();
-        DeleteAllManga();
-
+        setupHomeButton();
+        setupDeleteAllButton();
     }
 
-    private void CalculateTotalSize() {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(this);
+    private void setupHomeButton() {
+        button_home.setOnClickListener(v -> {
+            startActivity(new Intent(SettingsPage.this, HomePage.class));
+        });
+    }
 
-            long totalBytes = 0;
-
-            for (MangaItemEntity manga : mangaList) {
-                String mangaId = manga.getMangaId();
-                List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(mangaId);
-
-
-                for (ChapterItemEntity chapter : chapters) {
-                    // Chapter ID size (if stored as string)
-                    if (chapter.getChapterId() != null)
-                        totalBytes += chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length;
-
-                    // Manga ID size (int)
-                    totalBytes += mangaId.getBytes(StandardCharsets.UTF_8).length;;
-
-                    // Title size
-                    if (chapter.getTitle() != null)
-                        totalBytes += chapter.getTitle().getBytes(StandardCharsets.UTF_8).length;
-
-                    // Number size (int)
-                    totalBytes += chapter.getNumber().getBytes(StandardCharsets.UTF_8).length;;
-
-                }
-
-
-            }
-
-            double sizeMB = totalBytes / 1024.0 / 1024.0;
-            // <-- POST TO MAIN THREAD
+    private void setupDeleteAllButton() {
+        button_clear_all.setOnClickListener(v -> Executors.newSingleThreadExecutor().execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(SettingsPage.this);
+            db.mangaItemDao().deleteAllManga();
+            db.chapterDao().deleteChapters();
+            mangaList.clear();
             new Handler(Looper.getMainLooper()).post(() -> {
-                text_total_size.setText(String.format("%.3f MB", sizeMB));
+                adapter.notifyDataSetChanged();
+                text_total_size.setText("0.000 MB");
             });
-            Log.d("TOTAL_SIZE", "Total metadata size: " + sizeMB + " MB");
-
-        });
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    private void DeleteAllManga(){
-        button_clear_all.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AppDatabase db = AppDatabase.getInstance(SettingsPage.this);
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    db.mangaItemDao().deleteAllManga();
-                    db.chapterDao().deleteChapters();
-                    mangaList.clear();
-                    runOnUiThread(() -> {
-                        mangaList.clear();
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            text_total_size.setText(String.format("%.2f MB", 0.0));
-                        });
-                        adapter.notifyDataSetChanged();
-                    });
-
-
-                });
-            };
-        });
-    }
-
-    private void HomeButtonGoTo(){
-        button_home.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(SettingsPage.this, HomePage.class);
-                startActivity(intent);
-            }
-        });
+        }));
     }
 
     private void loadDataFromDB() {
-        AppDatabase db = AppDatabase.getInstance(this);
-
         Executors.newSingleThreadExecutor().execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(this);
             List<MangaItemEntity> data = db.mangaItemDao().getAllManga();
 
-            // Switch to main thread for UI updates
-            runOnUiThread(() -> {
+            new Handler(Looper.getMainLooper()).post(() -> {
                 mangaList.clear();
                 mangaList.addAll(data);
-                CalculateTotalSize();
                 adapter.notifyDataSetChanged();
+                calculateTotalSize();
             });
+        });
+    }
+
+    private void calculateTotalSize() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(this);
+            long totalBytes = mangaList.stream().flatMap(manga -> db.chapterDao().getChaptersByMangaId(manga.getMangaId()).stream())
+                    .mapToLong(chapter -> {
+                        long size = 0;
+                        size += chapter.getChapterId() != null ? chapter.getChapterId().getBytes().length : 0;
+                        size += chapter.getNumber() != null ? chapter.getNumber().getBytes().length : 0;
+                        size += chapter.getTitle() != null ? chapter.getTitle().getBytes().length : 0;
+                        return size;
+                    }).sum();
+
+            double sizeMB = totalBytes / 1024.0 / 1024.0;
+            new Handler(Looper.getMainLooper()).post(() -> text_total_size.setText(String.format("%.3f MB", sizeMB)));
         });
     }
 }

@@ -20,31 +20,25 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Entity.ChapterItemEntity;
-import com.example.mangav5.Entity.MangaItemEntity;
-import com.example.mangav5.MainActivitys.ChapterPage;
-import com.example.mangav5.MainActivitys.HomePage;
-import com.example.mangav5.MainActivitys.MangaPage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.Services.BookmarkService;
 import com.example.mangav5.Services.ChaptersService;
+import com.example.mangav5.MainActivitys.ChapterPage;
+import com.example.mangav5.MainActivitys.MangaPage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaViewHolder>{
+public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaViewHolder> {
 
     private final List<MangaItemModel> mangaList;
     private final Context context;
-    private BookmarkDao bookmarkDao;
-    private String chapterId;
-    private ActivityResultLauncher<Intent> mangaPageLauncher;
-
-
+    private final BookmarkDao bookmarkDao;
+    private final ActivityResultLauncher<Intent> mangaPageLauncher;
 
     public HomePageAdapter(List<MangaItemModel> mangaList, Context context, ActivityResultLauncher<Intent> launcher) {
         this.mangaList = mangaList;
@@ -65,27 +59,11 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     @Override
     public void onBindViewHolder(@NonNull MangaViewHolder holder, @SuppressLint("RecyclerView") int position) {
         MangaItemModel manga = mangaList.get(position);
+
         holder.title.setText(manga.getTitle());
         holder.description.setText(manga.getDescription());
-        // Load cover image using Picasso or Glide
-        // Load manga cover image with Glide
-        ChaptersService.fetchAllChapters(manga.getMangaId(),"desc",0,1, new ChaptersService.ChapterListCallback() {
-            @Override
-            public void onSuccess(List<ChapterModel> chapters) {
-                if (chapters != null && !chapters.isEmpty()) {
-                    holder.lastChapter.setText("Last Chapter: " + chapters.get(0).getTitle());
-                    chapterId = chapters.get(0).getChapterId();
-                } else {
-                    holder.lastChapter.setText("No chapters");
-                    chapterId = null;
-                }
-            }
 
-            @Override
-            public void onError(String message) {
-
-            }
-        });
+        // Load cover image
         String coverUrl = manga.getCoverImageUrl();
         if (coverUrl != null && !coverUrl.isEmpty()) {
             Glide.with(context)
@@ -96,124 +74,96 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
+
+        // Bookmark star
         holder.bookmarkStar.setImageResource(manga.getIsBookmarked() ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
-        //Toggle bookmark star icon and delete or insert bookmark in database
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, manga, bookmarkDao);
 
-        holder.lastChapter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                GoToChapterPage(manga);
-                updateLoadChapterList(0,manga.getMangaId());
-            }
-        });
-
-
-        holder.title.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                GoToMangaItem(manga);
-            }
-        });
-
-    }
-
-    private void updateLoadChapterList(int offset,String mangaId) {
-        int LIMIT = 100;
-        AppDatabase db = AppDatabase.getInstance(context);
-
-        ChaptersService.fetchAllChapters(mangaId, "desc", offset, LIMIT, new ChaptersService.ChapterListCallback() {
-            @Override
-            public void onSuccess(List<ChapterModel> fetchedChapters) {
-                if (fetchedChapters.isEmpty()) return; // stop recursion
-
-                // Save/update in Room
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    List<ChapterItemEntity> entities = new ArrayList<>();
-                    for (ChapterModel c : fetchedChapters) {
-                        entities.add(new ChapterItemEntity(
-                                c.getChapterId(), // primary key
-                                mangaId,
-                                c.getTitle(),
-                                c.getNumber()
-                        ));
-                    }
-                    db.chapterDao().insertChapters(entities);
-                });
-
-
-                // Load next batch recursively
-                // Fetch next batch only if we got full LIMIT
-                if (fetchedChapters.size() == LIMIT) {
-                    updateLoadChapterList(offset + LIMIT,mangaId);
-                }
-            }
-
-            @Override
-            public void onError(String message) {
-                Log.e("ChapterService", "Error: " + message);
-            }
-        });
-    }
-
-    public void GoToChapterPage(MangaItemModel manga){
-        AppDatabase db = AppDatabase.getInstance(context);
-
-        Executors.newSingleThreadExecutor().execute(() -> {
-            MangaItemEntity mangaEntity = new MangaItemEntity(
-                    manga.getMangaId(),
-                    manga.getTitle(),
-                    manga.getCoverImageUrl(),
-                    manga.getDescription()
-            );
-            db.mangaItemDao().insertManga(mangaEntity);
-        });
+        // Load last chapter safely
         ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
-                if (chapters != null && !chapters.isEmpty()) {
-                    String lastChapterId = chapters.get(0).getChapterId();
-                    Intent intent = new Intent(context, ChapterPage.class);
-                    intent.putExtra("chapterId", lastChapterId);
-                    intent.putExtra("chapterTitle", chapters.get(0).getTitle());
-                    intent.putExtra("mangaId", manga.getMangaId());
-                    context.startActivity(intent);
-                } else {
-                    // Maybe show a toast
-                    Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
-                }
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (chapters != null && !chapters.isEmpty()) {
+                        holder.lastChapter.setText("Last Chapter: " + chapters.get(0).getTitle());
+                    } else {
+                        holder.lastChapter.setText("No chapters");
+                    }
+                });
             }
 
             @Override
             public void onError(String message) {
-                // Optional: show a toast or log
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    holder.lastChapter.setText("Error loading chapters");
+                });
+            }
+        });
+
+        holder.lastChapter.setOnClickListener(v -> goToChapterPage(manga));
+
+        holder.title.setOnClickListener(v -> goToMangaPage(manga));
+    }
+
+    private void goToChapterPage(MangaItemModel manga) {
+        AppDatabase db = AppDatabase.getInstance(context);
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            // Save manga in Room
+            db.mangaItemDao().insertManga(
+                    new com.example.mangav5.Entity.MangaItemEntity(
+                            manga.getMangaId(),
+                            manga.getTitle(),
+                            manga.getCoverImageUrl(),
+                            manga.getDescription()
+                    )
+            );
+        });
+
+        // Fetch latest chapter
+        ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> chapters) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (chapters != null && !chapters.isEmpty()) {
+                        ChapterModel lastChapter = chapters.get(0);
+                        Intent intent = new Intent(context, ChapterPage.class);
+                        intent.putExtra("chapterId", lastChapter.getChapterId());
+                        intent.putExtra("chapterTitle", lastChapter.getTitle());
+                        intent.putExtra("mangaId", manga.getMangaId());
+                        context.startActivity(intent);
+                    } else {
+                        Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    Toast.makeText(context, "Error fetching chapters", Toast.LENGTH_SHORT).show();
+                });
             }
         });
     }
 
-    public void GoToMangaItem(MangaItemModel manga){
+    private void goToMangaPage(MangaItemModel manga) {
         Intent intent = new Intent(context, MangaPage.class);
         intent.putExtra("mangaId", manga.getMangaId());
         mangaPageLauncher.launch(intent);
     }
 
-
-
     public void refreshBookmarkStates() {
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(context);
             BookmarkDao dao = db.bookmarkDao();
-
             for (MangaItemModel manga : mangaList) {
                 boolean isBookmarked = dao.isBookmarked(manga.getMangaId());
                 manga.setIsBookmarked(isBookmarked);
             }
-
             new Handler(Looper.getMainLooper()).post(this::notifyDataSetChanged);
         });
     }
-
-
 
     @Override
     public int getItemCount() {
@@ -223,8 +173,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     public static class MangaViewHolder extends RecyclerView.ViewHolder {
         ImageView cover;
         ImageView bookmarkStar;
-        TextView title, description,lastChapter;
-
+        TextView title, description, lastChapter;
 
         public MangaViewHolder(@NonNull View itemView) {
             super(itemView);
