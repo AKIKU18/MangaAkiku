@@ -31,4 +31,16 @@ public interface MangaItemDao {
 
     @Query("SELECT * FROM mangaItem WHERE mangaId = :id")
     MangaItemEntity getMangaById(String id);
+
+    //Delete on manga
+    @Delete
+    void deleteManga(MangaItemEntity manga);
+
+    //Delete all manga
+    @Query("DELETE FROM mangaItem")
+    void deleteAllManga();
+
+    //Get all manga
+    @Query("SELECT * FROM mangaItem")
+    List<MangaItemEntity> getAllManga();
 }

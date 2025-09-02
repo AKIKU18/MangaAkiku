@@ -32,4 +32,13 @@ public interface ChapterDao {
 
     @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId AND CAST(number AS REAL) < (SELECT CAST(number AS REAL) FROM chapterItem WHERE chapterId = :chapterId) ORDER BY CAST(number AS REAL) DESC LIMIT 1")
     ChapterItemEntity getPrevChapter(String mangaId, String chapterId);
+
+    //Delete all chapters of a manga
+    @Query("DELETE FROM chapterItem WHERE mangaId = :mangaId")
+    void deleteChaptersByMangaId(String mangaId);
+    @Query("DELETE FROM chapterItem")
+    void deleteChapters();
+
+
+
 }

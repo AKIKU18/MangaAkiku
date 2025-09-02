@@ -56,6 +56,7 @@ public class MangaPage extends AppCompatActivity {
     private List<BookmarkEntity> bookmarkList = new ArrayList<>();
     private boolean bookmarkChanged = false;
     ImageButton scrollToBottomButton;
+    Button button_homeMangaPage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +79,7 @@ public class MangaPage extends AppCompatActivity {
         firstChapterButtonPage = findViewById(R.id.firstChapterButtonPage);
         lastChapterButtonPage = findViewById(R.id.lastChapterButtonPage);
         scrollToBottomButton = findViewById(R.id.scrollToBottomButtonPage);
-
+        button_homeMangaPage = findViewById(R.id.button_homeMangaPage);
 
         loadMangaItem();
         //loadChapterList(0);
@@ -87,7 +88,7 @@ public class MangaPage extends AppCompatActivity {
         OnClickToggleMangaPage(bookmarkStar,mangaItem,bookmarkDao);
         CheckIfStillBookmarked();
         ScrollButton();
-
+        HomePageGoTo();
     }
 
     private void ScrollButton(){
@@ -333,6 +334,16 @@ public class MangaPage extends AppCompatActivity {
                 setResult(RESULT_OK, resultIntent);
                 finish();
             }
+        });
+    }
+
+    private void HomePageGoTo(){
+
+        button_homeMangaPage.setOnClickListener(v -> {
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("bookmarkChanged", bookmarkChanged);
+            setResult(RESULT_OK, resultIntent);
+            finish();
         });
     }
 }

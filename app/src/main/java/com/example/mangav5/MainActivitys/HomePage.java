@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,6 +43,7 @@ public class HomePage extends AppCompatActivity {
     private SearchView searchView;
     private Button bookmarkPageButton;
     private Button historyPageButton;
+    private ImageButton settingsPageButton;
     private List<MangaItemModel> mangaList = new ArrayList<>();
     private List<MangaItemModel> searchMangaList = new ArrayList<>();
     private boolean isSearchListAnimated = false;
@@ -65,6 +67,7 @@ public class HomePage extends AppCompatActivity {
         searchView = findViewById(R.id.search_bar);
         bookmarkPageButton = findViewById(R.id.button_bookmarks);
         historyPageButton = findViewById(R.id.button_history);
+        settingsPageButton = findViewById(R.id.button_settings);
         CheckIfStillBookmarked();
 
 
@@ -85,7 +88,7 @@ public class HomePage extends AppCompatActivity {
         loadMangaOffset();
         BookmarkButtonGoTo();
         HistoryButtonGoTo();
-
+        SettingsButtonGoTo();
 
     }
 
@@ -123,6 +126,16 @@ public class HomePage extends AppCompatActivity {
                 }
         );
 
+    }
+
+    private void SettingsButtonGoTo(){
+        settingsPageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HomePage.this, SettingsPage.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void BookmarkButtonGoTo(){
