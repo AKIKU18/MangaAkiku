@@ -14,9 +14,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.mangav5.Adapters.SettingsAdapter;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.R;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -68,7 +70,7 @@ public class SettingsPage extends AppCompatActivity {
             mangaList.clear();
             new Handler(Looper.getMainLooper()).post(() -> {
                 adapter.notifyDataSetChanged();
-                text_total_size.setText("0.000 MB");
+                text_total_size.setText("0.000 KB");
             });
         }));
     }
@@ -90,17 +92,38 @@ public class SettingsPage extends AppCompatActivity {
     private void calculateTotalSize() {
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(this);
-            long totalBytes = mangaList.stream().flatMap(manga -> db.chapterDao().getChaptersByMangaId(manga.getMangaId()).stream())
-                    .mapToLong(chapter -> {
-                        long size = 0;
-                        size += chapter.getChapterId() != null ? chapter.getChapterId().getBytes().length : 0;
-                        size += chapter.getNumber() != null ? chapter.getNumber().getBytes().length : 0;
-                        size += chapter.getTitle() != null ? chapter.getTitle().getBytes().length : 0;
-                        return size;
-                    }).sum();
+            double totalBytes = 0;
 
-            double sizeMB = totalBytes / 1024.0 / 1024.0;
-            new Handler(Looper.getMainLooper()).post(() -> text_total_size.setText(String.format("%.3f MB", sizeMB)));
+            for (MangaItemEntity manga : mangaList) {
+                // Manga info
+                totalBytes += manga.getCoverUrl() != null ? manga.getCoverUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += manga.getTitle() != null ? manga.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += manga.getMangaId() != null ? manga.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += manga.getDescription() != null ? manga.getDescription().getBytes(StandardCharsets.UTF_8).length : 0;
+
+                // Chapters
+                List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(manga.getMangaId());
+                for (ChapterItemEntity chapter : chapters) {
+                    totalBytes += chapter.getChapterId() != null ? chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += chapter.getNumber() != null ? chapter.getNumber().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += chapter.getTitle() != null ? chapter.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                }
+            }
+
+            String sizeText = formatSizeFromBytes(totalBytes);
+
+            new Handler(Looper.getMainLooper()).post(() -> text_total_size.setText(sizeText));
         });
+    }
+
+    private String formatSizeFromBytes(double bytes) {
+        double kb = bytes / 1024.0;
+        double mb = kb / 1024.0;
+        double gb = mb / 1024.0;
+
+        if (gb >= 1) return String.format("%.2f GB", gb);
+        else if (mb >= 1) return String.format("%.2f MB", mb);
+        else if (kb >= 1) return String.format("%.2f KB", kb);
+        else return String.format("%.2f B", bytes);
     }
 }

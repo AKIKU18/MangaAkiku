@@ -58,44 +58,75 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
         calculateMetadataSize(holder.text_size, manga.getMangaId());
 
         holder.button_delete.setOnClickListener(v -> {
-            // Safe parsing with comma replacement
-            double total_size = parseTextSize(textTotalSize.getText().toString());
-            double holder_size = parseTextSize(holder.text_size.getText().toString());
-            double calculate = Math.max(total_size - holder_size, 0);
+            double totalSizeBytes = parseSizeToBytes(textTotalSize.getText().toString());
+            double itemSizeBytes = parseSizeToBytes(holder.text_size.getText().toString());
+            double newTotal = Math.max(totalSizeBytes - itemSizeBytes, 0);
 
-            textTotalSize.setText(String.format("%.3f MB", calculate));
+            textTotalSize.setText(formatSizeFromBytes(newTotal));
             deleteManga(manga);
         });
-    }
-
-    private double parseTextSize(String text) {
-        try {
-            return Double.parseDouble(text.replace(" MB", "").replace(",", "."));
-        } catch (NumberFormatException e) {
-            return 0.0;
-        }
     }
 
     private void calculateMetadataSize(TextView holder, String mangaId) {
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(context);
+            MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
             List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(mangaId);
-            MangaItemEntity manga= db.mangaItemDao().getMangaById(mangaId);
+
             long totalBytes = 0;
+
+            // Manga info
             totalBytes += manga.getCoverUrl() != null ? manga.getCoverUrl().getBytes(StandardCharsets.UTF_8).length : 0;
             totalBytes += manga.getTitle() != null ? manga.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
             totalBytes += manga.getMangaId() != null ? manga.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
             totalBytes += manga.getDescription() != null ? manga.getDescription().getBytes(StandardCharsets.UTF_8).length : 0;
 
+            // Chapters
             for (ChapterItemEntity chapter : chapters) {
                 totalBytes += chapter.getChapterId() != null ? chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += chapter.getNumber() != null ? chapter.getNumber().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += chapter.getTitle() != null ? chapter.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
             }
 
-            double sizeMB = totalBytes / 1024.0 / 1024.0;
-            new Handler(Looper.getMainLooper()).post(() -> holder.setText(String.format("%.3f MB", sizeMB)));
+            String sizeText = formatSizeFromBytes(totalBytes);
+
+            new Handler(Looper.getMainLooper()).post(() -> holder.setText(sizeText));
         });
+    }
+
+    // Parsează un text ca "3.02 MB" sau "512 KB" în bytes
+    private double parseSizeToBytes(String text) {
+        text = text.trim().toUpperCase().replace(",", ".");
+        double value = 0.0;
+
+        try {
+            if (text.endsWith("GB")) {
+                value = Double.parseDouble(text.replace("GB", "").trim()) * 1024 * 1024 * 1024;
+            } else if (text.endsWith("MB")) {
+                value = Double.parseDouble(text.replace("MB", "").trim()) * 1024 * 1024;
+            } else if (text.endsWith("KB")) {
+                value = Double.parseDouble(text.replace("KB", "").trim()) * 1024;
+            } else if (text.endsWith("B")) {
+                value = Double.parseDouble(text.replace("B", "").trim());
+            } else {
+                value = Double.parseDouble(text.trim());
+            }
+        } catch (NumberFormatException e) {
+            value = 0.0;
+        }
+
+        return value;
+    }
+
+    private String formatSizeFromBytes(double bytes) {
+        double kb = bytes / 1024.0;
+        double mb = kb / 1024.0;
+        double gb = mb / 1024.0;
+
+        if (gb >= 1) return String.format("%.2f GB", gb);
+        else if (mb >= 1) return String.format("%.2f MB", mb);
+        else if (kb >= 1) return String.format("%.2f KB", kb);
+        else return String.format("%.2f B", bytes);
     }
 
     private void deleteManga(MangaItemEntity manga) {
