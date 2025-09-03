@@ -75,6 +75,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                     .placeholder(android.R.drawable.ic_dialog_info)
                     .error(android.R.drawable.ic_dialog_alert)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .dontTransform()
                     .into(holder.cover);
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);

@@ -52,6 +52,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
                 .load(manga.getCoverUrl())
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .dontTransform()
                 .into(holder.image_cover);
 
         calculateMetadataSize(holder.text_size, manga.getMangaId());

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,7 @@ public class ChapterPage extends AppCompatActivity {
     private Button btnPrevious;
     private Button btnHome;
     private Button btnNext;
+    private ImageButton btnRefresh;
     private TextView tvMangaTitle;
     ChapterPageAdapter chapterPageAdapter;
     private List<String> chapters = new ArrayList<>();
@@ -85,7 +87,7 @@ public class ChapterPage extends AppCompatActivity {
         btnNext = findViewById(R.id.btnNext);
         tvMangaTitle = findViewById(R.id.mangaTitle);
         btnHome = findViewById(R.id.btnHome);
-
+        btnRefresh = findViewById(R.id.btnRefresh);
 
 
         tvChapterNumber.setText(chapterTitle);
@@ -95,6 +97,14 @@ public class ChapterPage extends AppCompatActivity {
         InsertChapterIntoHistory();
         SetMangaTitle();
         GoToHomePage();
+        ChapterRefresh();
+    }
+
+    private void ChapterRefresh(){
+        btnRefresh.setOnClickListener(v -> {
+            GetChapterPages(getCurrentChapterId());
+            Toast.makeText(ChapterPage.this, "Refreshed", Toast.LENGTH_SHORT).show();
+        });
     }
 
 

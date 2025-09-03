@@ -233,6 +233,7 @@ public class MangaPage extends AppCompatActivity {
                                 .load(mangaItem.getCoverImageUrl())
                                 .placeholder(android.R.drawable.ic_dialog_info)
                                 .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                .dontTransform()
                                 .error(android.R.drawable.ic_dialog_alert)
                                 .into(cover);
                     } else {

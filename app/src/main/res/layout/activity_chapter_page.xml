@@ -22,7 +22,7 @@
     <!-- Chapter title / number -->
     <TextView
         android:id="@+id/chapterNumber"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Chapter 1"
         android:textSize="18sp"
@@ -31,6 +31,20 @@
         android:padding="6dp"
         app:layout_constraintTop_toBottomOf="@id/mangaTitle"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Refresh button -->
+    <ImageButton
+        android:id="@+id/btnRefresh"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@android:color/transparent"
+        android:padding="4dp"
+        android:scaleType="centerInside"
+        android:contentDescription="Refresh"
+        android:src="@android:drawable/ic_menu_rotate"
+        app:layout_constraintTop_toTopOf="@id/chapterNumber"
+        app:layout_constraintBottom_toBottomOf="@id/chapterNumber"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Manga pages list -->

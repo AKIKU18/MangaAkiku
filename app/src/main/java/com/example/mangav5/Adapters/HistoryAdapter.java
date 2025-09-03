@@ -71,6 +71,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
                     .placeholder(android.R.drawable.ic_menu_gallery)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .error(android.R.drawable.ic_dialog_alert)
+                    .dontTransform()
                     .into(holder.coverImageView);
         } else {
             holder.coverImageView.setImageResource(android.R.drawable.picture_frame);
