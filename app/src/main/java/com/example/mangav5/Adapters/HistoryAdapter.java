@@ -69,7 +69,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             Glide.with(context)
                     .load(item.getCoverUrl())
                     .placeholder(android.R.drawable.ic_menu_gallery)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .error(android.R.drawable.ic_dialog_alert)
                     .into(holder.coverImageView);
         } else {

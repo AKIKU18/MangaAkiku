@@ -47,7 +47,7 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
         Glide.with(context)
                 .load(imageUrl)
                 .placeholder(android.R.drawable.ic_menu_gallery)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .error(android.R.drawable.ic_dialog_alert)
                 .into(holder.imageContainer);
 

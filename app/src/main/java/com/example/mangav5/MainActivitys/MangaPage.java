@@ -232,7 +232,7 @@ public class MangaPage extends AppCompatActivity {
                         Glide.with(MangaPage.this)
                                 .load(mangaItem.getCoverImageUrl())
                                 .placeholder(android.R.drawable.ic_dialog_info)
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .diskCacheStrategy(DiskCacheStrategy.NONE)
                                 .error(android.R.drawable.ic_dialog_alert)
                                 .into(cover);
                     } else {

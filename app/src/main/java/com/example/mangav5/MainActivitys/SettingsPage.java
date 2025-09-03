@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.mangav5.Adapters.SettingsAdapter;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.MangaItemEntity;
