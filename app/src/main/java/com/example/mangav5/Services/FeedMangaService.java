@@ -59,7 +59,7 @@ public class FeedMangaService {
                     String id = data.getString("id");
                     JSONObject attr = data.getJSONObject("attributes");
 
-                    String title = getLocalizedString(attr, "title", "No Title");
+                    String title = getMangaTitle(attr, "No Title");
                     String description = getLocalizedString(attr, "description", "No Description");
                     String coverUrl = null;
 
@@ -125,7 +125,7 @@ public class FeedMangaService {
                         String id = obj.getString("id");
                         JSONObject attr = obj.getJSONObject("attributes");
 
-                        String title = getLocalizedString(attr, "title", "No Title");
+                        String title = getMangaTitle(attr, "No Title");
                         String description = getLocalizedString(attr, "description", "No Description");
                         String coverUrl = null;
                         JSONArray rels = obj.optJSONArray("relationships");
@@ -155,6 +155,39 @@ public class FeedMangaService {
             }
         });
     }
+
+    private static String getMangaTitle(JSONObject attr, String defaultValue) {
+        try {
+            // 1. Titlul principal în engleză
+            JSONObject titleObj = attr.optJSONObject("title");
+            if (titleObj != null) {
+                if (titleObj.has("en")) {
+                    return titleObj.optString("en", defaultValue);
+                } else if (titleObj.has("ja-ro")) {
+                    return titleObj.optString("ja-ro", defaultValue);
+                }
+            }
+
+            // 2. Alternative titles
+            JSONArray altTitles = attr.optJSONArray("altTitles");
+            if (altTitles != null) {
+                for (int i = 0; i < altTitles.length(); i++) {
+                    JSONObject alt = altTitles.optJSONObject(i);
+                    if (alt != null) {
+                        if (alt.has("en")) {
+                            return alt.optString("en", defaultValue);
+                        } else if (alt.has("ja-ro")) {
+                            return alt.optString("ja-ro", defaultValue);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // 3. Fallback
+        return defaultValue;
+    }
+
 
     private static String getLocalizedString(JSONObject jsonObject, String key, String defaultValue) {
         try {
