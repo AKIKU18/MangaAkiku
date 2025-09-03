@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.R;
@@ -68,6 +69,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             Glide.with(context)
                     .load(item.getCoverUrl())
                     .placeholder(android.R.drawable.ic_menu_gallery)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .error(android.R.drawable.ic_dialog_alert)
                     .into(holder.coverImageView);
         } else {

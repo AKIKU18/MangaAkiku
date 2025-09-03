@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Adapters.BookmarksAdapter;
 import com.example.mangav5.Adapters.MangaPageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
@@ -231,6 +232,7 @@ public class MangaPage extends AppCompatActivity {
                         Glide.with(MangaPage.this)
                                 .load(mangaItem.getCoverImageUrl())
                                 .placeholder(android.R.drawable.ic_dialog_info)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .error(android.R.drawable.ic_dialog_alert)
                                 .into(cover);
                     } else {

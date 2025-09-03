@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.ChapterItemEntity;
@@ -70,6 +71,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                     .load(coverUrl)
                     .placeholder(android.R.drawable.ic_dialog_info)
                     .error(android.R.drawable.ic_dialog_alert)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(holder.cover);
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);

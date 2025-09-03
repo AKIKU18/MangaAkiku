@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
@@ -50,6 +51,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
         Glide.with(context)
                 .load(manga.getCoverUrl())
                 .placeholder(R.drawable.ic_launcher_foreground)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(holder.image_cover);
 
         calculateMetadataSize(holder.text_size, manga.getMangaId());
@@ -77,7 +79,12 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(context);
             List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(mangaId);
+            MangaItemEntity manga= db.mangaItemDao().getMangaById(mangaId);
             long totalBytes = 0;
+            totalBytes += manga.getCoverUrl() != null ? manga.getCoverUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+            totalBytes += manga.getTitle() != null ? manga.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+            totalBytes += manga.getMangaId() != null ? manga.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
+            totalBytes += manga.getDescription() != null ? manga.getDescription().getBytes(StandardCharsets.UTF_8).length : 0;
 
             for (ChapterItemEntity chapter : chapters) {
                 totalBytes += chapter.getChapterId() != null ? chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
