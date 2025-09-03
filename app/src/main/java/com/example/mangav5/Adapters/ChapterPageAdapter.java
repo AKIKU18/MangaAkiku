@@ -14,9 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.example.mangav5.MainActivitys.MangaPage;
-import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.github.chrisbanes.photoview.PhotoView;
 
 import java.util.List;
 
@@ -47,11 +46,9 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
         Glide.with(context)
                 .load(imageUrl)
                 .placeholder(android.R.drawable.ic_menu_gallery)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .error(android.R.drawable.ic_dialog_alert)
                 .into(holder.imageContainer);
-
-
     }
 
 
@@ -62,7 +59,7 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     }
 
     public static class ChapterPageViewer extends RecyclerView.ViewHolder {
-       ImageView imageContainer;
+       PhotoView imageContainer;
        TextView tvChapterNumber;
        TextView tvMangaTitle;
 

@@ -77,14 +77,27 @@ public class ChaptersService {
 
                         String title = attr.isNull("title") ? "" : attr.optString("title", "").trim();
                         String chapterNumber = attr.isNull("chapter") ? "" : attr.optString("chapter", "").trim();
-
+                        String externalUrl = attr.isNull("externalUrl") ? "" : attr.optString("externalUrl", "").trim();
                         //Display Chapter Title and ChapterNumber
-                        String displayTitle;
-                        if (title.isEmpty()) {
-                            displayTitle = "Chapter" + (chapterNumber.isEmpty() ? "" : ": " + chapterNumber);
-                        } else {
-                            displayTitle = title + (chapterNumber.isEmpty() ? "" : ": " + chapterNumber);
+                        String displayTitle = "";
+
+                        if(!externalUrl.isEmpty()){
+                            String url = externalUrl;
+                            String siteName = url.replaceAll("https?://(www\\.)?", "")  // remove http/https and www.
+                                    .split("\\.")[0];                      // take first part
+                            siteName = siteName.substring(0,1).toUpperCase() + siteName.substring(1); // capitalize
+                            displayTitle += chapterNumber + " - External Site: " + siteName;
+                        }else{
+                            if (title.isEmpty()) {
+                                displayTitle = "Chapter" + (chapterNumber.isEmpty() ? "" : ": " + chapterNumber);
+                            }else{
+                                displayTitle = title + (chapterNumber.isEmpty() ? "" : ": " + chapterNumber);
+                            }
                         }
+
+
+
+
 
                         allChapters.add(new ChapterModel(id, displayTitle, chapterNumber));
                     }

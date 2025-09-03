@@ -60,4 +60,6 @@ dependencies {
     implementation("androidx.room:room-ktx:2.5.2")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
+
 }
