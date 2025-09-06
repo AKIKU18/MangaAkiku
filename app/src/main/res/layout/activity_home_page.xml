@@ -9,7 +9,22 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivitys.HomePage">
 
+
+    <!-- App Logo -->
+
     <!-- App name -->
+
+    <ImageView
+        android:id="@+id/app_logo"
+        android:layout_width="48dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="8dp"
+        android:src="@mipmap/ic_launcher"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.264"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/app_title"
         android:layout_width="wrap_content"
@@ -39,19 +54,20 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="12dp"/>
 
+    <!-- Main list -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/search_bar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:queryHint="Search manga"
-        app:layout_constraintTop_toBottomOf="@id/app_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/app_title" />
 
-    <!-- Main list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_main"
         android:layout_width="0dp"
