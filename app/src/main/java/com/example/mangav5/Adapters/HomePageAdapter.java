@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
@@ -69,10 +70,12 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         if (coverUrl != null && !coverUrl.isEmpty()) {
             Glide.with(context)
                     .load(coverUrl)
-                    .placeholder(android.R.drawable.ic_dialog_info)
-                    .error(android.R.drawable.ic_dialog_alert)
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .dontTransform()
+                    .placeholder(R.drawable.error_placeholder)
+                    .error(R.drawable.error_placeholder)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .skipMemoryCache(false)
+                    .dontAnimate()
+                    .format(DecodeFormat.PREFER_RGB_565) // or PREFER_ARGB_8888
                     .into(holder.cover);
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);
@@ -160,13 +163,31 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(context);
             BookmarkDao dao = db.bookmarkDao();
-            for (MangaItemModel manga : mangaList) {
+
+            // make a safe copy of the current list
+            List<MangaItemModel> snapshot;
+            synchronized (mangaList) {
+                snapshot = new ArrayList<>(mangaList);
+            }
+
+            // update the copy
+            for (MangaItemModel manga : snapshot) {
                 boolean isBookmarked = dao.isBookmarked(manga.getMangaId());
                 manga.setIsBookmarked(isBookmarked);
             }
-            new Handler(Looper.getMainLooper()).post(this::notifyDataSetChanged);
+
+            // push updates back to main thread
+            new Handler(Looper.getMainLooper()).post(() -> {
+                synchronized (mangaList) {
+                    for (int i = 0; i < mangaList.size(); i++) {
+                        mangaList.get(i).setIsBookmarked(snapshot.get(i).getIsBookmarked());
+                    }
+                }
+                notifyDataSetChanged();
+            });
         });
     }
+
 
     @Override
     public int getItemCount() {

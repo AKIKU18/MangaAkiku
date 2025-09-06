@@ -109,6 +109,7 @@ public class HomePage extends AppCompatActivity {
                         }
                         // Always refresh bookmarks to reflect current DB
                         homeListAdapter.refreshBookmarkStates();
+                        searchResultAdapter.refreshBookmarkStates();
                         if (bookmarkChanged) {
                             Log.e("HomePage", "Bookmark changed detected!");
                         }
@@ -206,6 +207,7 @@ public class HomePage extends AppCompatActivity {
                     runOnUiThread(() -> {
                         searchMangaList.clear();
                         searchMangaList.addAll(results);
+                        searchResultAdapter.refreshBookmarkStates();
                         searchResultAdapter.notifyDataSetChanged();
                     });
                 }
