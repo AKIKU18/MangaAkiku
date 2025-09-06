@@ -163,6 +163,8 @@ public class FeedMangaService {
             if (titleObj != null) {
                 if (titleObj.has("en")) {
                     return titleObj.optString("en", defaultValue);
+                }else if (titleObj.has("ja")) {
+                    return titleObj.optString("ja", defaultValue);
                 } else if (titleObj.has("ja-ro")) {
                     return titleObj.optString("ja-ro", defaultValue);
                 }
