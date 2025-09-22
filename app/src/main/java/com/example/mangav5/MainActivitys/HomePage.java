@@ -134,6 +134,8 @@ public class HomePage extends AppCompatActivity {
 
     }
 
+
+
     private void SettingsButtonGoTo(){
         settingsPageButton.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,6 +19,7 @@ import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.Services.ChaptersService;
@@ -98,7 +100,29 @@ public class ChapterPage extends AppCompatActivity {
         SetMangaTitle();
         GoToHomePage();
         ChapterRefresh();
+        updateLoadChapterList(0);
+        setupRecyclerScroll();
     }
+
+    private void setupRecyclerScroll() {
+        ImageButton btnToggleUI = findViewById(R.id.btnToggleUI);
+        ConstraintLayout upper = findViewById(R.id.upperPartLayout);
+        ConstraintLayout lower = findViewById(R.id.lowerPartLayout);
+
+        btnToggleUI.setOnClickListener(v -> {
+            if (upper.getVisibility() == View.VISIBLE) {
+                upper.setVisibility(View.GONE);
+                lower.setVisibility(View.GONE);
+                btnToggleUI.setImageResource(R.drawable.ic_visibility_off); // 👁️ hide
+            } else {
+                upper.setVisibility(View.VISIBLE);
+                lower.setVisibility(View.VISIBLE);
+                btnToggleUI.setImageResource(R.drawable.ic_visibility_on); // 👁️ show
+            }
+        });
+
+    }
+
 
     private void ChapterRefresh(){
         btnRefresh.setOnClickListener(v -> {
@@ -137,6 +161,43 @@ public class ChapterPage extends AppCompatActivity {
         btnHome.setOnClickListener(v -> {
             Intent intent = new Intent(ChapterPage.this, HomePage.class);
             startActivity(intent);
+        });
+    }
+
+    private void updateLoadChapterList(int offset) {
+        String mangaId = getIntent().getStringExtra("mangaId");
+        int LIMIT = 100;
+        AppDatabase db = AppDatabase.getInstance(this);
+
+        ChaptersService.fetchAllChapters(mangaId, "desc", offset, LIMIT, new ChaptersService.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                if (fetchedChapters.isEmpty()) return; // stop recursion
+
+                // Save/update in Room
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    List<ChapterItemEntity> entities = new ArrayList<>();
+                    for (ChapterModel c : fetchedChapters) {
+                        entities.add(new ChapterItemEntity(
+                                c.getChapterId(), // primary key
+                                mangaId,
+                                c.getTitle(),
+                                c.getNumber()
+                        ));
+                    }
+                    db.chapterDao().insertChapters(entities);
+                });
+                // Load next batch recursively
+                // Fetch next batch only if we got full LIMIT
+                if (fetchedChapters.size() == LIMIT) {
+                    updateLoadChapterList(offset + LIMIT);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> Toast.makeText(ChapterPage.this, "Error loading chapters: " + message, Toast.LENGTH_SHORT).show());
+            }
         });
     }
 
@@ -192,13 +253,13 @@ public class ChapterPage extends AppCompatActivity {
                     Log.e("ChapterPage", "Prev chapter fetched successfully: " + prevChapter.getTitle());
                 } else {
                     Log.e("ChapterPage", "No prev chapter found");
+                    runOnUiThread(() -> {
+                        Toast.makeText(ChapterPage.this, "No prev chapter found", Toast.LENGTH_SHORT).show();
+                    });
                 }
             });
         });
     }
-
-
-
 
     private void GetChapterPages(String chapterId){
         ChaptersService.fetchChapterPages(chapterId, new ChaptersService.PagesCallback(){

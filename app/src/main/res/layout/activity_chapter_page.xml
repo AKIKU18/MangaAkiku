@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -5,47 +6,59 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <!-- Manga title -->
-    <TextView
-        android:id="@+id/mangaTitle"
+    <!-- UPPER PART (Manga title + chapter + refresh) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/upperPartLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Manga Title"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:padding="8dp"
+        android:padding="4dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- Chapter title / number -->
-    <TextView
-        android:id="@+id/chapterNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Chapter 1"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:padding="6dp"
-        app:layout_constraintTop_toBottomOf="@id/mangaTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        <!-- Manga title -->
+        <TextView
+            android:id="@+id/mangaTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Manga Title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:padding="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Refresh button -->
-    <ImageButton
-        android:id="@+id/btnRefresh"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:background="@android:color/transparent"
-        android:padding="4dp"
-        android:scaleType="centerInside"
-        android:contentDescription="Refresh"
-        android:src="@android:drawable/ic_menu_rotate"
-        app:layout_constraintTop_toTopOf="@id/chapterNumber"
-        app:layout_constraintBottom_toBottomOf="@id/chapterNumber"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <!-- Chapter title / number -->
+        <TextView
+            android:id="@+id/chapterNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chapter 1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:padding="6dp"
+            app:layout_constraintTop_toBottomOf="@id/mangaTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- Refresh button -->
+        <ImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@android:color/transparent"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            android:contentDescription="Refresh"
+            android:src="@android:drawable/ic_menu_rotate"
+            app:layout_constraintTop_toTopOf="@id/chapterNumber"
+            app:layout_constraintBottom_toBottomOf="@id/chapterNumber"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Manga pages list -->
     <androidx.recyclerview.widget.RecyclerView
@@ -55,14 +68,28 @@
         android:clipToPadding="false"
         android:padding="0dp"
         android:scrollbars="vertical"
-        app:layout_constraintTop_toBottomOf="@id/chapterNumber"
-        app:layout_constraintBottom_toTopOf="@id/navButtonsLayout"
+        app:layout_constraintTop_toBottomOf="@id/upperPartLayout"
+        app:layout_constraintBottom_toTopOf="@id/lowerPartLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Navigation buttons -->
+    <!-- Transparent button at top-right -->
+    <ImageButton
+        android:id="@+id/btnToggleUI"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:alpha="1"
+        android:src="@drawable/ic_visibility_on"
+        android:contentDescription="Toggle UI"
+        android:text="Hide"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/recyclerPages" />
+
+    <!-- LOWER PART (Navigation buttons) -->
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/navButtonsLayout"
+        android:id="@+id/lowerPartLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:padding="8dp"
@@ -97,7 +124,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

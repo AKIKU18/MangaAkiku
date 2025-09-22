@@ -178,11 +178,20 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
 
             // push updates back to main thread
             new Handler(Looper.getMainLooper()).post(() -> {
-                synchronized (mangaList) {
-                    for (int i = 0; i < mangaList.size(); i++) {
+
+                if(mangaList.size() != snapshot.size()){
+                    int minSize = Math.min(mangaList.size(), snapshot.size());
+                    for (int i = 0; i < minSize; i++) {
                         mangaList.get(i).setIsBookmarked(snapshot.get(i).getIsBookmarked());
                     }
+                }else{
+                    synchronized (mangaList) {
+                        for (int i = 0; i < mangaList.size(); i++) {
+                            mangaList.get(i).setIsBookmarked(snapshot.get(i).getIsBookmarked());
+                        }
+                    }
                 }
+
                 notifyDataSetChanged();
             });
         });
