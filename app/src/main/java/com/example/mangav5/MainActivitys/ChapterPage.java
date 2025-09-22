@@ -61,7 +61,9 @@ public class ChapterPage extends AppCompatActivity {
     public void setCurrentChapterId(String chapterId) {
         this.currentChapterId = chapterId;
     }
-
+    private ImageButton btnToggleUI;
+    private ConstraintLayout upperPartLayout;
+    private ConstraintLayout lowerPartLayout;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -106,80 +108,67 @@ public class ChapterPage extends AppCompatActivity {
     }
 
     private void setupRecyclerScroll() {
-        ImageButton btnToggleUI = findViewById(R.id.btnToggleUI);
-        ConstraintLayout upper = findViewById(R.id.upperPartLayout);
-        ConstraintLayout lower = findViewById(R.id.lowerPartLayout);
+        // --- Step 1: Initialize Views (in onCreate) ---
+        btnToggleUI = findViewById(R.id.btnToggleUI);
+        upperPartLayout = findViewById(R.id.upperPartLayout);
+        lowerPartLayout = findViewById(R.id.lowerPartLayout);
+        recycleViewPage = findViewById(R.id.recyclerPages); // Add your RecyclerView ID
 
-        // Start hidden
-        upper.setVisibility(View.GONE);
-        lower.setVisibility(View.GONE);
-        btnToggleUI.setImageResource(R.drawable.ic_visibility_off); // 👁️ hidden
+        // --- Step 2: Set the initial state ---
+        setUiVisibility(false); // Start hidden
 
-        // Toggle manually
-        btnToggleUI.setOnClickListener(v -> {
-            if (upper.getVisibility() == View.VISIBLE) {
-                upper.setVisibility(View.GONE);
-                lower.setVisibility(View.GONE);
-                btnToggleUI.setImageResource(R.drawable.ic_visibility_off);
-            } else {
-                upper.setVisibility(View.VISIBLE);
-                lower.setVisibility(View.VISIBLE);
-                btnToggleUI.setImageResource(R.drawable.ic_visibility_on);
-            }
-        });
+        // --- Step 3: Set up listeners ---
 
+        // Toggle with the button
+        btnToggleUI.setOnClickListener(v -> toggleUiVisibility());
+
+        // Toggle with a tap on the RecyclerView
         GestureDetector gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
-                ConstraintLayout upper = findViewById(R.id.upperPartLayout);
-                ConstraintLayout lower = findViewById(R.id.lowerPartLayout);
-                ImageButton btnToggleUI = findViewById(R.id.btnToggleUI);
-
-                if (upper.getVisibility() == View.VISIBLE) {
-                    upper.setVisibility(View.GONE);
-                    lower.setVisibility(View.GONE);
-                    btnToggleUI.setImageResource(R.drawable.ic_visibility_off);
-                } else {
-                    upper.setVisibility(View.VISIBLE);
-                    lower.setVisibility(View.VISIBLE);
-                    btnToggleUI.setImageResource(R.drawable.ic_visibility_on);
-                }
+                toggleUiVisibility();
                 return true;
             }
         });
 
-// attach to recycler
         recycleViewPage.setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
-            return false; // allow scroll to work too
+            return false; // Allow scroll events to pass through
         });
 
-
-        // 👇 Listen for scroll events
+        // Show UI when scrolled to the bottom
         recycleViewPage.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-
-                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                if (layoutManager == null) return;
-
-                int visibleItemCount = layoutManager.getChildCount();
-                int totalItemCount = layoutManager.getItemCount();
-                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-
-                // check if at bottom
-                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
-                        && firstVisibleItemPosition >= 0) {
-                    // 👉 Show UI when at end
-                    if (upper.getVisibility() == View.GONE || lower.getVisibility() == View.GONE) {
-                        upper.setVisibility(View.VISIBLE);
-                        lower.setVisibility(View.VISIBLE);
-                        btnToggleUI.setImageResource(R.drawable.ic_visibility_on);
-                    }
+                // Show the UI if the user scrolls down and has reached the end.
+                // !canScrollVertically(1) is a simpler check for the bottom.
+                if (dy > 0 && !recyclerView.canScrollVertically(1)) {
+                    setUiVisibility(true);
                 }
             }
         });
+    }
+
+    /**
+     * Toggles the visibility of the UI elements.
+     */
+    private void toggleUiVisibility() {
+        boolean isCurrentlyVisible = (upperPartLayout.getVisibility() == View.VISIBLE);
+        setUiVisibility(!isCurrentlyVisible);
+    }
+
+    /**
+     * Central function to show or hide the UI elements and update the icon.
+     * @param isVisible True to show the UI, false to hide it.
+     */
+    private void setUiVisibility(boolean isVisible) {
+        int visibility = isVisible ? View.VISIBLE : View.GONE;
+        upperPartLayout.setVisibility(visibility);
+        lowerPartLayout.setVisibility(visibility);
+
+        int iconRes = isVisible ? R.drawable.ic_visibility_on : R.drawable.ic_visibility_off;
+        btnToggleUI.setImageResource(iconRes);
     }
 
 
