@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="@android:color/transparent"
     android:foreground="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
@@ -13,10 +13,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="12dp">
 
-        <!-- Cover image -->
+        <!-- Manga cover / history cover -->
         <ImageView
             android:id="@+id/historyCover"
             android:layout_width="80dp"
@@ -24,16 +26,16 @@
             android:scaleType="centerCrop"
             android:contentDescription="Manga cover"
             android:clipToOutline="true"
-            android:layout_marginEnd="10dp" />
+            android:layout_marginEnd="12dp" />
 
         <!-- Text content -->
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_vertical">
+            android:orientation="vertical">
 
+            <!-- Manga/History title -->
             <TextView
                 android:id="@+id/historyMangaTitle"
                 android:layout_width="match_parent"
@@ -45,7 +47,7 @@
                 android:ellipsize="end"
                 android:textColor="@color/teal_200" />
 
-            <!-- Highlighted Chapter Title (Clickable) -->
+            <!-- Chapter title (clickable) -->
             <TextView
                 android:id="@+id/historyChapterTitle"
                 android:layout_width="match_parent"
@@ -60,15 +62,17 @@
                 android:ellipsize="end"
                 android:maxLines="1" />
 
+            <!-- Timestamp -->
             <TextView
                 android:id="@+id/historyTimestamp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="12 Feb 2025, 14:32"
-                android:textSize="15sp"
+                android:textSize="14sp"
                 android:textStyle="italic"
-                android:textColor="@color/purple_500"
+                android:textColor="@android:color/white"
                 android:layout_marginTop="4dp" />
+
         </LinearLayout>
 
     </LinearLayout>

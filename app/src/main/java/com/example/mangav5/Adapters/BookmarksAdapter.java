@@ -2,6 +2,9 @@ package com.example.mangav5.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -13,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -63,6 +67,12 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         mangaItemModel.setTitle(manga.getTitle());
         mangaItemModel.setCoverImageUrl(manga.getCoverUrl());
         mangaItemModel.setDescription(manga.getDescription());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            holder.mangaBlurCard.setRenderEffect(
+                    RenderEffect.createBlurEffect(40f, 40f, Shader.TileMode.CLAMP)
+            );
+        }
 
 
         holder.title.setText(manga.getTitle());
@@ -212,6 +222,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         ImageView cover;
         ImageView bookmarkStar;
         TextView title, lastChapter, viewedChapter;
+        CardView mangaBlurCard;
 
 
         public BookmarkMangaViewHolder(@NonNull View itemView) {
@@ -221,6 +232,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             title = itemView.findViewById(R.id.mangaTitle);
             lastChapter = itemView.findViewById(R.id.currentChapter);
             viewedChapter = itemView.findViewById(R.id.viewedChapter);
+            mangaBlurCard = itemView.findViewById(R.id.mangaBlurCard);
         }
     }
 }

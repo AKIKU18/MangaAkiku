@@ -4,7 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:background="@drawable/bg_gradient">
 
     <!-- UPPER PART (Manga title + chapter + refresh) -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -26,11 +27,12 @@
             android:textStyle="bold"
             android:gravity="center"
             android:padding="8dp"
+            android:textColor="@android:color/white"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-        <!-- Chapter title / number -->
+        <!-- Chapter number -->
         <TextView
             android:id="@+id/chapterNumber"
             android:layout_width="wrap_content"
@@ -40,6 +42,7 @@
             android:textStyle="bold"
             android:gravity="center"
             android:padding="6dp"
+            android:textColor="@android:color/white"
             app:layout_constraintTop_toBottomOf="@id/mangaTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -56,8 +59,7 @@
             android:src="@android:drawable/ic_menu_rotate"
             app:layout_constraintTop_toTopOf="@id/chapterNumber"
             app:layout_constraintBottom_toBottomOf="@id/chapterNumber"
-            app:layout_constraintEnd_toEndOf="parent" />
-
+            app:layout_constraintEnd_toEndOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Manga pages list -->
@@ -71,23 +73,22 @@
         app:layout_constraintTop_toBottomOf="@id/upperPartLayout"
         app:layout_constraintBottom_toTopOf="@id/lowerPartLayout"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Transparent button at top-right -->
+    <!-- Transparent toggle button -->
     <ImageButton
         android:id="@+id/btnToggleUI"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:alpha="1"
         android:src="@drawable/ic_visibility_on"
+        android:background="@drawable/bg_gradient_search"
         android:contentDescription="Toggle UI"
-        android:text="Hide"
-        android:textColor="@color/black"
-        android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/recyclerPages" />
+        app:layout_constraintTop_toTopOf="@id/recyclerPages"
+        />
 
-    <!-- LOWER PART (Navigation buttons) -->
+    <!-- LOWER PART (Navigation buttons with glass style) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/lowerPartLayout"
         android:layout_width="0dp"
@@ -97,33 +98,101 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
-            android:id="@+id/btnPrevious"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Back"
+        <!-- Previous -->
+        <FrameLayout
+            android:layout_width="100dp"
+            android:layout_height="40dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintBottom_toBottomOf="parent">
 
-        <Button
-            android:id="@+id/btnHome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Home"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="16dp"
+                app:cardBackgroundColor="@android:color/transparent">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/glass_bg"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/btnPrevious"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Back"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:gravity="center"/>
+        </FrameLayout>
+
+        <!-- Home -->
+        <FrameLayout
+            android:layout_width="100dp"
+            android:layout_height="40dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
-        <Button
-            android:id="@+id/btnNext"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Next"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            app:layout_constraintBottom_toBottomOf="parent">
 
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="16dp"
+                app:cardBackgroundColor="@android:color/transparent">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/glass_bg"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/btnHome"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Home"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:gravity="center"/>
+        </FrameLayout>
+
+        <!-- Next -->
+        <FrameLayout
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="16dp"
+                app:cardBackgroundColor="@android:color/transparent">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/glass_bg"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/btnNext"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Next"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:gravity="center"/>
+        </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

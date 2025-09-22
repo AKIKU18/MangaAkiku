@@ -7,12 +7,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivitys.HomePage">
-
-
-    <!-- App Logo -->
-
-    <!-- App name -->
+    tools:context=".MainActivitys.HomePage"
+    android:background="@drawable/bg_gradient"
+    >
 
     <ImageView
         android:id="@+id/app_logo"
@@ -39,7 +36,6 @@
         android:gravity="center"
         android:layout_marginTop="12dp"/>
 
-    <!-- Settings button -->
     <ImageButton
         android:id="@+id/button_settings"
         android:layout_width="40dp"
@@ -54,7 +50,6 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="12dp"/>
 
-    <!-- Main list -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/search_bar"
         android:layout_width="0dp"
@@ -80,22 +75,35 @@
         android:clipToPadding="false"
         android:paddingBottom="16dp" />
 
-    <!-- Search results list -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_search_results"
-        android:layout_width="374dp"
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="403dp"
         android:layout_marginTop="8dp"
-        android:background="@drawable/rounded_background"
-        android:elevation="8dp"
-        android:padding="8dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/search_bar" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_bar">
 
-    <!-- Bottom buttons -->
+        <ImageView
+            android:id="@+id/recycler_bg_blur"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/bg_gradient_search"
+            android:alpha="1"
+            android:visibility="gone"
+            android:contentDescription="@null" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_search_results"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="8dp"
+            app:cardCornerRadius="50dp"
+            android:background="@android:color/transparent"
+            android:visibility="gone" />
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/bottom_buttons_container"
         android:layout_width="0dp"
@@ -107,27 +115,81 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
-            android:id="@+id/button_bookmarks"
+        <!-- Bookmarks Button -->
+        <FrameLayout
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Bookmarks"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="14sp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/rounded_button" />
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
-        <Button
-            android:id="@+id/button_history"
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <View
+                    android:id="@+id/bookmarkBlurBackground"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/glass_bg" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/button_bookmarks"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Bookmarks"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:gravity="center" />
+        </FrameLayout>
+
+        <!-- History Button -->
+        <FrameLayout
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="History"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="14sp"
             android:layout_marginStart="8dp"
-            android:background="@drawable/rounded_button" />
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <View
+                    android:id="@+id/historyBlurBackground"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/glass_bg" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/button_history"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="History"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:gravity="center" />
+        </FrameLayout>
+
     </LinearLayout>
+
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,6 +3,8 @@ package com.example.mangav5.MainActivitys;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -31,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChapterPage extends AppCompatActivity {
+    ChapterPageAdapter chapterPageAdapter;
     private RecyclerView recycleViewPage;
     private TextView tvChapterNumber;
     private Button btnPrevious;
@@ -38,7 +41,6 @@ public class ChapterPage extends AppCompatActivity {
     private Button btnNext;
     private ImageButton btnRefresh;
     private TextView tvMangaTitle;
-    ChapterPageAdapter chapterPageAdapter;
     private List<String> chapters = new ArrayList<>();
 
     private String currentChapterId;
@@ -61,7 +63,6 @@ public class ChapterPage extends AppCompatActivity {
     }
 
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,7 +82,7 @@ public class ChapterPage extends AppCompatActivity {
 
         recycleViewPage = findViewById(R.id.recyclerPages);
         recycleViewPage.setLayoutManager(new LinearLayoutManager(this));
-        chapterPageAdapter = new ChapterPageAdapter(chapters ,ChapterPage.this,chapterTitle);
+        chapterPageAdapter = new ChapterPageAdapter(chapters, ChapterPage.this, chapterTitle);
         recycleViewPage.setAdapter(chapterPageAdapter);
 
         tvChapterNumber = findViewById(R.id.chapterNumber);
@@ -109,22 +110,80 @@ public class ChapterPage extends AppCompatActivity {
         ConstraintLayout upper = findViewById(R.id.upperPartLayout);
         ConstraintLayout lower = findViewById(R.id.lowerPartLayout);
 
+        // Start hidden
+        upper.setVisibility(View.GONE);
+        lower.setVisibility(View.GONE);
+        btnToggleUI.setImageResource(R.drawable.ic_visibility_off); // 👁️ hidden
+
+        // Toggle manually
         btnToggleUI.setOnClickListener(v -> {
             if (upper.getVisibility() == View.VISIBLE) {
                 upper.setVisibility(View.GONE);
                 lower.setVisibility(View.GONE);
-                btnToggleUI.setImageResource(R.drawable.ic_visibility_off); // 👁️ hide
+                btnToggleUI.setImageResource(R.drawable.ic_visibility_off);
             } else {
                 upper.setVisibility(View.VISIBLE);
                 lower.setVisibility(View.VISIBLE);
-                btnToggleUI.setImageResource(R.drawable.ic_visibility_on); // 👁️ show
+                btnToggleUI.setImageResource(R.drawable.ic_visibility_on);
             }
         });
 
+        GestureDetector gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                ConstraintLayout upper = findViewById(R.id.upperPartLayout);
+                ConstraintLayout lower = findViewById(R.id.lowerPartLayout);
+                ImageButton btnToggleUI = findViewById(R.id.btnToggleUI);
+
+                if (upper.getVisibility() == View.VISIBLE) {
+                    upper.setVisibility(View.GONE);
+                    lower.setVisibility(View.GONE);
+                    btnToggleUI.setImageResource(R.drawable.ic_visibility_off);
+                } else {
+                    upper.setVisibility(View.VISIBLE);
+                    lower.setVisibility(View.VISIBLE);
+                    btnToggleUI.setImageResource(R.drawable.ic_visibility_on);
+                }
+                return true;
+            }
+        });
+
+// attach to recycler
+        recycleViewPage.setOnTouchListener((v, event) -> {
+            gestureDetector.onTouchEvent(event);
+            return false; // allow scroll to work too
+        });
+
+
+        // 👇 Listen for scroll events
+        recycleViewPage.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager == null) return;
+
+                int visibleItemCount = layoutManager.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+                // check if at bottom
+                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
+                        && firstVisibleItemPosition >= 0) {
+                    // 👉 Show UI when at end
+                    if (upper.getVisibility() == View.GONE || lower.getVisibility() == View.GONE) {
+                        upper.setVisibility(View.VISIBLE);
+                        lower.setVisibility(View.VISIBLE);
+                        btnToggleUI.setImageResource(R.drawable.ic_visibility_on);
+                    }
+                }
+            }
+        });
     }
 
 
-    private void ChapterRefresh(){
+    private void ChapterRefresh() {
         btnRefresh.setOnClickListener(v -> {
             GetChapterPages(getCurrentChapterId());
             Toast.makeText(ChapterPage.this, "Refreshed", Toast.LENGTH_SHORT).show();
@@ -132,7 +191,7 @@ public class ChapterPage extends AppCompatActivity {
     }
 
 
-    private void SetMangaTitle(){
+    private void SetMangaTitle() {
         String mangaId = getIntent().getStringExtra("mangaId");
         AppDatabase db = AppDatabase.getInstance(this);
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -151,13 +210,13 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
-    public void GoToMangaItem(String mangaId){
+    public void GoToMangaItem(String mangaId) {
         Intent intent = new Intent(this, MangaPage.class);
-        intent.putExtra("mangaId",mangaId);
+        intent.putExtra("mangaId", mangaId);
         this.startActivity(intent);
     }
 
-    private void GoToHomePage(){
+    private void GoToHomePage() {
         btnHome.setOnClickListener(v -> {
             Intent intent = new Intent(ChapterPage.this, HomePage.class);
             startActivity(intent);
@@ -218,6 +277,15 @@ public class ChapterPage extends AppCompatActivity {
                             tvChapterNumber.setText(nextChapter.getTitle());
                             GetChapterPages(nextChapter.getChapterId());
                             recycleViewPage.scrollToPosition(0);
+
+                            ImageButton btnToggleUI = findViewById(R.id.btnToggleUI);
+                            ConstraintLayout upper = findViewById(R.id.upperPartLayout);
+                            ConstraintLayout lower = findViewById(R.id.lowerPartLayout);
+
+                            // Start hidden
+                            upper.setVisibility(View.GONE);
+                            lower.setVisibility(View.GONE);
+                            btnToggleUI.setImageResource(R.drawable.ic_visibility_off); // 👁️ hidden
                         });
                     });
                     GetChapterPages(nextChapter.getChapterId());
@@ -249,6 +317,16 @@ public class ChapterPage extends AppCompatActivity {
                         tvChapterNumber.setText(prevChapter.getTitle());
                         GetChapterPages(prevChapter.getChapterId());
                         recycleViewPage.scrollToPosition(0);
+
+                        // Update UI
+                        ImageButton btnToggleUI = findViewById(R.id.btnToggleUI);
+                        ConstraintLayout upper = findViewById(R.id.upperPartLayout);
+                        ConstraintLayout lower = findViewById(R.id.lowerPartLayout);
+
+                        // Start hidden
+                        upper.setVisibility(View.GONE);
+                        lower.setVisibility(View.GONE);
+                        btnToggleUI.setImageResource(R.drawable.ic_visibility_off); // 👁️ hidden
                     });
                     Log.e("ChapterPage", "Prev chapter fetched successfully: " + prevChapter.getTitle());
                 } else {
@@ -261,8 +339,8 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
-    private void GetChapterPages(String chapterId){
-        ChaptersService.fetchChapterPages(chapterId, new ChaptersService.PagesCallback(){
+    private void GetChapterPages(String chapterId) {
+        ChaptersService.fetchChapterPages(chapterId, new ChaptersService.PagesCallback() {
             @Override
             public void onSuccess(List<String> fetchPages) {
                 runOnUiThread(() -> {
@@ -283,7 +361,7 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
-    private void InsertChapterIntoHistory(){
+    private void InsertChapterIntoHistory() {
         String mangaId = getIntent().getStringExtra("mangaId");
         String chapterId = getIntent().getStringExtra("chapterId");
         String chapterTitle = getIntent().getStringExtra("chapterTitle");
@@ -295,7 +373,7 @@ public class ChapterPage extends AppCompatActivity {
                 AppDatabase db = AppDatabase.getInstance(ChapterPage.this);
 
                 Executors.newSingleThreadExecutor().execute(() -> {
-                    HistoryEntity historyItem = new HistoryEntity(manga.getMangaId(),getCurrentChapterId(), getCurrentChapterTitle(), manga.getCoverImageUrl(), manga.getDescription(), System.currentTimeMillis(), manga.getTitle());
+                    HistoryEntity historyItem = new HistoryEntity(manga.getMangaId(), getCurrentChapterId(), getCurrentChapterTitle(), manga.getCoverImageUrl(), manga.getDescription(), System.currentTimeMillis(), manga.getTitle());
                     db.historyDao().insertHistoryItem(historyItem);
                     Log.e("ChapterPage", "Chapter inserted into history: " + getCurrentChapterTitle());
                 });

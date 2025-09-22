@@ -1,6 +1,9 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +37,7 @@ public class BookmarksPage extends AppCompatActivity {
     private BookmarkDao bookmarkDao;
     private Button homePageButton;
     TextView emptyText ;
+    View bookmarkBlurBackground;
 
     public static ActivityResultLauncher<Intent> mangaPageLauncher;
 
@@ -49,6 +53,7 @@ public class BookmarksPage extends AppCompatActivity {
         setContentView(R.layout.activity_bookmarks_page);
         bookmarkRecyclerView = findViewById(R.id.recycler_bookmarks);
         homePageButton = findViewById(R.id.btn_home);
+        bookmarkBlurBackground = findViewById(R.id.bookmarkBlurBackground);
 
         AppDatabase db = AppDatabase.getInstance(this);
         this.bookmarkDao =db.bookmarkDao();
@@ -65,6 +70,15 @@ public class BookmarksPage extends AppCompatActivity {
         IntentHandleGoBack();
         OnClickGoToHomePage();
         CheckIfStillBookmarked();
+
+    }
+
+    private void BlurEffect(View button){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            button.setRenderEffect(
+                    RenderEffect.createBlurEffect(400f, 400f, Shader.TileMode.CLAMP)
+            );
+        }
     }
     private void CheckIfStillBookmarked(){
         mangaPageLauncher = registerForActivityResult(

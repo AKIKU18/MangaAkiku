@@ -1,6 +1,9 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -13,9 +16,11 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -44,6 +49,9 @@ public class HomePage extends AppCompatActivity {
     private Button bookmarkPageButton;
     private Button historyPageButton;
     private ImageButton settingsPageButton;
+    private View bookmarkBlurBackground;
+    private View historyBlurBackground;
+    private ImageView recycler_bg_blur;
     private List<MangaItemModel> mangaList = new ArrayList<>();
     private List<MangaItemModel> searchMangaList = new ArrayList<>();
     private boolean isSearchListAnimated = false;
@@ -68,6 +76,9 @@ public class HomePage extends AppCompatActivity {
         bookmarkPageButton = findViewById(R.id.button_bookmarks);
         historyPageButton = findViewById(R.id.button_history);
         settingsPageButton = findViewById(R.id.button_settings);
+        bookmarkBlurBackground = findViewById(R.id.bookmarkBlurBackground);
+        historyBlurBackground = findViewById(R.id.historyBlurBackground);
+        recycler_bg_blur = findViewById(R.id.recycler_bg_blur);
         CheckIfStillBookmarked();
 
 
@@ -134,8 +145,13 @@ public class HomePage extends AppCompatActivity {
 
     }
 
-
-
+    private void BlurEffect(View button){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            button.setRenderEffect(
+                    RenderEffect.createBlurEffect(30f, 30f, Shader.TileMode.CLAMP)
+            );
+        }
+    }
     private void SettingsButtonGoTo(){
         settingsPageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -179,6 +195,7 @@ public class HomePage extends AppCompatActivity {
                 if (!newText.trim().isEmpty()) {
                     if (searchResultView.getVisibility() != View.VISIBLE) {
                         searchResultView.setVisibility(View.VISIBLE);
+                        recycler_bg_blur.setVisibility(View.VISIBLE);
                     }
                     if (!isSearchListAnimated) {
                         Animation slideDown = AnimationUtils.loadAnimation(HomePage.this, R.anim.slide_down);
@@ -188,6 +205,7 @@ public class HomePage extends AppCompatActivity {
                     performSearch(newText);
                 } else {
                     searchResultView.setVisibility(View.GONE);
+                    recycler_bg_blur.setVisibility(View.GONE);
                     isSearchListAnimated = false;  // reset flag when hidden
                 }
                 return true;
