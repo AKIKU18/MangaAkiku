@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.target.Target;
 import com.example.mangav5.R;
 import com.github.chrisbanes.photoview.PhotoView;
 
@@ -43,9 +44,12 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     @Override
     public void onBindViewHolder(@NonNull ChapterPageViewer holder, int position) {
         String imageUrl = pages.get(position);
+        // Use screen width to avoid loading massive bitmaps
+        int targetWidth = context.getResources().getDisplayMetrics().widthPixels;
         Glide.with(context)
                 .load(imageUrl)
                 .placeholder(android.R.drawable.ic_menu_gallery)
+                .override(targetWidth, Target.SIZE_ORIGINAL) // ✅ scale down to screen width
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .dontTransform()
                 .error(android.R.drawable.ic_dialog_alert)

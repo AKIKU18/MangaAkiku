@@ -76,32 +76,33 @@
         android:paddingBottom="16dp" />
 
     <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="403dp"
+        android:id="@+id/frameLayout"
+        android:layout_width="408dp"
+        android:layout_height="500dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/search_bar">
 
         <ImageView
             android:id="@+id/recycler_bg_blur"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:alpha="1"
+            android:contentDescription="@null"
             android:scaleType="centerCrop"
             android:src="@drawable/bg_gradient_search"
-            android:alpha="1"
-            android:visibility="gone"
-            android:contentDescription="@null" />
+            android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_search_results"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@android:color/transparent"
             android:clipToPadding="false"
             android:padding="8dp"
-            app:cardCornerRadius="50dp"
-            android:background="@android:color/transparent"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:cardCornerRadius="50dp" />
     </FrameLayout>
 
     <LinearLayout

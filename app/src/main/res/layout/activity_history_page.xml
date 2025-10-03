@@ -51,7 +51,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:cardCornerRadius="28dp"
-            app:cardElevation="4dp"
             app:cardBackgroundColor="@android:color/transparent"
             android:clipChildren="false"
             android:clipToPadding="false">

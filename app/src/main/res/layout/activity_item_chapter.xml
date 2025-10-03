@@ -2,30 +2,56 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="8dp"
-    android:background="?attr/selectableItemBackground"
-    >
+    android:background="?attr/selectableItemBackground">
 
-    <!-- Container with rounded card-like look -->
-<LinearLayout
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:orientation="vertical"
-android:padding="12dp"
-android:background="@drawable/chapter_item_bg">
+    <!-- Glass Card Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-<TextView
-    android:id="@+id/chapterTitle"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="Chapter Title"
-    android:textSize="16sp"
-    android:textColor="@color/teal_700"
-    android:textStyle="bold"
-    android:maxLines="1"
-    android:ellipsize="end" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardUseCompatPadding="false"
+            app:cardPreventCornerOverlap="false"
+            android:elevation="0dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:background="@drawable/glass_bg2" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/chapterTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chapter Title"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="16sp"
+                android:autoSizeStepGranularity="1sp"/>
+        </LinearLayout>
+
+    </FrameLayout>
 </LinearLayout>
-
-    </LinearLayout>
