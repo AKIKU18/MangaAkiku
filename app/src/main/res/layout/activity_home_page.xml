@@ -8,9 +8,9 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".MainActivitys.HomePage"
-    android:background="@drawable/bg_gradient"
-    >
+    android:background="@drawable/bg_gradient">
 
+    <!-- App Logo -->
     <ImageView
         android:id="@+id/app_logo"
         android:layout_width="48dp"
@@ -22,6 +22,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- App Title -->
     <TextView
         android:id="@+id/app_title"
         android:layout_width="wrap_content"
@@ -36,6 +37,43 @@
         android:gravity="center"
         android:layout_marginTop="12dp"/>
 
+    <!-- Feed Switch Buttons -->
+    <LinearLayout
+        android:id="@+id/feed_buttons_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/app_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/button_mangadex"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="MangaDex"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_gradient"
+            android:textSize="14sp"/>
+
+        <Button
+            android:id="@+id/button_asurascans"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="AsuraScans"
+            android:textColor="@android:color/white"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_gradient"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+    <!-- Settings Button -->
     <ImageButton
         android:id="@+id/button_settings"
         android:layout_width="40dp"
@@ -50,19 +88,20 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="12dp"/>
 
+    <!-- Search Bar -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/search_bar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
         android:queryHint="Search manga"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/app_title" />
+        app:layout_constraintTop_toBottomOf="@id/feed_buttons_container" />
 
+    <!-- Main RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_main"
         android:layout_width="0dp"
@@ -75,6 +114,7 @@
         android:clipToPadding="false"
         android:paddingBottom="16dp" />
 
+    <!-- Search Results Frame -->
     <FrameLayout
         android:id="@+id/frameLayout"
         android:layout_width="408dp"
@@ -105,6 +145,7 @@
             app:cardCornerRadius="50dp" />
     </FrameLayout>
 
+    <!-- Bottom Buttons -->
     <LinearLayout
         android:id="@+id/bottom_buttons_container"
         android:layout_width="0dp"
@@ -128,8 +169,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
+                app:cardCornerRadius="28dp"
                 app:cardBackgroundColor="@android:color/transparent"
                 android:clipChildren="false"
                 android:clipToPadding="false">
@@ -164,8 +204,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
+                app:cardCornerRadius="28dp"
                 app:cardBackgroundColor="@android:color/transparent"
                 android:clipChildren="false"
                 android:clipToPadding="false">
@@ -189,8 +228,5 @@
         </FrameLayout>
 
     </LinearLayout>
-
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

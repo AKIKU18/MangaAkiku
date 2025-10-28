@@ -6,16 +6,21 @@ public class MangaItemModel {
     private String description;
     private String coverImageUrl;
     private Boolean isBookmarked;
+    private String mangaUrl;
+    private String lastChapter;
 
     public MangaItemModel(){
     }
 
-    public MangaItemModel(String mangaId, String title, String description, String coverImageUrl, Boolean isBookmarked) {
+    public MangaItemModel(String mangaId, String title, String description, String coverImageUrl, Boolean isBookmarked, String mangaUrl,String lastChapter) {
         this.mangaId = mangaId;
         this.title = title;
         this.description = description;
         this.coverImageUrl = coverImageUrl;
         this.isBookmarked = isBookmarked;
+        this.mangaUrl = mangaUrl;
+        this.lastChapter = lastChapter;
+
     }
 
     // Getters and setters for mangaId, title, description, and coverImageUrl
@@ -48,5 +53,20 @@ public class MangaItemModel {
     }
     public void setIsBookmarked(Boolean isBookmarked) {
         this.isBookmarked = isBookmarked;
+    }
+    public String getMangaUrl() {
+        return mangaUrl;
+    }
+
+    public void setMangaUrl(String mangaUrl) {
+        this.mangaUrl = mangaUrl;
+    }
+
+    public String getLastChapter() {
+        return lastChapter;
+    }
+
+    public void setLastChapter(String lastChapter) {
+        this.lastChapter = lastChapter;
     }
 }

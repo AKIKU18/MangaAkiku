@@ -1,21 +1,15 @@
-package com.example.mangav5.Services;
+package com.example.mangav5.ServicesMangaDex;
 
-import android.media.Image;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageView;
 
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.mangav5.Adapters.BookmarksAdapter;
-import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 
-import java.util.List;
 import java.util.concurrent.Executors;
 
 public class BookmarkService {

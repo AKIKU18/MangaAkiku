@@ -2,48 +2,40 @@ package com.example.mangav5.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.MainActivitys.ChapterPage;
-import com.example.mangav5.MainActivitys.MangaPage;
 import com.example.mangav5.Models.ChapterModel;
-import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.Services.BookmarkService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.MangaViewHolder> {
     private List<ChapterModel> chapters;
     private final Context context;
     private final String mangaId;
+
+    private final String mangaUrl;
     private BookmarkDao bookmarkDao;
     private BookmarksAdapter bookmarkAdapter;
 
 
-    public MangaPageAdapter(List<ChapterModel> chapters, Context context,String mangaId) {
+    public MangaPageAdapter(List<ChapterModel> chapters, Context context,String mangaId,String mangaUrl) {
         this.chapters = chapters;
         this.context = context;
         this.mangaId = mangaId;
         AppDatabase db = AppDatabase.getInstance(context);
         this.bookmarkDao = db.bookmarkDao();
+        this.mangaUrl = mangaUrl;
     }
 
     @NonNull
@@ -58,7 +50,9 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
     public void onBindViewHolder(@NonNull MangaViewHolder holder, int position) {
         ChapterModel chapter = chapters.get(position);
         holder.chapterTitle.setText(chapter.getTitle());
-        GoToTheChapterPage(holder,chapter.getChapterId(),chapter.getTitle());
+
+        GoToTheChapterPage(holder,chapter.getChapterId(),chapter.getTitle(),mangaUrl,chapter.getChapterUrl());
+
     }
 
     @Override
@@ -68,17 +62,19 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
 
 
 
-    private void GoToTheChapterPage(MangaViewHolder holder,String chapterId,String chapterTitle){
+    private void GoToTheChapterPage(MangaViewHolder holder, String chapterId, String chapterTitle, String mangaUrl, String chapterUrl){
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, ChapterPage.class);
             intent.putExtra("chapterId", chapterId);
             intent.putExtra("chapterTitle", chapterTitle);
             intent.putExtra("mangaId", mangaId);
-            Log.e("MangaPageAdapter", "chapterTitle " + chapterTitle);
+            intent.putExtra("mangaUrl",mangaUrl);
+            intent.putExtra("chapterUrl",chapterUrl);
+            Log.e("MangaPageAdapter", "mangaUrl " + mangaUrl);
+            //Log.e("MangaPageAdapter", "chapterTitle " + chapterTitle);
             context.startActivity(intent);
         });
     }
-
 
 
     public static class MangaViewHolder extends RecyclerView.ViewHolder {

@@ -1,11 +1,6 @@
-package com.example.mangav5.Services;
+package com.example.mangav5.ServicesMangaDex;
 
-import android.util.Log;
-
-import com.example.mangav5.Models.ChapterListModel;
 import com.example.mangav5.Models.ChapterModel;
-import com.example.mangav5.Models.MangaItemModel;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -99,7 +94,7 @@ public class ChaptersService {
 
 
 
-                        allChapters.add(new ChapterModel(id, displayTitle, chapterNumber));
+                        allChapters.add(new ChapterModel(id, displayTitle, chapterNumber,"ChapterUrl"));
                     }
                     callback.onSuccess(allChapters);
 

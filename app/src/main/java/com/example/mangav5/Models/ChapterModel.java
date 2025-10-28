@@ -1,16 +1,16 @@
 package com.example.mangav5.Models;
 
-import java.util.List;
-
 public class ChapterModel {
     private String chapterId;
     private String title;
     private String number;
+    private String chapterUlr;
 
-    public ChapterModel(String chapterId, String title, String number) {
+    public ChapterModel(String chapterId, String title, String number, String chapterUlr) {
         this.chapterId = chapterId;
         this.title = title;
         this.number = number;
+        this.chapterUlr = chapterUlr;
     }
 
     // Getters and setters for chapterId, title, number, coverImageUrl, and pages
@@ -31,6 +31,13 @@ public class ChapterModel {
     }
     public void setNumber(String number) {
         this.number = number;
+    }
+    public String getChapterUrl() {
+        return chapterUlr;
+    }
+
+    public void setChapterUlr(String chapterUlr) {
+        this.chapterUlr = chapterUlr;
     }
 
 }

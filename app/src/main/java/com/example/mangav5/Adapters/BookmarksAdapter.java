@@ -31,8 +31,8 @@ import com.example.mangav5.MainActivitys.MangaPage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.Services.BookmarkService;
-import com.example.mangav5.Services.ChaptersService;
+import com.example.mangav5.ServicesMangaDex.BookmarkService;
+import com.example.mangav5.ServicesMangaDex.ChaptersService;
 
 import java.util.List;
 import java.util.concurrent.Executors;

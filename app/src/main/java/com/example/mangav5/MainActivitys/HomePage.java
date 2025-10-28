@@ -20,21 +20,19 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.mangav5.Adapters.BookmarksAdapter;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Models.ChapterListModel;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.Services.ChaptersService;
-import com.example.mangav5.Services.FeedMangaService;
-import com.example.mangav5.Services.SearchService;
+import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPages;
+import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
+import com.example.mangav5.ServicesMangaDex.FeedMangaService;
+import com.example.mangav5.ServicesMangaDex.SearchService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +46,8 @@ public class HomePage extends AppCompatActivity {
     private SearchView searchView;
     private Button bookmarkPageButton;
     private Button historyPageButton;
+    private Button button_mangadex;
+    private Button button_asurascans;
     private ImageButton settingsPageButton;
     private View bookmarkBlurBackground;
     private View historyBlurBackground;
@@ -62,6 +62,8 @@ public class HomePage extends AppCompatActivity {
     private ActivityResultLauncher<Intent> bookmarkLauncher;
     private ActivityResultLauncher<Intent> mangaPageLauncher;
     private BookmarkDao bookmarkDao;
+    public static String serviceFeed = "MangaDex";
+    private int asuraScansOffset = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +81,8 @@ public class HomePage extends AppCompatActivity {
         bookmarkBlurBackground = findViewById(R.id.bookmarkBlurBackground);
         historyBlurBackground = findViewById(R.id.historyBlurBackground);
         recycler_bg_blur = findViewById(R.id.recycler_bg_blur);
+        button_mangadex = findViewById(R.id.button_mangadex);
+        button_asurascans = findViewById(R.id.button_asurascans);
         CheckIfStillBookmarked();
 
 
@@ -100,12 +104,48 @@ public class HomePage extends AppCompatActivity {
         }
 
         setupSearchView();
-        loadMangaList();
+        mangaDexLoadList();
         loadMangaOffset();
         BookmarkButtonGoTo();
         HistoryButtonGoTo();
         SettingsButtonGoTo();
+        SwitchFeed();
+    }
 
+    private void SwitchFeed() {
+        button_asurascans.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                serviceFeed = "AsuraScans";
+                Toast.makeText(HomePage.this, "AsuraScans", Toast.LENGTH_SHORT).show();
+
+                mangaList.clear();
+                offset = 0;
+                asuraScansOffset = 0;
+                hasMore = true;
+                homeListAdapter.notifyDataSetChanged();
+                mangaListView.scrollToPosition(0);
+
+                asuraScanLoadList();
+            }
+        });
+
+        button_mangadex.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                serviceFeed = "MangaDex";
+                Toast.makeText(HomePage.this, "MangaDex", Toast.LENGTH_SHORT).show();
+
+                // Clear current list and reset offset
+                mangaList.clear();
+                offset = 0;
+                asuraScansOffset = 0;
+                homeListAdapter.notifyDataSetChanged();
+
+                // Load MangaDex feed
+                mangaDexLoadList();
+            }
+        });
     }
 
     private void CheckIfStillBookmarked(){
@@ -166,7 +206,7 @@ public class HomePage extends AppCompatActivity {
         bookmarkPageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(HomePage.this, BookmarksPage.class);
+                Intent intent = new Intent(HomePage.this, AsuraScansChapterPages.class);
                 bookmarkLauncher.launch(intent);
             }
         });
@@ -240,12 +280,10 @@ public class HomePage extends AppCompatActivity {
         }
     }
 
-    private void loadMangaOffset(){
+    private void loadMangaOffset() {
         mangaListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-
                 LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
                 if (layoutManager == null || isLoading || !hasMore) return;
 
@@ -253,43 +291,82 @@ public class HomePage extends AppCompatActivity {
                 int totalItemCount = layoutManager.getItemCount();
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
-                // Trigger when scrolled near the end
                 if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5) {
-                    loadMangaList(); // Load next batch
+                    if (serviceFeed.equals("MangaDex")) {
+                        mangaDexLoadList();
+                    } else if (serviceFeed.equals("AsuraScans")) {
+                        asuraScanLoadList();
+                    }
                 }
             }
         });
     }
 
-    private void loadMangaList() {
+
+    private void mangaDexLoadList() {
         isLoading = true;
         FeedMangaService.fetchMangaList(offset, LIMIT, new FeedMangaService.MangaListCallback() {
-        @Override
-        public void onSuccess(List<MangaItemModel> mangas) {
-            runOnUiThread(() -> {
-                if (offset == 0) {
-                    mangaList.clear();
-                    mangaList.addAll(mangas);
-                    homeListAdapter.notifyDataSetChanged();
-                } else {
-                    int start = mangaList.size();
-                    mangaList.addAll(mangas);
-                    homeListAdapter.notifyItemRangeInserted(start, mangas.size());
-                }
-                offset += LIMIT;
-                isLoading = false;
-                homeListAdapter.refreshBookmarkStates();
+            @Override
+            public void onSuccess(List<MangaItemModel> mangas) {
+                runOnUiThread(() -> {
+                    if (offset == 0) {
+                        mangaList.clear();
+                        mangaList.addAll(mangas);
+                        homeListAdapter.notifyDataSetChanged();
+                    } else {
+                        int start = mangaList.size();
+                        mangaList.addAll(mangas);
+                        homeListAdapter.notifyItemRangeInserted(start, mangas.size());
+                    }
+                    offset += LIMIT;
+                    isLoading = false;
+                    homeListAdapter.refreshBookmarkStates();
 
-            });
-        }
+                });
+            }
 
-        @Override
-        public void onError(String message) {
-            runOnUiThread(() -> {
-                Toast.makeText(HomePage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
-            });
-        }
-    });
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> {
+                    Toast.makeText(HomePage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+
+    private void asuraScanLoadList() {
+        if (isLoading) return;  // safety check
+        isLoading = true;
+
+        int currentPage = asuraScansOffset;
+        asuraScansOffset += 1;  // increment immediately
+
+        AsuraScraperTask.getAsuraScansMangaFeed(currentPage, new AsuraScraperTask.MangaListCallback() {
+            @Override
+            public void onSuccess(List<MangaItemModel> mangas) {
+                runOnUiThread(() -> {
+                    if (currentPage == 0) {
+                        mangaList.clear();
+                        mangaList.addAll(mangas);
+                        homeListAdapter.notifyDataSetChanged();
+                    } else {
+                        int start = mangaList.size();
+                        mangaList.addAll(mangas);
+                        homeListAdapter.notifyItemRangeInserted(start, mangas.size());
+                    }
+                    isLoading = false;
+                    homeListAdapter.refreshBookmarkStates();
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> {
+                    Toast.makeText(HomePage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                    isLoading = false;
+                });
+            }
+        });
     }
 
 }

@@ -30,8 +30,9 @@ import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.Services.ChaptersService;
-import com.example.mangav5.Services.FeedMangaService;
+import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
+import com.example.mangav5.ServicesMangaDex.ChaptersService;
+import com.example.mangav5.ServicesMangaDex.FeedMangaService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +76,7 @@ public class MangaPage extends AppCompatActivity {
         chapterList = new ArrayList<>();
         chapterRecyclerView = findViewById(R.id.chaptersRecyclerViewPage);
         chapterRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mangaPageAdapter = new MangaPageAdapter(chapterList, this,getMangaId);
+        mangaPageAdapter = new MangaPageAdapter(chapterList, this, getMangaId, getIntent().getStringExtra("mangaUrl"));
         chapterRecyclerView.setAdapter(mangaPageAdapter);
 
         cover = findViewById(R.id.mangaCoverImagePage);
@@ -87,7 +88,7 @@ public class MangaPage extends AppCompatActivity {
         scrollToBottomButton = findViewById(R.id.scrollToBottomButtonPage);
         button_homeMangaPage = findViewById(R.id.button_homeMangaPage);
 
-        loadMangaItem();
+        LoadMangaItem();
         //loadChapterList(0);
         PrevOrNextChapter();
         handleBackPress();
@@ -95,6 +96,17 @@ public class MangaPage extends AppCompatActivity {
         CheckIfStillBookmarked();
         ScrollButton();
         HomePageGoTo();
+    }
+
+    private void LoadMangaItem(){
+        switch (HomePage.serviceFeed){
+            case "MangaDex":
+                loadMangaItemMangaDex();
+                break;
+            case "AsuraScans":
+                loadMangaItemAsuraScans();
+                break;
+        }
     }
 
     private void ScrollButton(){
@@ -185,7 +197,7 @@ public class MangaPage extends AppCompatActivity {
         });
     }
 
-    private void loadMangaItem() {
+    private void loadMangaItemMangaDex() {
         String mangaId = getIntent().getStringExtra("mangaId");
 
         FeedMangaService.fetchMangaById(mangaId, new FeedMangaService.MangaCallback() {
@@ -204,24 +216,26 @@ public class MangaPage extends AppCompatActivity {
                             manga.getTitle(),
                             manga.getCoverImageUrl(),
                             manga.getDescription()
+                            ,manga.getMangaUrl()
+                            ,manga.getLastChapter()
                     );
                     db.mangaItemDao().insertManga(mangaEntity);
                     // Load chapters from Room first
                     List<ChapterItemEntity> savedChapters = db.chapterDao().getChaptersByMangaId(mangaId);
-                    Log.e("MangaPage", "Loaded chapters: " + savedChapters.size());
+                    //Log.e("MangaPage", "Loaded chapters: " + savedChapters.size());
                     runOnUiThread(() -> {
                         for (ChapterItemEntity c : savedChapters) {
                             if (chapterList.stream().noneMatch(ch -> ch.getChapterId().equals(c.getChapterId()))) {
-                                ChapterModel ch = new ChapterModel(c.getChapterId(), c.getTitle(), c.getNumber());
+                                ChapterModel ch = new ChapterModel(c.getChapterId(), c.getTitle(), c.getNumber(),c.getChapterUrl());
                                 chapterList.add(ch);
-                                Log.e("MangaPage", "Loaded chapter FROM DB: " + c.getTitle());
+                               // Log.e("MangaPage", "Loaded chapter FROM DB: " + c.getTitle());
                             }
                         }
                         mangaPageAdapter.notifyDataSetChanged();
                     });
 
                     // Then fetch remaining chapters from API
-                    updateLoadChapterList(0); // start offset after existing chapters
+                    updateLoadChapterListMangaDex(0); // start offset after existing chapters
                 });
 
                 runOnUiThread(() -> {
@@ -246,6 +260,74 @@ public class MangaPage extends AppCompatActivity {
             public void onError(String errorMessage) {
 
             };
+        });
+    }
+
+    private void loadMangaItemAsuraScans() {
+        String mangaUrl = getIntent().getStringExtra("mangaUrl");
+        String mangaId = getIntent().getStringExtra("mangaId");
+
+
+        AsuraScraperTask.getMangaInfoAsuraScans(mangaUrl, new AsuraScraperTask.MangaCallback(){
+
+            @Override
+            public void onSuccess(MangaItemModel manga) {
+
+                if (manga == null) return;
+
+                AppDatabase db = AppDatabase.getInstance(MangaPage.this);
+
+                // Save manga to Room
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    MangaItemEntity mangaEntity = new MangaItemEntity(
+                            manga.getMangaId(),
+                            manga.getTitle(),
+                            manga.getCoverImageUrl(),
+                            manga.getDescription()
+                            ,manga.getMangaUrl()
+                            ,manga.getLastChapter()
+                    );
+                    db.mangaItemDao().insertManga(mangaEntity);
+                    // Load chapters from Room first
+                    List<ChapterItemEntity> savedChapters = db.chapterDao().getChaptersByMangaId(mangaId);
+                    //Log.e("MangaPage", "Loaded chapters: " + savedChapters.size());
+                    runOnUiThread(() -> {
+                        for (ChapterItemEntity c : savedChapters) {
+                            if (chapterList.stream().noneMatch(ch -> ch.getChapterId().equals(c.getChapterId()))) {
+                                ChapterModel ch = new ChapterModel(c.getChapterId(), c.getTitle(), c.getNumber(),c.getChapterUrl());
+                                chapterList.add(ch);
+                                //Log.e("MangaPage", "Loaded chapter FROM DB: " + c.getTitle());
+                            }
+                        }
+                        mangaPageAdapter.notifyDataSetChanged();
+                    });
+
+                    // Then fetch remaining chapters from API
+                    updateLoadChapterListAsuraScans(0); // start offset after existing chapters
+                });
+
+                runOnUiThread(() -> {
+                    mangaItem = manga;
+                    if (mangaItem != null && mangaItem.getCoverImageUrl() != null) {
+                        title.setText(mangaItem.getTitle());
+                        description.setText(mangaItem.getDescription());
+                        Glide.with(MangaPage.this)
+                                .load(mangaItem.getCoverImageUrl())
+                                .placeholder(android.R.drawable.ic_dialog_info)
+                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                .dontTransform()
+                                .error(android.R.drawable.ic_dialog_alert)
+                                .into(cover);
+                    } else {
+                        cover.setImageResource(android.R.drawable.picture_frame);
+                    }
+                });;
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+
+            }
         });
     }
 
@@ -282,7 +364,7 @@ public class MangaPage extends AppCompatActivity {
     }
 
 
-    private void updateLoadChapterList(int offset) {
+    private void updateLoadChapterListMangaDex(int offset) {
         String mangaId = getIntent().getStringExtra("mangaId");
         int LIMIT = 100;
         AppDatabase db = AppDatabase.getInstance(this);
@@ -300,7 +382,8 @@ public class MangaPage extends AppCompatActivity {
                                 c.getChapterId(), // primary key
                                 mangaId,
                                 c.getTitle(),
-                                c.getNumber()
+                                c.getNumber(),
+                                c.getChapterUrl()
                         ));
                     }
                     db.chapterDao().insertChapters(entities);
@@ -321,7 +404,60 @@ public class MangaPage extends AppCompatActivity {
                 // Load next batch recursively
                 // Fetch next batch only if we got full LIMIT
                 if (fetchedChapters.size() == LIMIT) {
-                    updateLoadChapterList(offset + LIMIT);
+                    updateLoadChapterListMangaDex(offset + LIMIT);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> Toast.makeText(MangaPage.this, "Error loading chapters: " + message, Toast.LENGTH_SHORT).show());
+            }
+        });
+    }
+
+    private void updateLoadChapterListAsuraScans(int offset) {
+        String mangaId = getIntent().getStringExtra("mangaId");
+        String mangaUrl = getIntent().getStringExtra("mangaUrl");
+        Log.e("MangaPage", "mangaUrl " + mangaUrl);
+        int LIMIT = 100;
+        AppDatabase db = AppDatabase.getInstance(this);
+
+        AsuraScraperTask.getMangaChaptersAsuraScans(mangaUrl, new AsuraScraperTask.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                if (fetchedChapters.isEmpty()) return; // stop recursion
+
+                // Save/update in Room
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    List<ChapterItemEntity> entities = new ArrayList<>();
+                    for (ChapterModel c : fetchedChapters) {
+                        entities.add(new ChapterItemEntity(
+                                c.getChapterId(), // primary key
+                                mangaId,
+                                c.getTitle(),
+                                c.getNumber(),
+                                c.getChapterUrl()
+                        ));
+                    }
+                    db.chapterDao().insertChapters(entities);
+                });
+
+                // Update UI
+                runOnUiThread(() -> {
+                    for (ChapterModel c : fetchedChapters) {
+                        if (chapterList.stream().noneMatch(ch -> ch.getChapterId().equals(c.getChapterId()))) {
+                            chapterList.add(c);
+
+                        }
+                    }
+                    mangaPageAdapter.notifyDataSetChanged();
+                });
+
+
+                // Load next batch recursively
+                // Fetch next batch only if we got full LIMIT
+                if (fetchedChapters.size() == LIMIT) {
+                    updateLoadChapterListMangaDex(offset + LIMIT);
                 }
             }
 

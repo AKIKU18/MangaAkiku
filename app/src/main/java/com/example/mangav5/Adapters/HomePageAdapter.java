@@ -1,26 +1,21 @@
 package com.example.mangav5.Adapters;
 
+import static com.example.mangav5.MainActivitys.HomePage.serviceFeed;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.RenderEffect;
-import android.graphics.Shader;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -28,13 +23,13 @@ import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.MainActivitys.HomePage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.Services.BookmarkService;
-import com.example.mangav5.Services.ChaptersService;
+import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
+import com.example.mangav5.ServicesMangaDex.BookmarkService;
+import com.example.mangav5.ServicesMangaDex.ChaptersService;
 import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.MainActivitys.MangaPage;
 
@@ -72,50 +67,79 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         holder.title.setText(manga.getTitle());
         holder.description.setText(manga.getDescription());
 
-        // Load cover image
+        /// Load cover image
         String coverUrl = manga.getCoverImageUrl();
         if (coverUrl != null && !coverUrl.isEmpty()) {
+            boolean isAnimatedWebP = coverUrl.endsWith(".webp"); // adjust if needed
+
             Glide.with(context)
                     .load(coverUrl)
                     .placeholder(R.drawable.error_placeholder)
                     .error(R.drawable.error_placeholder)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .skipMemoryCache(false)
+                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) // cache to disk
+                    .skipMemoryCache(!isAnimatedWebP)              // skip memory only for animated
                     .dontAnimate()
-                    .format(DecodeFormat.PREFER_RGB_565) // or PREFER_ARGB_8888
+                    .format(DecodeFormat.PREFER_RGB_565)
                     .into(holder.cover);
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
 
+        SwitchLastChapterFeed(manga,holder);
+
         // Bookmark star
         holder.bookmarkStar.setImageResource(manga.getIsBookmarked() ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, manga, bookmarkDao);
 
-        // Load last chapter safely
-        ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
-            @Override
-            public void onSuccess(List<ChapterModel> chapters) {
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    if (chapters != null && !chapters.isEmpty()) {
-                        holder.lastChapter.setText("Last Chapter: " + chapters.get(0).getTitle());
-                    } else {
-                        holder.lastChapter.setText("No chapters");
-                    }
-                });
-            }
 
-            @Override
-            public void onError(String message) {
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    holder.lastChapter.setText("Error loading chapters");
-                });
-            }
-        });
 
         holder.lastChapter.setOnClickListener(v -> goToChapterPage(manga));
 
         holder.title.setOnClickListener(v -> goToMangaPage(manga));
+    }
+
+    private void SwitchLastChapterFeed(MangaItemModel manga,MangaViewHolder holder){
+        if (serviceFeed.equals("MangaDex")) {
+            // Load last chapter safely
+            ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
+                @Override
+                public void onSuccess(List<ChapterModel> chapters) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if (chapters != null && !chapters.isEmpty()) {
+                            holder.lastChapter.setText("Last Chapter: " + chapters.get(0).getTitle());
+                        } else {
+                            holder.lastChapter.setText("No chapters");
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        holder.lastChapter.setText("Error loading chapters");
+                    });
+                }
+            });
+        }else{
+            holder.lastChapter.setText(manga.getLastChapter());
+
+            AsuraScraperTask.getMangaInfoAsuraScans(manga.getMangaUrl(), new AsuraScraperTask.MangaCallback() {
+                @Override
+                public void onSuccess(MangaItemModel mangaResult) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        holder.description.setText(mangaResult.getDescription());
+                    });
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        holder.lastChapter.setText("Error loading");
+                    });
+                }
+            });
+
+        }
     }
 
     private void goToChapterPage(MangaItemModel manga) {
@@ -128,42 +152,66 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                             manga.getMangaId(),
                             manga.getTitle(),
                             manga.getCoverImageUrl(),
-                            manga.getDescription()
+                            manga.getDescription(),
+                            manga.getMangaUrl()
+                            ,manga.getLastChapter()
                     )
             );
         });
 
-        // Fetch latest chapter
-        ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
-            @Override
-            public void onSuccess(List<ChapterModel> chapters) {
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    if (chapters != null && !chapters.isEmpty()) {
-                        ChapterModel lastChapter = chapters.get(0);
-                        Intent intent = new Intent(context, ChapterPage.class);
-                        intent.putExtra("chapterId", lastChapter.getChapterId());
-                        intent.putExtra("chapterTitle", lastChapter.getTitle());
-                        intent.putExtra("mangaId", manga.getMangaId());
-                        context.startActivity(intent);
-                    } else {
-                        Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
+        switch (serviceFeed){
+            case "MangaDex":
+                // Fetch latest chapter
+                ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
+                    @Override
+                    public void onSuccess(List<ChapterModel> chapters) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            if (chapters != null && !chapters.isEmpty()) {
+                                ChapterModel lastChapter = chapters.get(0);
+                                Intent intent = new Intent(context, ChapterPage.class);
+                                intent.putExtra("chapterId", lastChapter.getChapterId());
+                                intent.putExtra("chapterTitle", lastChapter.getTitle());
+                                intent.putExtra("mangaId", manga.getMangaId());
+                                context.startActivity(intent);
+                            } else {
+                                Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            Toast.makeText(context, "Error fetching chapters", Toast.LENGTH_SHORT).show();
+                        });
                     }
                 });
-            }
+                break;
+            case "AsuraScans":
+                Toast.makeText(context, "AsuraScans work in progress", Toast.LENGTH_SHORT).show();
+                break;
+        }
 
-            @Override
-            public void onError(String message) {
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    Toast.makeText(context, "Error fetching chapters", Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
+
     }
 
     private void goToMangaPage(MangaItemModel manga) {
         Intent intent = new Intent(context, MangaPage.class);
-        intent.putExtra("mangaId", manga.getMangaId());
-        mangaPageLauncher.launch(intent);
+
+        switch (serviceFeed){
+            case "MangaDex":
+                intent.putExtra("mangaId", manga.getMangaId());
+                mangaPageLauncher.launch(intent);
+                break;
+            case "AsuraScans":
+                intent.putExtra("mangaUrl", manga.getMangaUrl());
+                intent.putExtra("mangaId", manga.getMangaId());
+                mangaPageLauncher.launch(intent);
+                break;
+        }
+
+
+
     }
 
     public void refreshBookmarkStates() {

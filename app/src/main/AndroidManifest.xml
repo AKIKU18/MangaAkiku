@@ -22,16 +22,21 @@
             android:exported="false" />
         <activity
             android:name=".MainActivitys.BookmarksPage"
-            android:exported="true"/>
+            android:exported="true" />
         <activity
             android:name=".MainActivitys.MangaPage"
-            android:exported="true"/>
+            android:exported="true" />
         <activity
             android:name=".MainActivitys.ChapterPage"
-            android:exported="true"/>
+            android:exported="true" />
         <activity
-            android:name=".MainActivitys.HomePage"
-            android:exported="true">
+            android:name=".ServicesAsuraScans.AsuraScansChapterPages"
+            android:exported="true"/>
+
+            <activity
+                android:name=".MainActivitys.HomePage"
+                android:exported="true" >
+
 
             <!-- 👇 THIS MUST BE INSIDE the <activity> tag -->
             <intent-filter>
