@@ -27,6 +27,7 @@ import com.example.mangav5.MainActivitys.HomePage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
 import com.example.mangav5.ServicesMangaDex.BookmarkService;
 import com.example.mangav5.ServicesMangaDex.ChaptersService;
@@ -159,40 +160,32 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             );
         });
 
-        switch (serviceFeed){
-            case "MangaDex":
-                // Fetch latest chapter
-                ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
-                    @Override
-                    public void onSuccess(List<ChapterModel> chapters) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            if (chapters != null && !chapters.isEmpty()) {
-                                ChapterModel lastChapter = chapters.get(0);
-                                Intent intent = new Intent(context, ChapterPage.class);
-                                intent.putExtra("chapterId", lastChapter.getChapterId());
-                                intent.putExtra("chapterTitle", lastChapter.getTitle());
-                                intent.putExtra("mangaId", manga.getMangaId());
-                                context.startActivity(intent);
-                            } else {
-                                Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(String message) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            Toast.makeText(context, "Error fetching chapters", Toast.LENGTH_SHORT).show();
-                        });
+        ServiceController.fetchChapterListController(serviceFeed,manga.getMangaId(),manga.getMangaUrl(), 0, 1, "desc" ,new ServiceController.ChapterListCallback() {
+            @Override
+            public void onSuccess(List<ChapterModel> chapters) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (chapters != null && !chapters.isEmpty()) {
+                        ChapterModel lastChapter = chapters.get(0);
+                        Intent intent = new Intent(context, ChapterPage.class);
+                        intent.putExtra("chapterId", lastChapter.getChapterId());
+                        intent.putExtra("chapterTitle", lastChapter.getTitle());
+                        intent.putExtra("mangaId", manga.getMangaId());
+                        intent.putExtra("mangaUrl", manga.getMangaUrl());
+                        intent.putExtra("chapterUrl", lastChapter.getChapterUrl());
+                        context.startActivity(intent);
+                    } else {
+                        Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
                     }
                 });
-                break;
-            case "AsuraScans":
-                Toast.makeText(context, "AsuraScans work in progress", Toast.LENGTH_SHORT).show();
-                break;
-        }
+            }
 
-
+            @Override
+            public void onError(String message) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    Toast.makeText(context, "Error fetching chapters", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     private void goToMangaPage(MangaItemModel manga) {

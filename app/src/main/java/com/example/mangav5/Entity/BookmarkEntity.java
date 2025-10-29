@@ -13,32 +13,34 @@ public class BookmarkEntity {
     public String title;
     public String coverUrl;
     public String description;
+    public String mangaUrl;
 
-    public BookmarkEntity(String mangaId, String title, String coverUrl, String description) {
+    public BookmarkEntity(String mangaId, String title, String coverUrl, String description, String mangaUrl) {
         this.mangaId = mangaId;
         this.title = title;
         this.coverUrl = coverUrl;
         this.description = description;
+        this.mangaUrl = mangaUrl;
     }
 
     public String getMangaId() {
         return mangaId;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public String getCoverUrl() {
-        return coverUrl;
-    }
-
     public void setMangaId(String mangaId) {
         this.mangaId = mangaId;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getCoverUrl() {
+        return coverUrl;
     }
 
     public void setCoverUrl(String coverUrl) {
@@ -52,4 +54,13 @@ public class BookmarkEntity {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getMangaUrl() {
+        return mangaUrl;
+    }
+
+    public void setMangaUrl(String mangaUrl) {
+        this.mangaUrl = mangaUrl;
+    }
+
 }

@@ -188,7 +188,9 @@ public class ChapterPage extends AppCompatActivity {
                             manga.getCoverImageUrl(),
                             manga.getDescription(),
                             System.currentTimeMillis(),
-                            manga.getTitle()
+                            manga.getTitle(),
+                            manga.getMangaUrl(),
+                            getIntent().getStringExtra("chapterUrl")
                     );
                     db.historyDao().insertHistoryItem(historyItem);
                     Log.e("ChapterPage", "Chapter inserted into history: " + getCurrentChapterTitle());
@@ -215,7 +217,9 @@ public class ChapterPage extends AppCompatActivity {
                             manga.getCoverImageUrl(),
                             manga.getDescription(),
                             System.currentTimeMillis(),
-                            manga.getTitle()
+                            manga.getTitle(),
+                            manga.getMangaUrl(),
+                            getIntent().getStringExtra("chapterUrl")
                     );
                     db.historyDao().insertHistoryItem(historyItem);
                     Log.e("ChapterPage", "Chapter inserted into history: " + getCurrentChapterTitle());

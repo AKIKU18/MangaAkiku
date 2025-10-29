@@ -16,7 +16,7 @@ import com.example.mangav5.Entity.MangaItemEntity;
 
 @Database(
         entities = {BookmarkEntity.class, ChapterItemEntity.class, MangaItemEntity.class, HistoryEntity.class},
-        version = 2,
+        version = 1,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

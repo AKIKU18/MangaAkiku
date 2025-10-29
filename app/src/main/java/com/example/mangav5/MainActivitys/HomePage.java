@@ -9,6 +9,9 @@ import android.os.Bundle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.View;
@@ -19,20 +22,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPages;
-import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
-import com.example.mangav5.ServicesMangaDex.FeedMangaService;
+import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServicesMangaDex.SearchService;
+import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPages;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +46,6 @@ public class HomePage extends AppCompatActivity {
     private Button button_mangadex;
     private Button button_asurascans;
     private ImageButton settingsPageButton;
-    private View bookmarkBlurBackground;
-    private View historyBlurBackground;
     private ImageView recycler_bg_blur;
     private List<MangaItemModel> mangaList = new ArrayList<>();
     private List<MangaItemModel> searchMangaList = new ArrayList<>();
@@ -58,11 +53,10 @@ public class HomePage extends AppCompatActivity {
     private boolean isLoading = false;
     private int offset = 0;
     private static final int LIMIT = 10;
-    private boolean hasMore = true; // Optional, in case the API tells you there are no more items
     private ActivityResultLauncher<Intent> bookmarkLauncher;
     private ActivityResultLauncher<Intent> mangaPageLauncher;
     private BookmarkDao bookmarkDao;
-    public static String serviceFeed = "MangaDex";
+    public static String serviceFeed = "AsuraScans";
     private int asuraScansOffset = 0;
 
     @Override
@@ -70,33 +64,30 @@ public class HomePage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
-
-        // Initialize views and DB
+        // Initialize views
         searchResultView = findViewById(R.id.recycler_search_results);
         mangaListView = findViewById(R.id.recycler_main);
         searchView = findViewById(R.id.search_bar);
         bookmarkPageButton = findViewById(R.id.button_bookmarks);
         historyPageButton = findViewById(R.id.button_history);
         settingsPageButton = findViewById(R.id.button_settings);
-        bookmarkBlurBackground = findViewById(R.id.bookmarkBlurBackground);
-        historyBlurBackground = findViewById(R.id.historyBlurBackground);
         recycler_bg_blur = findViewById(R.id.recycler_bg_blur);
         button_mangadex = findViewById(R.id.button_mangadex);
         button_asurascans = findViewById(R.id.button_asurascans);
+
+        AppDatabase db = AppDatabase.getInstance(this);
+        bookmarkDao = db.bookmarkDao();
+
         CheckIfStillBookmarked();
 
+        searchResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
+        homeListAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
 
-        searchResultAdapter = new HomePageAdapter(searchMangaList, this,mangaPageLauncher);
-
-        homeListAdapter = new HomePageAdapter(mangaList, this,mangaPageLauncher);
         searchResultView.setAdapter(searchResultAdapter);
         mangaListView.setAdapter(homeListAdapter);
 
         searchResultView.setLayoutManager(new LinearLayoutManager(this));
         mangaListView.setLayoutManager(new LinearLayoutManager(this));
-
-        AppDatabase db = AppDatabase.getInstance(this);
-        this.bookmarkDao =db.bookmarkDao();
 
         // Remove title bar
         if (getSupportActionBar() != null) {
@@ -104,7 +95,7 @@ public class HomePage extends AppCompatActivity {
         }
 
         setupSearchView();
-        mangaDexLoadList();
+        loadFeed(offset, LIMIT); // Load initial feed
         loadMangaOffset();
         BookmarkButtonGoTo();
         HistoryButtonGoTo();
@@ -113,42 +104,33 @@ public class HomePage extends AppCompatActivity {
     }
 
     private void SwitchFeed() {
-        button_asurascans.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                serviceFeed = "AsuraScans";
-                Toast.makeText(HomePage.this, "AsuraScans", Toast.LENGTH_SHORT).show();
+        button_asurascans.setOnClickListener(v -> {
+            serviceFeed = "AsuraScans";
+            Toast.makeText(HomePage.this, "AsuraScans", Toast.LENGTH_SHORT).show();
 
-                mangaList.clear();
-                offset = 0;
-                asuraScansOffset = 0;
-                hasMore = true;
-                homeListAdapter.notifyDataSetChanged();
-                mangaListView.scrollToPosition(0);
+            mangaList.clear();
+            offset = 0;
+            asuraScansOffset = 0;
+            homeListAdapter.notifyDataSetChanged();
+            mangaListView.scrollToPosition(0);
 
-                asuraScanLoadList();
-            }
+            loadFeed(asuraScansOffset, LIMIT);
         });
 
-        button_mangadex.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                serviceFeed = "MangaDex";
-                Toast.makeText(HomePage.this, "MangaDex", Toast.LENGTH_SHORT).show();
+        button_mangadex.setOnClickListener(v -> {
+            serviceFeed = "MangaDex";
+            Toast.makeText(HomePage.this, "MangaDex", Toast.LENGTH_SHORT).show();
 
-                // Clear current list and reset offset
-                mangaList.clear();
-                offset = 0;
-                asuraScansOffset = 0;
-                homeListAdapter.notifyDataSetChanged();
+            mangaList.clear();
+            offset = 0;
+            asuraScansOffset = 0;
+            homeListAdapter.notifyDataSetChanged();
 
-                // Load MangaDex feed
-                mangaDexLoadList();
-            }
+            loadFeed(offset, LIMIT);
         });
     }
 
-    private void CheckIfStillBookmarked(){
+    private void CheckIfStillBookmarked() {
         bookmarkLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -158,72 +140,41 @@ public class HomePage extends AppCompatActivity {
                         if (data != null) {
                             bookmarkChanged = data.getBooleanExtra("bookmarkChanged", false);
                         }
-                        // Always refresh bookmarks to reflect current DB
                         homeListAdapter.refreshBookmarkStates();
                         searchResultAdapter.refreshBookmarkStates();
-                        if (bookmarkChanged) {
-                            Log.e("HomePage", "Bookmark changed detected!");
-                        }
+                        if (bookmarkChanged) Log.e("HomePage", "Bookmark changed detected!");
                     }
-                }
-        );
+                });
 
         mangaPageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK) {
                         Intent data = result.getData();
-                        if (data != null) {
-                            boolean bookmarkChanged = data.getBooleanExtra("bookmarkChanged", false);
-                            if (bookmarkChanged) {
-                                homeListAdapter.refreshBookmarkStates();
-                            }
+                        if (data != null && data.getBooleanExtra("bookmarkChanged", false)) {
+                            homeListAdapter.refreshBookmarkStates();
                         }
                     }
-                }
-        );
-
+                });
     }
 
-    private void BlurEffect(View button){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            button.setRenderEffect(
-                    RenderEffect.createBlurEffect(30f, 30f, Shader.TileMode.CLAMP)
-            );
-        }
+    private void SettingsButtonGoTo() {
+        settingsPageButton.setOnClickListener(v -> startActivity(new Intent(HomePage.this, SettingsPage.class)));
     }
-    private void SettingsButtonGoTo(){
-        settingsPageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomePage.this, SettingsPage.class);
-                startActivity(intent);
-            }
+
+    private void BookmarkButtonGoTo() {
+        bookmarkPageButton.setOnClickListener(v -> {
+            Intent intent = new Intent(HomePage.this, BookmarksPage.class);
+            bookmarkLauncher.launch(intent);
         });
     }
 
-    private void BookmarkButtonGoTo(){
-        bookmarkPageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomePage.this, AsuraScansChapterPages.class);
-                bookmarkLauncher.launch(intent);
-            }
-        });
-    }
-    private void HistoryButtonGoTo(){
-        historyPageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomePage.this, HistoryPage.class);
-                startActivity(intent);
-            }
-        });
+    private void HistoryButtonGoTo() {
+        historyPageButton.setOnClickListener(v -> startActivity(new Intent(HomePage.this, HistoryPage.class)));
     }
 
     private void setupSearchView() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-
             @Override
             public boolean onQueryTextSubmit(String query) {
                 performSearch(query);
@@ -240,44 +191,40 @@ public class HomePage extends AppCompatActivity {
                     if (!isSearchListAnimated) {
                         Animation slideDown = AnimationUtils.loadAnimation(HomePage.this, R.anim.slide_down);
                         searchResultView.startAnimation(slideDown);
-                        isSearchListAnimated = true;  // prevent running again until hidden
+                        isSearchListAnimated = true;
                     }
                     performSearch(newText);
                 } else {
                     searchResultView.setVisibility(View.GONE);
                     recycler_bg_blur.setVisibility(View.GONE);
-                    isSearchListAnimated = false;  // reset flag when hidden
+                    isSearchListAnimated = false;
                 }
                 return true;
             }
         });
     }
 
-
-
-
     private void performSearch(String query) {
         if (query == null || query.trim().isEmpty()) {
             searchMangaList.clear();
-            offset = 0;
-        } else {
-            SearchService.searchManga(query.trim(), 0, 50, new SearchService.MangaListCallback() {
-                @Override
-                public void onSuccess(List<MangaItemModel> results) {
-                    runOnUiThread(() -> {
-                        searchMangaList.clear();
-                        searchMangaList.addAll(results);
-                        searchResultAdapter.refreshBookmarkStates();
-                        searchResultAdapter.notifyDataSetChanged();
-                    });
-                }
-
-                @Override
-                public void onError(String message) {
-
-                }
-            });
+            return;
         }
+        SearchService.searchManga(query.trim(), 0, 50, new SearchService.MangaListCallback() {
+            @Override
+            public void onSuccess(List<MangaItemModel> results) {
+                runOnUiThread(() -> {
+                    searchMangaList.clear();
+                    searchMangaList.addAll(results);
+                    searchResultAdapter.refreshBookmarkStates();
+                    searchResultAdapter.notifyDataSetChanged();
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e("HomePageSearch", "Error: " + message);
+            }
+        });
     }
 
     private void loadMangaOffset() {
@@ -285,27 +232,25 @@ public class HomePage extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                if (layoutManager == null || isLoading || !hasMore) return;
+                if (layoutManager == null || isLoading) return;
 
                 int visibleItemCount = layoutManager.getChildCount();
                 int totalItemCount = layoutManager.getItemCount();
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
                 if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5) {
-                    if (serviceFeed.equals("MangaDex")) {
-                        mangaDexLoadList();
-                    } else if (serviceFeed.equals("AsuraScans")) {
-                        asuraScanLoadList();
-                    }
+                    if (serviceFeed.equals("MangaDex")) loadFeed(offset, LIMIT);
+                    else if (serviceFeed.equals("AsuraScans")) loadFeed(asuraScansOffset, LIMIT);
                 }
             }
         });
     }
 
-
-    private void mangaDexLoadList() {
+    private void loadFeed(int offset, int limit) {
+        if (isLoading) return;
         isLoading = true;
-        FeedMangaService.fetchMangaList(offset, LIMIT, new FeedMangaService.MangaListCallback() {
+
+        ServiceController.fetchMangaListController(serviceFeed, offset, limit, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> mangas) {
                 runOnUiThread(() -> {
@@ -318,44 +263,12 @@ public class HomePage extends AppCompatActivity {
                         mangaList.addAll(mangas);
                         homeListAdapter.notifyItemRangeInserted(start, mangas.size());
                     }
-                    offset += LIMIT;
+
                     isLoading = false;
                     homeListAdapter.refreshBookmarkStates();
 
-                });
-            }
-
-            @Override
-            public void onError(String message) {
-                runOnUiThread(() -> {
-                    Toast.makeText(HomePage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
-    }
-
-    private void asuraScanLoadList() {
-        if (isLoading) return;  // safety check
-        isLoading = true;
-
-        int currentPage = asuraScansOffset;
-        asuraScansOffset += 1;  // increment immediately
-
-        AsuraScraperTask.getAsuraScansMangaFeed(currentPage, new AsuraScraperTask.MangaListCallback() {
-            @Override
-            public void onSuccess(List<MangaItemModel> mangas) {
-                runOnUiThread(() -> {
-                    if (currentPage == 0) {
-                        mangaList.clear();
-                        mangaList.addAll(mangas);
-                        homeListAdapter.notifyDataSetChanged();
-                    } else {
-                        int start = mangaList.size();
-                        mangaList.addAll(mangas);
-                        homeListAdapter.notifyItemRangeInserted(start, mangas.size());
-                    }
-                    isLoading = false;
-                    homeListAdapter.refreshBookmarkStates();
+                    if (serviceFeed.equals("MangaDex")) HomePage.this.offset += limit;
+                    else if (serviceFeed.equals("AsuraScans")) HomePage.this.asuraScansOffset += 1;
                 });
             }
 

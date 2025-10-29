@@ -33,11 +33,13 @@ public class BookmarkService {
     }
 
     private static void toggleBookmark(MangaItemModel manga, BookmarkDao bookmarkDao) {
-        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription());
+        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl());
         bookmark.setMangaId(manga.getMangaId());
         bookmark.setTitle(manga.getTitle());
         bookmark.setCoverUrl(manga.getCoverImageUrl());
         bookmark.setDescription(manga.getDescription());
+        bookmark.setMangaUrl(manga.getMangaUrl());
+
         //If exist in database bookmark than delete
         if (bookmarkDao.isBookmarked(manga.getMangaId())) {
             bookmarkDao.delete(bookmark);

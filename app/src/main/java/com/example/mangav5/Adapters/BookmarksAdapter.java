@@ -27,10 +27,12 @@ import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.MainActivitys.BookmarksPage;
 import com.example.mangav5.MainActivitys.ChapterPage;
+import com.example.mangav5.MainActivitys.HomePage;
 import com.example.mangav5.MainActivitys.MangaPage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServicesMangaDex.BookmarkService;
 import com.example.mangav5.ServicesMangaDex.ChaptersService;
 
@@ -67,6 +69,9 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         mangaItemModel.setTitle(manga.getTitle());
         mangaItemModel.setCoverImageUrl(manga.getCoverUrl());
         mangaItemModel.setDescription(manga.getDescription());
+        mangaItemModel.setMangaUrl(manga.getMangaUrl());
+
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             holder.mangaBlurCard.setRenderEffect(
@@ -121,19 +126,23 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                 intent.putExtra("chapterId", viewdChapterId);
                 intent.putExtra("chapterTitle", viewedChaptertTitle);
                 intent.putExtra("mangaId", mangaItem.getMangaId());
+                intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
+                intent.putExtra("chapterUrl", db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterUrl);
                 context.startActivity(intent);
             }
         });
     }
 
     private void GetLastChapter(MangaItemModel mangaItem) {
-        ChaptersService.fetchAllChapters(mangaItem.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
+        ServiceController.fetchChapterListController(HomePage.serviceFeed,mangaItem.getMangaId(),mangaItem.getMangaUrl(), 0, 1, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 Intent intent = new Intent(context, ChapterPage.class);
                 intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
                 intent.putExtra("chapterTitle", fetchedChapters.get(0).getTitle());
                 intent.putExtra("mangaId", mangaItem.getMangaId());
+                intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
+                intent.putExtra("chapterUrl", fetchedChapters.get(0).getChapterUrl());
                 context.startActivity(intent);
             }
 
@@ -178,6 +187,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     public void GoToMangaItem(MangaItemModel manga){
         Intent intent = new Intent(context, MangaPage.class);
         intent.putExtra("mangaId", manga.getMangaId());
+        intent.putExtra("mangaUrl", manga.getMangaUrl());
         BookmarksPage.mangaPageLauncher.launch(intent);
     }
 
