@@ -24,6 +24,7 @@ import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPages;
 import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
 import com.example.mangav5.ServicesMangaDex.ChaptersService;
@@ -88,94 +89,66 @@ public class ChapterPage extends AppCompatActivity {
         tvChapterNumber.setText(chapterTitle);
 
         // --- Load chapter pages ---
-        SwitchFeedPages(chapterId, chapterUrl);
+        GetChapterPages();
 
         // --- Setup UI ---
         setupRecyclerScroll();
         ChapterRefresh();
         NextChapter();
         PrevChapter();
-        SwitchInsertHistoryChapter();
         SetMangaTitle(mangaId);
         GoToHomePage();
-        switch (HomePage.serviceFeed){
-            case "MangaDex":
-                updateLoadChapterListMangaDex(0);
-                break;
-            case "AsuraScans":
-                updateLoadChapterListAsuraScans();
-                break;
+        updateLoadChapterList(0);
+        InsertChapterIntoHistory();
+    }
+
+    private void GetChapterPages(){
+        String source = getIntent().getStringExtra("source");
+        String chapterUrlOrId;
+
+        if ("MangaDex".equals(source)) {
+            chapterUrlOrId = getCurrentChapterId(); // use current chapter ID
+        } else {
+            chapterUrlOrId = getIntent().getStringExtra("chapterUrl"); // fallback
         }
-    }
 
-    private void SwitchInsertHistoryChapter(){
-        switch (HomePage.serviceFeed){
-            case "MangaDex":
-                InsertChapterIntoHistoryMangaDex();
-                break;
-            case "AsuraScans":
-                InsertChapterIntoHistoryAsuraScans();
-                break;
-        }
-    }
-
-    private void SwitchFeedPages(String chapterId, String chapterUrl) {
-        switch (HomePage.serviceFeed) {
-            case "MangaDex":
-                GetChapterPagesMangaDex(chapterId);
-                break;
-            case "AsuraScans":
-                GetChapterPagesAsuraScans(chapterUrl);
-                break;
-        }
-    }
-
-    private void GetChapterPagesMangaDex(String chapterId) {
-        ChaptersService.fetchChapterPages(chapterId, new ChaptersService.PagesCallback() {
-            @Override
-            public void onSuccess(List<String> fetchPages) {
-                runOnUiThread(() -> {
-                    chapters.clear();
-                    chapters.addAll(fetchPages);
-                    SwitchInsertHistoryChapter();
-                    chapterPageAdapter.notifyDataSetChanged();
-                    Log.e("ChapterPage", "Pages fetched successfully: " + chapters.size());
-                });
-            }
-
-            @Override
-            public void onError(String message) {
-                runOnUiThread(() -> Toast.makeText(ChapterPage.this, "Error: " + message, Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-
-    private void GetChapterPagesAsuraScans(String chapterUrl) {
-        AsuraScansChapterPages scraper = new AsuraScansChapterPages();
-        scraper.GetChapterPages(this, chapterUrl, new AsuraScansChapterPages.PagesCallback() {
+        final String chapterUrlOrUrlFinal = chapterUrlOrId;
+        ServiceController.getChapterPages(this,source,chapterUrlOrUrlFinal, new ServiceController.PagesCallback() {
             @Override
             public void onSuccess(List<String> pages) {
+                Log.e("ChapterPageAdapter", "Pages: " + pages);
                 runOnUiThread(() -> {
                     chapters.clear();
                     chapters.addAll(pages);
-                    SwitchInsertHistoryChapter();
+                    InsertChapterIntoHistory();
                     chapterPageAdapter.notifyDataSetChanged();
-                    Log.e("ChapterPage", "Pages fetched successfully: " + chapters.size());
+                    Log.e("ChapterPage", "Pages fetched successfully: " + pages.size());
                 });
             }
-
             @Override
             public void onError(String message) {
-                runOnUiThread(() ->
-                        Toast.makeText(ChapterPage.this, "Error: " + message, Toast.LENGTH_SHORT).show()
-                );
+
             }
         });
     }
 
-    private void InsertChapterIntoHistoryMangaDex() {
-        String mangaId = getIntent().getStringExtra("mangaId");
-        FeedMangaService.fetchMangaById(mangaId, new FeedMangaService.MangaCallback() {
+    private void InsertChapterIntoHistory(){
+        String mangaUrlOrId =getIntent().getStringExtra("mangaId"); // always start with mangaId
+        String source = getIntent().getStringExtra("source");
+
+        if ("MangaDex".equals(source)) {
+            // Use only the ID for MangaDex
+            mangaUrlOrId = getIntent().getStringExtra("mangaId");
+        } else {
+            // For other sources, fallback to mangaUrl
+            if (getIntent().getStringExtra("mangaUrl") != null) {
+                mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+            }
+        }
+
+        Log.d("MangaPageLog", "Fetching manga: source=" + source + " , id/url=" + mangaUrlOrId);
+        final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
+        ServiceController.fetchMangaDetails(source, mangaUrlOrId, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 AppDatabase db = AppDatabase.getInstance(ChapterPage.this);
@@ -190,53 +163,39 @@ public class ChapterPage extends AppCompatActivity {
                             System.currentTimeMillis(),
                             manga.getTitle(),
                             manga.getMangaUrl(),
-                            getIntent().getStringExtra("chapterUrl")
+                            getIntent().getStringExtra("chapterUrl"),
+                            manga.getSource()
                     );
                     db.historyDao().insertHistoryItem(historyItem);
                     Log.e("ChapterPage", "Chapter inserted into history: " + getCurrentChapterTitle());
                 });
             }
 
-            @Override
             public void onError(String errorMessage) {}
-        });
-    }
 
-    private void InsertChapterIntoHistoryAsuraScans() {
-        String mangaUrl = getIntent().getStringExtra("mangaUrl");
-        AsuraScraperTask.getMangaInfoAsuraScans(mangaUrl, new AsuraScraperTask.MangaCallback() {
-            @Override
-            public void onSuccess(MangaItemModel manga) {
-                AppDatabase db = AppDatabase.getInstance(ChapterPage.this);
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.execute(() -> {
-                    HistoryEntity historyItem = new HistoryEntity(
-                            manga.getMangaId(),
-                            getCurrentChapterId(),
-                            getCurrentChapterTitle(),
-                            manga.getCoverImageUrl(),
-                            manga.getDescription(),
-                            System.currentTimeMillis(),
-                            manga.getTitle(),
-                            manga.getMangaUrl(),
-                            getIntent().getStringExtra("chapterUrl")
-                    );
-                    db.historyDao().insertHistoryItem(historyItem);
-                    Log.e("ChapterPage", "Chapter inserted into history: " + getCurrentChapterTitle());
-                });
-            }
-
-            @Override
-            public void onError(String errorMessage) {}
         });
     }
 
     private void NextChapter() {
         btnNext.setOnClickListener(v -> {
             AppDatabase db = AppDatabase.getInstance(this);
-            String mangaId = getIntent().getStringExtra("mangaId");
+
+            String mangaUrlOrId = getIntent().getStringExtra("mangaId");
+            String source = getIntent().getStringExtra("source");
+
+            if ("MangaDex".equals(source)) {
+                // Use only the ID for MangaDex
+                mangaUrlOrId = getIntent().getStringExtra("mangaId");
+            } else {
+                // For other sources, fallback to mangaUrl
+                if (getIntent().getStringExtra("mangaUrl") != null) {
+                    mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+                }
+            }
+            final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
+
             Executors.newSingleThreadExecutor().execute(() -> {
-                ChapterItemEntity nextChapter = db.chapterDao().getNextChapter(mangaId, getCurrentChapterId());
+                ChapterItemEntity nextChapter = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, getCurrentChapterId());
                 if (nextChapter != null) {
                     runOnUiThread(() -> loadChapter(nextChapter.getChapterId(), nextChapter.getTitle(), nextChapter.getChapterUrl()));
                 } else runOnUiThread(() -> Toast.makeText(this, "No next chapter found", Toast.LENGTH_SHORT).show());
@@ -247,9 +206,21 @@ public class ChapterPage extends AppCompatActivity {
     private void PrevChapter() {
         btnPrevious.setOnClickListener(v -> {
             AppDatabase db = AppDatabase.getInstance(this);
-            String mangaId = getIntent().getStringExtra("mangaId");
+            String mangaUrlOrId = getIntent().getStringExtra("mangaId");
+            String source = getIntent().getStringExtra("source");
+
+            if ("MangaDex".equals(source)) {
+                // Use only the ID for MangaDex
+                mangaUrlOrId = getIntent().getStringExtra("mangaId");
+            } else {
+                // For other sources, fallback to mangaUrl
+                if (getIntent().getStringExtra("mangaUrl") != null) {
+                    mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+                }
+            }
+            final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
             Executors.newSingleThreadExecutor().execute(() -> {
-                ChapterItemEntity prevChapter = db.chapterDao().getPrevChapter(mangaId, getCurrentChapterId());
+                ChapterItemEntity prevChapter = db.chapterDao().getPrevChapter(mangaIdOrUrlFinal, getCurrentChapterId());
                 if (prevChapter != null) {
                     runOnUiThread(() -> loadChapter(prevChapter.getChapterId(), prevChapter.getTitle(), prevChapter.getChapterUrl()));
                 } else runOnUiThread(() -> Toast.makeText(this, "No previous chapter found", Toast.LENGTH_SHORT).show());
@@ -264,13 +235,17 @@ public class ChapterPage extends AppCompatActivity {
         chapters.clear();
         chapterPageAdapter.notifyDataSetChanged();
         recycleViewPage.scrollToPosition(0);
-        SwitchFeedPages(chapterId, chapterUrl);
+        GetChapterPages();
         hideUI();
     }
 
     private void ChapterRefresh() {
         btnRefresh.setOnClickListener(v ->
-                SwitchFeedPages(getCurrentChapterId(), getIntent().getStringExtra("chapterUrl"))
+                GetChapterPages()
+        );
+
+        btnRefresh.setOnClickListener(v ->
+                Toast.makeText(this, "Refreshing...", Toast.LENGTH_SHORT).show()
         );
     }
 
@@ -286,6 +261,8 @@ public class ChapterPage extends AppCompatActivity {
     private void GoToMangaItem(String mangaId) {
         Intent intent = new Intent(this, MangaPage.class);
         intent.putExtra("mangaId", mangaId);
+        intent.putExtra("source", getIntent().getStringExtra("source"));
+        intent.putExtra("mangaUrl", getIntent().getStringExtra("mangaUrl"));
         startActivity(intent);
     }
 
@@ -296,29 +273,43 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
-    private void updateLoadChapterListMangaDex(int offset) {
-        String mangaId = getIntent().getStringExtra("mangaId");
+    private void updateLoadChapterList(int offset){
+        String mangaUrlOrId = getIntent().getStringExtra("mangaId");
+        String source = getIntent().getStringExtra("source");
+
+        if ("MangaDex".equals(source)) {
+            // Use only the ID for MangaDex
+            mangaUrlOrId = getIntent().getStringExtra("mangaId");
+        } else {
+            // For other sources, fallback to mangaUrl
+            if (getIntent().getStringExtra("mangaUrl") != null) {
+                mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+            }
+        }
+        final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
         int LIMIT = 100;
         AppDatabase db = AppDatabase.getInstance(this);
-
-        ChaptersService.fetchAllChapters(mangaId, "desc", offset, LIMIT, new ChaptersService.ChapterListCallback() {
+        ServiceController.fetchChapterListController(source,mangaIdOrUrlFinal, mangaUrlOrId, 0, 100, "desc", new ServiceController.ChapterListCallback() {
             @Override
-            public void onSuccess(List<ChapterModel> fetchedChapters) {
-                if (fetchedChapters.isEmpty()) return;
+            public void onSuccess(List<ChapterModel> chapters) {
+
+
+                if (chapters.isEmpty()) return;
                 Executors.newSingleThreadExecutor().execute(() -> {
                     List<ChapterItemEntity> entities = new ArrayList<>();
-                    for (ChapterModel c : fetchedChapters) {
+                    for (ChapterModel c : chapters) {
                         entities.add(new ChapterItemEntity(
                                 c.getChapterId(),
-                                mangaId,
+                                mangaIdOrUrlFinal,
                                 c.getTitle(),
                                 c.getNumber(),
-                                c.getChapterUrl()
+                                c.getChapterUrl(),
+                                c.getSource()
                         ));
                     }
                     db.chapterDao().insertChapters(entities);
                 });
-                if (fetchedChapters.size() == LIMIT) updateLoadChapterListMangaDex(offset + LIMIT);
+                if (chapters.size() == LIMIT) updateLoadChapterList(offset + LIMIT);
             }
 
             @Override
@@ -326,42 +317,9 @@ public class ChapterPage extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(ChapterPage.this, "Error loading chapters: " + message, Toast.LENGTH_SHORT).show());
             }
         });
+
     }
 
-    private void updateLoadChapterListAsuraScans() {
-        AppDatabase db = AppDatabase.getInstance(this);
-        String mangaUrl = getIntent().getStringExtra("mangaUrl");
-        Log.e("ChapterPage", "mangaUrl: " + mangaUrl);
-        AsuraScraperTask.getMangaChaptersAsuraScans(mangaUrl, new AsuraScraperTask.ChapterListCallback() {
-            @Override
-            public void onSuccess(List<ChapterModel> fetchedChapters) {
-                if (fetchedChapters.isEmpty()) return;
-
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    List<ChapterItemEntity> entities = new ArrayList<>();
-                    for (ChapterModel c : fetchedChapters) {
-                        entities.add(new ChapterItemEntity(
-                                c.getChapterId(),      // Primary key
-                                getIntent().getStringExtra("mangaId"),
-                                c.getTitle(),
-                                c.getNumber(),
-                                c.getChapterUrl()
-                        ));
-                    }
-
-                    db.chapterDao().insertChapters(entities);
-                });
-
-                // Optional: If you want pagination for Asura feed (not really needed usually)
-                // AsuraScraperTask.getMangaChaptersAsuraScans could support a page parameter in future
-            }
-
-            @Override
-            public void onError(String message) {
-                runOnUiThread(() -> Toast.makeText(ChapterPage.this, "Error loading chapters: " + message, Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
 
 
     private void setupRecyclerScroll() {

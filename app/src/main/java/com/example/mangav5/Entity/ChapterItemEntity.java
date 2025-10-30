@@ -13,14 +13,17 @@ public class ChapterItemEntity {
     public String title;
     public String number;
     public String chapterUrl;
+    public String source;
 
 
-    public ChapterItemEntity(String chapterId, String mangaId, String title, String number, String chapterUrl) {
+
+    public ChapterItemEntity(String chapterId, String mangaId, String title, String number, String chapterUrl,String source) {
         this.chapterId = chapterId;
         this.mangaId = mangaId;
         this.title = title;
         this.number = number;
         this.chapterUrl = chapterUrl;
+        this.source = source;
     }
 
     // Getters and setters for mangaId, chapterId, title, and number
@@ -56,5 +59,13 @@ public class ChapterItemEntity {
 
     public void setChapterUrl(String chapterUrl) {
         this.chapterUrl = chapterUrl;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }

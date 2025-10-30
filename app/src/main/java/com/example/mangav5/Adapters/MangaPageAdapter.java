@@ -51,7 +51,7 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
         ChapterModel chapter = chapters.get(position);
         holder.chapterTitle.setText(chapter.getTitle());
 
-        GoToTheChapterPage(holder,chapter.getChapterId(),chapter.getTitle(),mangaUrl,chapter.getChapterUrl());
+        GoToTheChapterPage(holder,chapter.getChapterId(),chapter.getTitle(),mangaUrl,chapter.getChapterUrl(),chapter.getSource());
 
     }
 
@@ -62,7 +62,7 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
 
 
 
-    private void GoToTheChapterPage(MangaViewHolder holder, String chapterId, String chapterTitle, String mangaUrl, String chapterUrl){
+    private void GoToTheChapterPage(MangaViewHolder holder, String chapterId, String chapterTitle, String mangaUrl, String chapterUrl,String source){
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, ChapterPage.class);
             intent.putExtra("chapterId", chapterId);
@@ -70,6 +70,8 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
             intent.putExtra("mangaId", mangaId);
             intent.putExtra("mangaUrl",mangaUrl);
             intent.putExtra("chapterUrl",chapterUrl);
+            intent.putExtra("source",source);
+
             Log.e("MangaPageAdapter", "mangaUrl " + mangaUrl);
             //Log.e("MangaPageAdapter", "chapterTitle " + chapterTitle);
             context.startActivity(intent);

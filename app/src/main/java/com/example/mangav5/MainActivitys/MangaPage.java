@@ -127,7 +127,7 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void ToggleBookmarkMangaPage(MangaItemModel manga, BookmarkDao bookmarkDao) {
-        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl());
+        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl(),manga.getSource());
         if (bookmarkDao.isBookmarked(manga.getMangaId())) {
             bookmarkDao.delete(bookmark);
             manga.setIsBookmarked(false);
@@ -145,8 +145,10 @@ public class MangaPage extends AppCompatActivity {
 
     private void GetFirstOrLastChapter(String descAsc){
         String mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+        String source = getIntent().getStringExtra("source");
 
-        ServiceController.fetchChapterListController(HomePage.serviceFeed,getMangaId, mangaUrlOrId, 0, 1, descAsc, new ServiceController.ChapterListCallback() {
+
+        ServiceController.fetchChapterListController(source,getMangaId, mangaUrlOrId, 0, 1, descAsc, new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 if (fetchedChapters.isEmpty()) return;
@@ -174,10 +176,23 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void LoadMangaInfo(){
-        String mangaUrlOrId = getIntent().getStringExtra("mangaUrl") != null ?
-                getIntent().getStringExtra("mangaUrl") : getMangaId;
+        String mangaUrlOrId = getMangaId; // always start with mangaId
+        String source = getIntent().getStringExtra("source");
 
-        ServiceController.fetchMangaDetails(HomePage.serviceFeed, mangaUrlOrId, new ServiceController.MangaCallback() {
+        if ("MangaDex".equals(source)) {
+            // Use only the ID for MangaDex
+            mangaUrlOrId = getMangaId;
+        } else {
+            // For other sources, fallback to mangaUrl
+            if (getIntent().getStringExtra("mangaUrl") != null) {
+                mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+            }
+        }
+
+        Log.d("MangaPageLog", "Fetching manga: source=" + source + " , id/url=" + mangaUrlOrId);
+        final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
+
+        ServiceController.fetchMangaDetails(source, mangaUrlOrId, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 if (manga == null) return;
@@ -186,14 +201,15 @@ public class MangaPage extends AppCompatActivity {
                 Executors.newSingleThreadExecutor().execute(() -> {
                     MangaItemEntity mangaEntity = new MangaItemEntity(
                             manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl(), manga.getLastChapter()
-                    );
-                    db.mangaItemDao().insertManga(mangaEntity);
+                    ,manga.getSource());
 
-                    List<ChapterItemEntity> savedChapters = db.chapterDao().getChaptersByMangaId(mangaUrlOrId);
+                    Log.d("MangaPage", "manga.getSource(): " + manga.getSource());
+                    db.mangaItemDao().insertManga(mangaEntity);
+                    List<ChapterItemEntity> savedChapters = db.chapterDao().getChaptersByMangaId(mangaIdOrUrlFinal);
                     runOnUiThread(() -> {
                         for (ChapterItemEntity c : savedChapters) {
                             if (chapterList.stream().noneMatch(ch -> ch.getChapterId().equals(c.getChapterId()))) {
-                                chapterList.add(new ChapterModel(c.getChapterId(), c.getTitle(), c.getNumber(), c.getChapterUrl()));
+                                chapterList.add(new ChapterModel(c.getChapterId(), c.getTitle(), c.getNumber(), c.getChapterUrl(),c.getSource()));
                             }
                         }
                         mangaPageAdapter.notifyDataSetChanged();
@@ -222,9 +238,23 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void updateLoadChapterListInfo(int offset){
-        String mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+        String mangaUrlOrId = getMangaId; // always start with mangaId
+        String source = getIntent().getStringExtra("source");
 
-        ServiceController.fetchChapterListController(HomePage.serviceFeed,getMangaId, mangaUrlOrId, offset, LIMIT, "desc", new ServiceController.ChapterListCallback() {
+        if ("MangaDex".equals(source)) {
+            // Use only the ID for MangaDex
+            mangaUrlOrId = getMangaId;
+        } else {
+            // For other sources, fallback to mangaUrl
+            if (getIntent().getStringExtra("mangaUrl") != null) {
+                mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+            }
+        }
+
+        Log.d("MangaPageLog", "Fetching manga: source=" + source + " , id/url=" + mangaUrlOrId);
+        final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
+
+        ServiceController.fetchChapterListController(source,getMangaId, mangaUrlOrId, offset, LIMIT, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
                 if (chapters.isEmpty()) return;
@@ -233,7 +263,7 @@ public class MangaPage extends AppCompatActivity {
                 Executors.newSingleThreadExecutor().execute(() -> {
                     List<ChapterItemEntity> entities = new ArrayList<>();
                     for (ChapterModel c : chapters) {
-                        entities.add(new ChapterItemEntity(c.getChapterId(), mangaUrlOrId, c.getTitle(), c.getNumber(), c.getChapterUrl()));
+                        entities.add(new ChapterItemEntity(c.getChapterId(), mangaIdOrUrlFinal, c.getTitle(), c.getNumber(), c.getChapterUrl(),c.getSource()));
                     }
                     db.chapterDao().insertChapters(entities);
                 });

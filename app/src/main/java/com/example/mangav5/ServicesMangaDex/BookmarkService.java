@@ -33,7 +33,7 @@ public class BookmarkService {
     }
 
     private static void toggleBookmark(MangaItemModel manga, BookmarkDao bookmarkDao) {
-        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl());
+        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl(),manga.getSource());
         bookmark.setMangaId(manga.getMangaId());
         bookmark.setTitle(manga.getTitle());
         bookmark.setCoverUrl(manga.getCoverImageUrl());

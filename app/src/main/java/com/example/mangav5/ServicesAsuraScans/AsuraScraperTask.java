@@ -73,7 +73,8 @@ public class AsuraScraperTask {
                             coverElement != null ? coverElement.attr("src") : "",
                             false,
                             mangaUrl,
-                            ""
+                            "",
+                            "AsuraScans"
                     );
 
                     mainHandler.post(() -> callback.onSuccess(manga));
@@ -120,14 +121,14 @@ public class AsuraScraperTask {
                     for (Element link : chapterLinks) {
                         Elements h3s = link.select("h3");
                         String[] parts = link.absUrl("href").split("/");
-
+                        Element time = link.selectFirst("p");
                         String chapterTitle = h3s.size() > 0 ? h3s.get(0).text() : "No title";
                         String dateUploaded = h3s.size() > 1 ? h3s.get(1).text() : "";
                         String chapterUrl = link.absUrl("href");
                         String chapterId = chapterTitle.replace(" ", "") + dateUploaded.replace(" ", "");
                         String chapterNumber = parts[parts.length - 1];
 
-                        ChapterModel chapter = new ChapterModel(chapterId, chapterTitle, chapterNumber, chapterUrl);
+                        ChapterModel chapter = new ChapterModel(chapterId, chapterTitle + " "+time, chapterNumber, chapterUrl,"AsuraScans");
                         chapters.add(chapter);
                     }
                 }
@@ -177,7 +178,8 @@ public class AsuraScraperTask {
                                 coverUrl,
                                 false,
                                 href,
-                                chapter != null ? chapter.text() : ""
+                                chapter != null ? chapter.text() : "",
+                                "AsuraScans"
                         );
 
                         mangaList.add(manga);

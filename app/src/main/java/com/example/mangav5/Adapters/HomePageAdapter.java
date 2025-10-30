@@ -66,7 +66,23 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         MangaItemModel manga = mangaList.get(position);
 
         holder.title.setText(manga.getTitle());
-        holder.description.setText(manga.getDescription());
+
+        ServiceController.mangaGetDescription(manga.getSource(), manga.getMangaId(), manga.getMangaUrl(), new ServiceController.DescriptionCallback() {
+            @Override
+            public void onSuccess(String description) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    holder.description.setText(description);
+                });
+
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    holder.description.setText("Error loading");
+                });
+            }
+        });
 
         /// Load cover image
         String coverUrl = manga.getCoverImageUrl();
@@ -99,49 +115,40 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         holder.title.setOnClickListener(v -> goToMangaPage(manga));
     }
 
-    private void SwitchLastChapterFeed(MangaItemModel manga,MangaViewHolder holder){
-        if (serviceFeed.equals("MangaDex")) {
-            // Load last chapter safely
-            ChaptersService.fetchAllChapters(manga.getMangaId(), "desc", 0, 1, new ChaptersService.ChapterListCallback() {
-                @Override
-                public void onSuccess(List<ChapterModel> chapters) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        if (chapters != null && !chapters.isEmpty()) {
-                            holder.lastChapter.setText("Last Chapter: " + chapters.get(0).getTitle());
-                        } else {
-                            holder.lastChapter.setText("No chapters");
-                        }
-                    });
-                }
+    private void SwitchLastChapterFeed(MangaItemModel manga, MangaViewHolder holder) {
+        // Set a placeholder while loading
+        holder.lastChapter.setText("Loading...");
 
-                @Override
-                public void onError(String message) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        holder.lastChapter.setText("Error loading chapters");
-                    });
-                }
-            });
-        }else{
-            holder.lastChapter.setText(manga.getLastChapter());
+        // Fetch last chapter dynamically from the correct source
+        ServiceController.fetchChapterListController(
+                manga.getSource(),
+                manga.getMangaId(),
+                manga.getMangaUrl(),
+                0,
+                1,
+                "desc",
+                new ServiceController.ChapterListCallback() {
+                    @Override
+                    public void onSuccess(List<ChapterModel> chapters) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            if (chapters != null && !chapters.isEmpty()) {
+                                holder.lastChapter.setText(chapters.get(0).getTitle());
+                            } else {
+                                holder.lastChapter.setText("No chapters");
+                            }
+                        });
+                    }
 
-            AsuraScraperTask.getMangaInfoAsuraScans(manga.getMangaUrl(), new AsuraScraperTask.MangaCallback() {
-                @Override
-                public void onSuccess(MangaItemModel mangaResult) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        holder.description.setText(mangaResult.getDescription());
-                    });
+                    @Override
+                    public void onError(String message) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            holder.lastChapter.setText("Error loading");
+                        });
+                    }
                 }
-
-                @Override
-                public void onError(String errorMessage) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        holder.lastChapter.setText("Error loading");
-                    });
-                }
-            });
-
-        }
+        );
     }
+
 
     private void goToChapterPage(MangaItemModel manga) {
         AppDatabase db = AppDatabase.getInstance(context);
@@ -155,12 +162,13 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                             manga.getCoverImageUrl(),
                             manga.getDescription(),
                             manga.getMangaUrl()
-                            ,manga.getLastChapter()
+                            ,manga.getLastChapter(),
+                            manga.getSource()
                     )
             );
         });
 
-        ServiceController.fetchChapterListController(serviceFeed,manga.getMangaId(),manga.getMangaUrl(), 0, 1, "desc" ,new ServiceController.ChapterListCallback() {
+        ServiceController.fetchChapterListController(manga.getSource(),manga.getMangaId(),manga.getMangaUrl(), 0, 1, "desc" ,new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -172,6 +180,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                         intent.putExtra("mangaId", manga.getMangaId());
                         intent.putExtra("mangaUrl", manga.getMangaUrl());
                         intent.putExtra("chapterUrl", lastChapter.getChapterUrl());
+                        intent.putExtra("source", manga.getSource());
                         context.startActivity(intent);
                     } else {
                         Toast.makeText(context, "No chapters found", Toast.LENGTH_SHORT).show();
@@ -194,11 +203,14 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         switch (serviceFeed){
             case "MangaDex":
                 intent.putExtra("mangaId", manga.getMangaId());
+                intent.putExtra("source", manga.getSource());
+
                 mangaPageLauncher.launch(intent);
                 break;
             case "AsuraScans":
                 intent.putExtra("mangaUrl", manga.getMangaUrl());
                 intent.putExtra("mangaId", manga.getMangaId());
+                intent.putExtra("source", manga.getSource());
                 mangaPageLauncher.launch(intent);
                 break;
         }

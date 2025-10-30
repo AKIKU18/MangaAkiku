@@ -20,15 +20,17 @@ public class MangaItemEntity {
     public String description;
     public String mangaUrl;
     public String lastChapter;
+    public String source;
 
 
-    public MangaItemEntity(String mangaId, String title, String coverUrl, String description, String mangaUrl, String lastChapter) {
+    public MangaItemEntity(String mangaId, String title, String coverUrl, String description, String mangaUrl, String lastChapter,String source) {
         this.mangaId = mangaId;
         this.title = title;
         this.coverUrl = coverUrl;
         this.description = description;
         this.mangaUrl = mangaUrl;
         this.lastChapter = lastChapter;
+        this.source = source;
 
     }
 
@@ -80,6 +82,13 @@ public class MangaItemEntity {
 
     public void setLastChapter(String lastChapter) {
         this.lastChapter = lastChapter;
+    }
+
+    public String getSource() {
+        return source;
+    }
+    public void setSource(String source) {
+        this.source = source;
     }
 
 

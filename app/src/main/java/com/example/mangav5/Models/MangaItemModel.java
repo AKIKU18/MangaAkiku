@@ -8,11 +8,13 @@ public class MangaItemModel {
     private Boolean isBookmarked;
     private String mangaUrl;
     private String lastChapter;
+    private String source;
+
 
     public MangaItemModel(){
     }
 
-    public MangaItemModel(String mangaId, String title, String description, String coverImageUrl, Boolean isBookmarked, String mangaUrl,String lastChapter) {
+    public MangaItemModel(String mangaId, String title, String description, String coverImageUrl, Boolean isBookmarked, String mangaUrl,String lastChapter,String source) {
         this.mangaId = mangaId;
         this.title = title;
         this.description = description;
@@ -20,6 +22,7 @@ public class MangaItemModel {
         this.isBookmarked = isBookmarked;
         this.mangaUrl = mangaUrl;
         this.lastChapter = lastChapter;
+        this.source = source;
 
     }
 
@@ -68,5 +71,12 @@ public class MangaItemModel {
 
     public void setLastChapter(String lastChapter) {
         this.lastChapter = lastChapter;
+    }
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }

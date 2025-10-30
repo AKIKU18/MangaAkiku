@@ -4,13 +4,15 @@ public class ChapterModel {
     private String chapterId;
     private String title;
     private String number;
-    private String chapterUlr;
+    private String chapterUrl;
+    private String source;
 
-    public ChapterModel(String chapterId, String title, String number, String chapterUlr) {
+    public ChapterModel(String chapterId, String title, String number, String chapterUrl,String source) {
         this.chapterId = chapterId;
         this.title = title;
         this.number = number;
-        this.chapterUlr = chapterUlr;
+        this.chapterUrl = chapterUrl;
+        this.source = source;
     }
 
     // Getters and setters for chapterId, title, number, coverImageUrl, and pages
@@ -33,11 +35,19 @@ public class ChapterModel {
         this.number = number;
     }
     public String getChapterUrl() {
-        return chapterUlr;
+        return chapterUrl;
     }
 
-    public void setChapterUlr(String chapterUlr) {
-        this.chapterUlr = chapterUlr;
+    public void setChapterUrl(String chapterUrl) {
+        this.chapterUrl = chapterUrl;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
 }

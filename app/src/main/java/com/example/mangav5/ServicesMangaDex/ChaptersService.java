@@ -1,5 +1,7 @@
 package com.example.mangav5.ServicesMangaDex;
 
+import android.util.Log;
+
 import com.example.mangav5.Models.ChapterModel;
 
 import org.json.JSONArray;
@@ -94,7 +96,7 @@ public class ChaptersService {
 
 
 
-                        allChapters.add(new ChapterModel(id, displayTitle, chapterNumber,"ChapterUrl"));
+                        allChapters.add(new ChapterModel(id, displayTitle, chapterNumber,"ChapterUrl","MangaDex"));
                     }
                     callback.onSuccess(allChapters);
 

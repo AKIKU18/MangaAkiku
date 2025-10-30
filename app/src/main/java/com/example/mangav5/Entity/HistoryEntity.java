@@ -18,10 +18,11 @@ public class HistoryEntity {
     public String mangaTitle;
     public String mangaUrl;
     public String chapterUrl;
+    public String source;
 
 
 
-    public HistoryEntity(String mangaId,String chapterId, String chapterTitle, String coverUrl, String description, long timestamp,String mangaTitle,String mangaUrl,String chapterUrl) {
+    public HistoryEntity(String mangaId,String chapterId, String chapterTitle, String coverUrl, String description, long timestamp,String mangaTitle,String mangaUrl,String chapterUrl,String source) {
         this.mangaId = mangaId;
         this.chapterId = chapterId;
         this.chapterTitle = chapterTitle;
@@ -31,6 +32,7 @@ public class HistoryEntity {
         this.mangaTitle = mangaTitle;
         this.mangaUrl = mangaUrl;
         this.chapterUrl = chapterUrl;
+        this.source = source;
     }
 
     // Getters and setters for mangaId, title, coverUrl, description, and timestamp
@@ -95,5 +97,13 @@ public class HistoryEntity {
 
     public void setChapterUrl(String chapterUrl) {
         this.chapterUrl = chapterUrl;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }

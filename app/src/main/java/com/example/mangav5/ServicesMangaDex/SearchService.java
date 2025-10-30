@@ -82,7 +82,7 @@ public class SearchService {
                             }
                         }
 
-                        mangaList.add(new MangaItemModel(id, title, description, coverUrl,false,url,""));
+                        mangaList.add(new MangaItemModel(id, title, description, coverUrl,false,url,"","MangaDex"));
                     }
 
                     callback.onSuccess(mangaList);
