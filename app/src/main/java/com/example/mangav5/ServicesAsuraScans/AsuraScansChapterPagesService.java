@@ -18,16 +18,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AsuraScansChapterPages {
+public class AsuraScansChapterPagesService {
+
     private static final String TAG = "ImagesScraper";
     private static final String JS_BRIDGE_NAME = "AndroidBridge";
+    private static final int MAX_JS_CHECKS = 10;
+    private static final int JS_CHECK_DELAY_MS = 500;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Set<String> processedUrls = new HashSet<>();
-
-    public interface PagesCallback {
-        void onSuccess(List<String> pages);
-        void onError(String message);
-    }
 
     @SuppressLint("SetJavaScriptEnabled")
     public void GetChapterPages(Context context, String chapterUrl, PagesCallback callback) {
@@ -36,7 +34,8 @@ public class AsuraScansChapterPages {
             return;
         }
 
-        // Create a hidden WebView (not added to layout)
+        Log.d(TAG, "Loading chapter URL: " + chapterUrl);
+
         WebView webView = new WebView(context);
         WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
@@ -51,10 +50,24 @@ public class AsuraScansChapterPages {
         webView.addJavascriptInterface(new JsBridge(callback), JS_BRIDGE_NAME);
 
         webView.setWebViewClient(new WebViewClient() {
+            private int jsAttempts = 0;
+
             @Override
             public void onPageFinished(WebView view, String url) {
-                // Inject JS after page load
-                handler.postDelayed(() -> injectCollectorScript(view), 500);
+                Log.d(TAG, "Page finished loading: " + url);
+                handler.postDelayed(() -> checkAndInject(view), JS_CHECK_DELAY_MS);
+            }
+
+            private void checkAndInject(WebView view) {
+                jsAttempts++;
+                Log.d(TAG, "JS injection attempt " + jsAttempts);
+                injectCollectorScript(view);
+
+                if (jsAttempts < MAX_JS_CHECKS) {
+                    handler.postDelayed(() -> checkAndInject(view), JS_CHECK_DELAY_MS);
+                } else {
+                    Log.d(TAG, "Max JS attempts reached");
+                }
             }
         });
 
@@ -64,31 +77,30 @@ public class AsuraScansChapterPages {
     private void injectCollectorScript(WebView view) {
         String js =
                 "(function(){" +
-                        "  function collectAndSend(){ " +
-                        "    try{ " +
-                        "      var arr = [];" +
-                        "      var imgs = document.querySelectorAll('img');" +
-                        "      imgs.forEach(function(el){ " +
-                        "        var src = el.getAttribute('src') || el.getAttribute('data-src') || el.src;" +
-                        "        if(src) arr.push(src);" +
-                        "      });" +
-                        "      var norm = arr.map(function(u){ " +
-                        "        if(!u) return u;" +
-                        "        if(u.indexOf('//')===0) return location.protocol + u;" +
-                        "        if(u.indexOf('/')===0) return location.origin + u;" +
-                        "        return u;" +
-                        "      });" +
-                        "      var unique = Array.from(new Set(norm.filter(function(x){ return !!x; }))); " +
-                        "      if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".process){ " +
-                        "        window." + JS_BRIDGE_NAME + ".process(JSON.stringify(unique)); " +
-                        "      }" +
-                        "    }catch(e){} " +
+                        "try{ " +
+                        "  var arr=[];" +
+                        "  document.querySelectorAll('img').forEach(function(el){ " +
+                        "    var src = el.getAttribute('src') || el.getAttribute('data-src') || el.src;" +
+                        "    if(src) arr.push(src);" +
+                        "  });" +
+                        "  var norm = arr.map(function(u){ " +
+                        "    if(!u) return u;" +
+                        "    if(u.indexOf('//')===0) return location.protocol + u;" +
+                        "    if(u.indexOf('/')===0) return location.origin + u;" +
+                        "    return u;" +
+                        "  });" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".process){ " +
+                        "    window." + JS_BRIDGE_NAME + ".process(JSON.stringify(norm)); " +
                         "  }" +
-                        "  collectAndSend();" +
-                        "  setTimeout(collectAndSend, 500);" +
-                        "  setTimeout(collectAndSend, 1200);" +
+                        "}catch(e){console.error(e);} " +
                         "})();";
         view.evaluateJavascript(js, null);
+    }
+
+    public interface PagesCallback {
+        void onSuccess(List<String> pages);
+
+        void onError(String message);
     }
 
     private class JsBridge {
@@ -102,31 +114,38 @@ public class AsuraScansChapterPages {
         public void process(String json) {
             handler.post(() -> {
                 if (json == null || json.length() < 2) {
-                    callback.onError("No images found");
+                    Log.d(TAG, "JS returned empty JSON");
                     return;
                 }
 
                 try {
                     List<String> pages = new ArrayList<>();
                     JSONArray arr = new JSONArray(json);
+                    Log.d(TAG, "JS returned " + arr.length() + " images");
+
                     for (int i = 0; i < arr.length(); i++) {
                         String src = arr.optString(i, "").trim();
-                        if (src.contains("gg.asuracomic.net/storage/media") &&
-                                src.matches(".*/\\d{2}-optimized\\.webp$") &&
-                                !processedUrls.contains(src)) {
+                        if (!processedUrls.contains(src)) {
                             processedUrls.add(src);
-                            pages.add(src);
-                            Log.i(TAG, "COMIC_IMG_URL: " + src);
+                            if (src.contains("/storage/media/") || src.contains("/storage/comics/")) {
+                                pages.add(src);
+                                Log.d(TAG, "Matched comic image: " + src);
+                            } else {
+                                Log.d(TAG, "Skipped image: " + src);
+                            }
+
+
                         }
                     }
 
                     if (pages.isEmpty()) {
-                        callback.onError("No comic images matched");
+                        Log.d(TAG, "No comic images matched yet, waiting...");
                     } else {
                         callback.onSuccess(pages);
                     }
 
                 } catch (Exception e) {
+                    Log.e(TAG, "Failed to parse JS JSON: " + e.getMessage());
                     callback.onError("Failed to parse JS JSON: " + e.getMessage());
                 }
             });

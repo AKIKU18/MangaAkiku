@@ -25,10 +25,6 @@ import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPages;
-import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
-import com.example.mangav5.ServicesMangaDex.ChaptersService;
-import com.example.mangav5.ServicesMangaDex.FeedMangaService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,13 +79,21 @@ public class ChapterPage extends AppCompatActivity {
         String chapterTitle = getIntent().getStringExtra("chapterTitle");
         String chapterUrl = getIntent().getStringExtra("chapterUrl");
         String mangaId = getIntent().getStringExtra("mangaId");
+        String source = getIntent().getStringExtra("source");
+
 
         setCurrentChapterId(chapterId);
         setCurrentChapterTitle(chapterTitle);
         tvChapterNumber.setText(chapterTitle);
+        final String chapterUrlOrIdFinal;
 
+        if ("MangaDex".equals(source)) {
+            chapterUrlOrIdFinal = getCurrentChapterId(); // ID for MangaDex
+        } else {
+            chapterUrlOrIdFinal = chapterUrl; // use the one passed to method
+        }
         // --- Load chapter pages ---
-        GetChapterPages();
+        GetChapterPages(chapterUrlOrIdFinal);
 
         // --- Setup UI ---
         setupRecyclerScroll();
@@ -102,18 +106,17 @@ public class ChapterPage extends AppCompatActivity {
         InsertChapterIntoHistory();
     }
 
-    private void GetChapterPages(){
+    private void GetChapterPages(String chapterUrl){
         String source = getIntent().getStringExtra("source");
-        String chapterUrlOrId;
+        final String chapterUrlOrIdFinal;
 
         if ("MangaDex".equals(source)) {
-            chapterUrlOrId = getCurrentChapterId(); // use current chapter ID
+            chapterUrlOrIdFinal = getCurrentChapterId(); // ID for MangaDex
         } else {
-            chapterUrlOrId = getIntent().getStringExtra("chapterUrl"); // fallback
+            chapterUrlOrIdFinal = chapterUrl; // use the one passed to method
         }
 
-        final String chapterUrlOrUrlFinal = chapterUrlOrId;
-        ServiceController.getChapterPages(this,source,chapterUrlOrUrlFinal, new ServiceController.PagesCallback() {
+        ServiceController.getChapterPages(this, source, chapterUrlOrIdFinal, new ServiceController.PagesCallback() {
             @Override
             public void onSuccess(List<String> pages) {
                 Log.e("ChapterPageAdapter", "Pages: " + pages);
@@ -122,15 +125,18 @@ public class ChapterPage extends AppCompatActivity {
                     chapters.addAll(pages);
                     InsertChapterIntoHistory();
                     chapterPageAdapter.notifyDataSetChanged();
+                    recycleViewPage.scrollToPosition(0);
                     Log.e("ChapterPage", "Pages fetched successfully: " + pages.size());
                 });
             }
+
             @Override
             public void onError(String message) {
-
+                Log.e("ChapterPage", "Error fetching pages: " + message);
             }
         });
     }
+
 
     private void InsertChapterIntoHistory(){
         String mangaUrlOrId =getIntent().getStringExtra("mangaId"); // always start with mangaId
@@ -235,13 +241,32 @@ public class ChapterPage extends AppCompatActivity {
         chapters.clear();
         chapterPageAdapter.notifyDataSetChanged();
         recycleViewPage.scrollToPosition(0);
-        GetChapterPages();
+        String source = getIntent().getStringExtra("source");
+        final String chapterUrlOrIdFinal;
+
+        if ("MangaDex".equals(source)) {
+            chapterUrlOrIdFinal = getCurrentChapterId(); // ID for MangaDex
+        } else {
+            chapterUrlOrIdFinal = chapterUrl; // use the one passed to method
+        }
+        GetChapterPages(chapterUrlOrIdFinal);
         hideUI();
     }
 
     private void ChapterRefresh() {
+        String source = getIntent().getStringExtra("source");
+        String chapterUrl = getIntent().getStringExtra("chapterUrl");
+
+        final String chapterUrlOrIdFinal;
+
+        if ("MangaDex".equals(source)) {
+            chapterUrlOrIdFinal = getCurrentChapterId(); // ID for MangaDex
+        } else {
+            chapterUrlOrIdFinal = chapterUrl; // use the one passed to method
+        }
         btnRefresh.setOnClickListener(v ->
-                GetChapterPages()
+
+                GetChapterPages(chapterUrlOrIdFinal)
         );
 
         btnRefresh.setOnClickListener(v ->

@@ -18,32 +18,16 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AsuraScraperTask {
+public class AsuraScansFeedService {
 
     private static final String TAG = "AsuraScraper";
-
-    public interface ChapterListCallback {
-        void onSuccess(List<ChapterModel> chapters);
-        void onError(String message);
-    }
-
-    public interface MangaCallback {
-        void onSuccess(MangaItemModel manga);
-        void onError(String errorMessage);
-    }
-
-    public interface MangaListCallback {
-        void onSuccess(List<MangaItemModel> mangas);
-        void onError(String message);
-    }
-
     private static final int TIMEOUT_MS = 60000; // 60 seconds
     private static final int MAX_RETRIES = 3;
 
     public static void getMangaInfoAsuraScans(String mangaUrl, MangaCallback callback) {
         if (mangaUrl.contains("api.mangadex.org")) {
             Log.e(TAG, "❌ Wrong URL: Jsoup cannot parse JSON from " + mangaUrl);
-            callback.onError("Invalid URL for AsuraScraperTask");
+            callback.onError("Invalid URL for AsuraScansFeedService");
             return;
         }
 
@@ -93,11 +77,10 @@ public class AsuraScraperTask {
         });
     }
 
-
     public static void getMangaChaptersAsuraScans(String mangaUrl, ChapterListCallback callback) {
         if (mangaUrl.contains("api.mangadex.org")) {
             Log.e(TAG, "❌ Wrong URL: Jsoup cannot parse JSON from " + mangaUrl);
-            callback.onError("Invalid URL for AsuraScraperTask");
+            callback.onError("Invalid URL for AsuraScansFeedService");
             return;
         }
 
@@ -121,14 +104,15 @@ public class AsuraScraperTask {
                     for (Element link : chapterLinks) {
                         Elements h3s = link.select("h3");
                         String[] parts = link.absUrl("href").split("/");
-                        Element time = link.selectFirst("p");
+
+
                         String chapterTitle = h3s.size() > 0 ? h3s.get(0).text() : "No title";
                         String dateUploaded = h3s.size() > 1 ? h3s.get(1).text() : "";
                         String chapterUrl = link.absUrl("href");
                         String chapterId = chapterTitle.replace(" ", "") + dateUploaded.replace(" ", "");
                         String chapterNumber = parts[parts.length - 1];
 
-                        ChapterModel chapter = new ChapterModel(chapterId, chapterTitle + " "+time, chapterNumber, chapterUrl,"AsuraScans");
+                        ChapterModel chapter = new ChapterModel(chapterId, chapterTitle, chapterNumber, chapterUrl, "AsuraScans");
                         chapters.add(chapter);
                     }
                 }
@@ -193,5 +177,24 @@ public class AsuraScraperTask {
                 mainHandler.post(() -> callback.onError(e.getMessage()));
             }
         });
+    }
+
+    public interface ChapterListCallback {
+        void onSuccess(List<ChapterModel> chapters);
+
+        void onError(String message);
+    }
+
+
+    public interface MangaCallback {
+        void onSuccess(MangaItemModel manga);
+
+        void onError(String errorMessage);
+    }
+
+    public interface MangaListCallback {
+        void onSuccess(List<MangaItemModel> mangas);
+
+        void onError(String message);
     }
 }

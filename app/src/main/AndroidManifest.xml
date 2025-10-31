@@ -30,7 +30,7 @@
             android:name=".MainActivitys.ChapterPage"
             android:exported="true" />
         <activity
-            android:name=".ServicesAsuraScans.AsuraScansChapterPages"
+            android:name=".ServicesAsuraScans.AsuraScansChapterPagesService"
             android:exported="true"/>
 
             <activity

@@ -12,7 +12,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,8 +28,7 @@ import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesMangaDex.ChaptersService;
-import com.example.mangav5.ServicesMangaDex.FeedMangaService;
+import com.example.mangav5.ServicesMangaDex.MangaDexFeedManga;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +102,7 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void OnClickToggleMangaPage(ImageView holder, MangaItemModel manb, BookmarkDao bookmarkDao){
-        FeedMangaService.fetchMangaById(getMangaId, new FeedMangaService.MangaCallback() {
+        MangaDexFeedManga.fetchMangaById(getMangaId, new MangaDexFeedManga.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 runOnUiThread(() -> {
@@ -165,6 +163,7 @@ public class MangaPage extends AppCompatActivity {
                 intent.putExtra("mangaId", getMangaId);
                 intent.putExtra("mangaUrl", mangaUrl);
                 intent.putExtra("chapterUrl", firstChapter.getChapterUrl());
+                intent.putExtra("source", source);
                 startActivity(intent);
             }
 

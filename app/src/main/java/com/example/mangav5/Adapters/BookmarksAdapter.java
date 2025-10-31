@@ -27,14 +27,12 @@ import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.MainActivitys.BookmarksPage;
 import com.example.mangav5.MainActivitys.ChapterPage;
-import com.example.mangav5.MainActivitys.HomePage;
 import com.example.mangav5.MainActivitys.MangaPage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesMangaDex.BookmarkService;
-import com.example.mangav5.ServicesMangaDex.ChaptersService;
+import com.example.mangav5.ServiceMaster.BookmarkService;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -122,22 +120,30 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     private void GetViewdChapter(MangaItemModel mangaItem) {
         Intent intent = new Intent(context, ChapterPage.class);
 
-
         AppDatabase db = AppDatabase.getInstance(context);
         Executors.newSingleThreadExecutor().execute(() -> {
-            String viewedChaptertTitle = db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterTitle;
-            String viewdChapterId = db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterId;
-            if (viewedChaptertTitle != null) {
-                intent.putExtra("chapterId", viewdChapterId);
-                intent.putExtra("chapterTitle", viewedChaptertTitle);
+            var historyItem = db.historyDao().getHistoryItem(mangaItem.getMangaId());
+
+            if (historyItem != null) {
+                String viewedChapterTitle = historyItem.chapterTitle;
+                String viewedChapterId = historyItem.chapterId;
+
+                intent.putExtra("chapterId", viewedChapterId);
+                intent.putExtra("chapterTitle", viewedChapterTitle);
                 intent.putExtra("mangaId", mangaItem.getMangaId());
                 intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
-                intent.putExtra("chapterUrl", db.historyDao().getHistoryItem(mangaItem.getMangaId()).chapterUrl);
+                intent.putExtra("chapterUrl", historyItem.chapterUrl);
                 intent.putExtra("source", mangaItem.getSource());
+
                 context.startActivity(intent);
+            } else {
+                new Handler(Looper.getMainLooper()).post(() ->
+                        Toast.makeText(context, "You haven’t read any chapters yet.", Toast.LENGTH_SHORT).show()
+                );
             }
         });
     }
+
 
     private void GetLastChapter(MangaItemModel mangaItem) {
         ServiceController.fetchChapterListController(mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl(), 0, 1, "desc", new ServiceController.ChapterListCallback() {

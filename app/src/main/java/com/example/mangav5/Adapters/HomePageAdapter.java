@@ -23,14 +23,11 @@ import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.MainActivitys.HomePage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
-import com.example.mangav5.ServicesMangaDex.BookmarkService;
-import com.example.mangav5.ServicesMangaDex.ChaptersService;
+import com.example.mangav5.ServiceMaster.BookmarkService;
 import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.MainActivitys.MangaPage;
 

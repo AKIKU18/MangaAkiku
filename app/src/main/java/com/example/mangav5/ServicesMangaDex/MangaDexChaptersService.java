@@ -1,7 +1,5 @@
 package com.example.mangav5.ServicesMangaDex;
 
-import android.util.Log;
-
 import com.example.mangav5.Models.ChapterModel;
 
 import org.json.JSONArray;
@@ -18,7 +16,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class ChaptersService {
+public class MangaDexChaptersService {
     private static final OkHttpClient client = new OkHttpClient();
 
     public interface ChapterListCallback {

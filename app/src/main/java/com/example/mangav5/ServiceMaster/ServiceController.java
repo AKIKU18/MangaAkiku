@@ -2,17 +2,14 @@ package com.example.mangav5.ServiceMaster;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
-import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPages;
-import com.example.mangav5.ServicesAsuraScans.AsuraScraperTask;
-import com.example.mangav5.ServicesMangaDex.ChaptersService;
-import com.example.mangav5.ServicesMangaDex.FeedMangaService;
+import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPagesService;
+import com.example.mangav5.ServicesAsuraScans.AsuraScansFeedService;
+import com.example.mangav5.ServicesMangaDex.MangaDexChaptersService;
+import com.example.mangav5.ServicesMangaDex.MangaDexFeedManga;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,7 +25,7 @@ public class ServiceController {
 
         switch (serviceFeed) {
             case "MangaDex":
-                FeedMangaService.fetchMangaList(offsetOrPage, limit, new FeedMangaService.MangaListCallback() {
+                MangaDexFeedManga.fetchMangaList(offsetOrPage, limit, new MangaDexFeedManga.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> mangas) {
                         callback.onSuccess(mangas);
@@ -42,7 +39,7 @@ public class ServiceController {
                 break;
 
             case "AsuraScans":
-                AsuraScraperTask.getAsuraScansMangaFeed(offsetOrPage, new AsuraScraperTask.MangaListCallback() {
+                AsuraScansFeedService.getAsuraScansMangaFeed(offsetOrPage, new AsuraScansFeedService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> mangas) {
                         callback.onSuccess(mangas);
@@ -70,7 +67,7 @@ public class ServiceController {
 
         switch (serviceFeed) {
             case "MangaDex":
-                FeedMangaService.fetchMangaById(mangaUrlOrId, new FeedMangaService.MangaCallback() {
+                MangaDexFeedManga.fetchMangaById(mangaUrlOrId, new MangaDexFeedManga.MangaCallback() {
                     @Override
                     public void onSuccess(MangaItemModel manga) {
                         callback.onSuccess(manga);
@@ -84,7 +81,7 @@ public class ServiceController {
                 break;
 
             case "AsuraScans":
-                AsuraScraperTask.getMangaInfoAsuraScans(mangaUrlOrId, new AsuraScraperTask.MangaCallback() {
+                AsuraScansFeedService.getMangaInfoAsuraScans(mangaUrlOrId, new AsuraScansFeedService.MangaCallback() {
                     @Override
                     public void onSuccess(MangaItemModel manga) {
                         callback.onSuccess(manga);
@@ -112,7 +109,7 @@ public class ServiceController {
 
         switch (serviceFeed) {
             case "MangaDex":
-                FeedMangaService.fetchMangaById(mangaId, new FeedMangaService.MangaCallback() {
+                MangaDexFeedManga.fetchMangaById(mangaId, new MangaDexFeedManga.MangaCallback() {
                     @Override
                     public void onSuccess(MangaItemModel manga) {
                         callback.onSuccess(manga.getDescription());
@@ -125,7 +122,7 @@ public class ServiceController {
                 });
                 break;
             case "AsuraScans":
-                AsuraScraperTask.getMangaInfoAsuraScans(mangaUrl, new AsuraScraperTask.MangaCallback() {
+                AsuraScansFeedService.getMangaInfoAsuraScans(mangaUrl, new AsuraScansFeedService.MangaCallback() {
                     @Override
                     public void onSuccess(MangaItemModel manga) {
                         callback.onSuccess(manga.getDescription());
@@ -150,7 +147,7 @@ public class ServiceController {
 
         switch (serviceFeed) {
             case "MangaDex":
-                ChaptersService.fetchAllChapters(mangaId, descAsc, offset, limit, new ChaptersService.ChapterListCallback() {
+                MangaDexChaptersService.fetchAllChapters(mangaId, descAsc, offset, limit, new MangaDexChaptersService.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapters) {
                         callback.onSuccess(chapters);
@@ -163,7 +160,7 @@ public class ServiceController {
                 });
                 break;
             case "AsuraScans":
-                AsuraScraperTask.getMangaChaptersAsuraScans(mangaUrl, new AsuraScraperTask.ChapterListCallback() {
+                AsuraScansFeedService.getMangaChaptersAsuraScans(mangaUrl, new AsuraScansFeedService.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapters) {
                         if ("asc".equalsIgnoreCase(descAsc)) {
@@ -192,12 +189,10 @@ public class ServiceController {
         }
         switch (source) {
             case "AsuraScans":
-                AsuraScansChapterPages scraper = new AsuraScansChapterPages();
-                scraper.GetChapterPages(context, chapterUrlId, new AsuraScansChapterPages.PagesCallback() {
+                AsuraScansChapterPagesService scraper = new AsuraScansChapterPagesService();
+                scraper.GetChapterPages(context, chapterUrlId, new AsuraScansChapterPagesService.PagesCallback() {
                     @Override
                     public void onSuccess(List<String> pages) {
-                        Log.i(TAG, "COMIC: " + pages);
-
                         callback.onSuccess(pages);
                     }
 
@@ -209,7 +204,7 @@ public class ServiceController {
                 break;
             case "MangaDex":
                 Log.e(TAG, "ServiceController MangaDex: " + chapterUrlId);
-                ChaptersService.fetchChapterPages(chapterUrlId, new ChaptersService.PagesCallback() {
+                MangaDexChaptersService.fetchChapterPages(chapterUrlId, new MangaDexChaptersService.PagesCallback() {
                     @Override
                     public void onSuccess(List<String> pages) {
 

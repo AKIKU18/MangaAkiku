@@ -1,4 +1,4 @@
-package com.example.mangav5.ServicesMangaDex;
+package com.example.mangav5.ServiceMaster;
 
 import android.os.Handler;
 import android.os.Looper;

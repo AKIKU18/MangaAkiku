@@ -1,9 +1,6 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
-import android.graphics.RenderEffect;
-import android.graphics.Shader;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -28,8 +25,7 @@ import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesMangaDex.SearchService;
-import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPages;
+import com.example.mangav5.ServicesMangaDex.MangaDexSearchService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +47,7 @@ public class HomePage extends AppCompatActivity {
     private List<MangaItemModel> searchMangaList = new ArrayList<>();
     private boolean isSearchListAnimated = false;
     private boolean isLoading = false;
-    private int offset = 0;
+    private int offset = 1;
     private static final int LIMIT = 10;
     private ActivityResultLauncher<Intent> bookmarkLauncher;
     private ActivityResultLauncher<Intent> mangaPageLauncher;
@@ -209,7 +205,7 @@ public class HomePage extends AppCompatActivity {
             searchMangaList.clear();
             return;
         }
-        SearchService.searchManga(query.trim(), 0, 50, new SearchService.MangaListCallback() {
+        MangaDexSearchService.searchManga(query.trim(), 0, 50, new MangaDexSearchService.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> results) {
                 runOnUiThread(() -> {
@@ -254,7 +250,7 @@ public class HomePage extends AppCompatActivity {
             @Override
             public void onSuccess(List<MangaItemModel> mangas) {
                 runOnUiThread(() -> {
-                    if (offset == 0) {
+                    if (offset == 1) {
                         mangaList.clear();
                         mangaList.addAll(mangas);
                         homeListAdapter.notifyDataSetChanged();
