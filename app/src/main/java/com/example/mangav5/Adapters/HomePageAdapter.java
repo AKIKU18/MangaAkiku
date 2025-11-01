@@ -208,6 +208,13 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                 intent.putExtra("source", manga.getSource());
                 mangaPageLauncher.launch(intent);
                 break;
+            case "Manhuaus":
+                intent.putExtra("mangaUrl", manga.getMangaUrl());
+                intent.putExtra("mangaId", manga.getMangaId());
+                intent.putExtra("source", manga.getSource());
+                mangaPageLauncher.launch(intent);
+                break;
+
         }
 
 

@@ -70,6 +70,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         mangaItemModel.setDescription(manga.getDescription());
         mangaItemModel.setMangaUrl(manga.getMangaUrl());
         mangaItemModel.setSource(manga.getSource());
+        holder.mangaSource.setText(manga.getSource());
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -77,7 +78,6 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                     RenderEffect.createBlurEffect(40f, 40f, Shader.TileMode.CLAMP)
             );
         }
-
 
         holder.title.setText(manga.getTitle());
         // Load cover image using Picasso or Glide
@@ -275,7 +275,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     public static class BookmarkMangaViewHolder extends RecyclerView.ViewHolder {
         ImageView cover;
         ImageView bookmarkStar;
-        TextView title, lastChapter, viewedChapter;
+        TextView title, lastChapter, viewedChapter,mangaSource;
         CardView mangaBlurCard;
 
 
@@ -287,6 +287,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             lastChapter = itemView.findViewById(R.id.currentChapter);
             viewedChapter = itemView.findViewById(R.id.viewedChapter);
             mangaBlurCard = itemView.findViewById(R.id.mangaBlurCard);
+            mangaSource = itemView.findViewById(R.id.mangaSource);
         }
     }
 }

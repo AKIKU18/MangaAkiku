@@ -22,27 +22,13 @@ public class ManhuausChaptersService {
     private static final int MAX_RETRIES = 3;
 
     public static String generateChapterId(String url, String title) {
-        // Extract site name
-        String siteName = url.replaceAll("https?://(www.\\.)?", "").split("/")[0];
-
-        // Split title into words using both space and hyphen
-        String[] words = title.split("[\\s-]+");
-        StringBuilder letters = new StringBuilder();
-
-        for (String word : words) {
-            if (!word.isEmpty()) {
-                letters.append(Character.toUpperCase(word.charAt(0))).append("-");
-            }
-        }
-
-        // Remove the last "-"
-        if (letters.length() > 0) {
-            letters.setLength(letters.length() - 1);
-        }
-
-        // Combine site name and letters
-        return siteName + "-" + letters.toString();
+        String siteName = url.replaceAll("https?://(www\\.)?", "").split("/")[0];
+        String hash = String.valueOf((url + title).hashCode());
+        String id = siteName + "-" + hash;
+        Log.e("ServiceManhuaus", "generateChapterId:" + id);
+        return id;
     }
+
 
     public static void getChaptersManhuaus(String mangaUrl, ChapterListCallback callback) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -65,10 +51,10 @@ public class ManhuausChaptersService {
                     List<ChapterModel> chapters = new ArrayList<>();
                     Elements chapterLinks = doc.select("li.wp-manga-chapter > a");
                     for (Element link : chapterLinks) {
-
-                        String chapterId = generateChapterId(mangaUrl,link.text().trim());
                         String chapterTitle = link.text().trim();
-                        String chapterNumber = chapterTitle.split(" ")[1];
+                        String[] parts = chapterTitle.split(" ");
+                        String chapterNumber = parts.length > 1 ? parts[1] : "0"; // safe fallback
+                        String chapterId = generateChapterId(mangaUrl, chapterTitle);
                         String chapterUrl = link.attr("href");
                         String source = "Manhuaus";
 
@@ -100,7 +86,7 @@ public class ManhuausChaptersService {
             int attempts = 0;
             while (attempts < MAX_RETRIES) {
                 try {
-                    Document doc = Jsoup.connect("https://manhuaus.com/manga/im-a-second-generation-demon/chapter-28")
+                    Document doc = Jsoup.connect(chapterUrl)
                             .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
                             .timeout(TIMEOUT_MS)
                             .get();

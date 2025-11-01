@@ -27,6 +27,8 @@ import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
+import com.example.mangav5.ServiceManhuas.ManhuausSearchService;
 import com.example.mangav5.ServiceMaster.ServiceController;
 
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ public class HomePage extends AppCompatActivity {
     private Button historyPageButton;
     private Button button_mangadex;
     private Button button_asurascans;
+    private Button button_manhuaus;
     private ImageButton settingsPageButton;
     private ImageView recycler_bg_blur;
     private List<MangaItemModel> mangaList = new ArrayList<>();
@@ -72,7 +75,7 @@ public class HomePage extends AppCompatActivity {
         recycler_bg_blur = findViewById(R.id.recycler_bg_blur);
         button_mangadex = findViewById(R.id.source_mangadex);
         button_asurascans = findViewById(R.id.source_asurascans);
-
+        button_manhuaus = findViewById(R.id.source_manhuaus);
         AppDatabase db = AppDatabase.getInstance(this);
         bookmarkDao = db.bookmarkDao();
 
@@ -99,6 +102,7 @@ public class HomePage extends AppCompatActivity {
         HistoryButtonGoTo();
         SettingsButtonGoTo();
         SelectSourceDrawer();
+        ShowGlowButtonsSource();//Glow directly for Asurascans as it is the primary source
 
     }
 
@@ -123,19 +127,22 @@ public class HomePage extends AppCompatActivity {
             loadFeed(offset, LIMIT);
 
             // Drawer glow animation
-            View glowViewAsuraScans = findViewById(R.id.drawer_asurascans_glow);
-            View glowViewMangaDex = findViewById(R.id.drawer_mangadex_glow);
-            glowViewAsuraScans.clearAnimation();
-            glowViewAsuraScans.setVisibility(View.GONE);
+            View glowAsura = findViewById(R.id.drawer_asurascans_glow);
+            View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
+            View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
 
-            glowViewMangaDex.setVisibility(View.VISIBLE);
+            glowAsura.clearAnimation();
+            glowManhuaus.clearAnimation();
+            glowAsura.setVisibility(View.GONE);
+            glowManhuaus.setVisibility(View.GONE);
+
+            glowMangaDex.setVisibility(View.VISIBLE);
             AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
             pulse.setDuration(1000);
             pulse.setRepeatMode(Animation.REVERSE);
             pulse.setRepeatCount(Animation.INFINITE);
-            glowViewMangaDex.startAnimation(pulse);
-
-            drawerLayout.closeDrawer(GravityCompat.START); // close drawer
+            glowMangaDex.startAnimation(pulse);
+            drawerLayout.closeDrawer(GravityCompat.START);
         });
 
         button_asurascans.setOnClickListener(v -> {
@@ -150,21 +157,74 @@ public class HomePage extends AppCompatActivity {
 
             loadFeed(asuraScansOffset, LIMIT);
 
-            // Drawer glow animation
-            View glowViewAsuraScans = findViewById(R.id.drawer_asurascans_glow);
-            View glowViewMangaDex = findViewById(R.id.drawer_mangadex_glow);
-            glowViewMangaDex.clearAnimation();
-            glowViewMangaDex.setVisibility(View.GONE);
+            View glowAsura = findViewById(R.id.drawer_asurascans_glow);
+            View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
+            View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
 
-            glowViewAsuraScans.setVisibility(View.VISIBLE);
+            glowMangaDex.clearAnimation();
+            glowManhuaus.clearAnimation();
+            glowMangaDex.setVisibility(View.GONE);
+            glowManhuaus.setVisibility(View.GONE);
+
+            glowAsura.setVisibility(View.VISIBLE);
             AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
             pulse.setDuration(1000);
             pulse.setRepeatMode(Animation.REVERSE);
             pulse.setRepeatCount(Animation.INFINITE);
-            glowViewAsuraScans.startAnimation(pulse);
+            glowAsura.startAnimation(pulse);
 
-            drawerLayout.closeDrawer(GravityCompat.START); // close drawer
+            drawerLayout.closeDrawer(GravityCompat.START);
         });
+
+        button_manhuaus.setOnClickListener(v -> {
+            serviceFeed = "Manhuaus";
+            Toast.makeText(HomePage.this, "Manhuaus", Toast.LENGTH_SHORT).show();
+
+            mangaList.clear();
+            offset = 0;
+            asuraScansOffset = 0;
+            homeListAdapter.notifyDataSetChanged();
+            mangaListView.scrollToPosition(0);
+
+            loadFeed(asuraScansOffset, LIMIT);
+
+            View glowAsura = findViewById(R.id.drawer_asurascans_glow);
+            View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
+            View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
+
+            glowAsura.clearAnimation();
+            glowMangaDex.clearAnimation();
+            glowAsura.setVisibility(View.GONE);
+            glowMangaDex.setVisibility(View.GONE);
+
+            glowManhuaus.setVisibility(View.VISIBLE);
+            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
+            pulse.setDuration(1000);
+            pulse.setRepeatMode(Animation.REVERSE);
+            pulse.setRepeatCount(Animation.INFINITE);
+            glowManhuaus.startAnimation(pulse);
+
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
+
+    }
+
+    private void ShowGlowButtonsSource(){
+        View glowAsura = findViewById(R.id.drawer_asurascans_glow);
+        View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
+        View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
+
+        glowMangaDex.clearAnimation();
+        glowManhuaus.clearAnimation();
+        glowMangaDex.setVisibility(View.GONE);
+        glowManhuaus.setVisibility(View.GONE);
+
+        glowAsura.setVisibility(View.VISIBLE);
+        AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
+        pulse.setDuration(1000);
+        pulse.setRepeatMode(Animation.REVERSE);
+        pulse.setRepeatCount(Animation.INFINITE);
+        glowAsura.startAnimation(pulse);
     }
 
 

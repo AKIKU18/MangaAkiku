@@ -58,7 +58,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         holder.mangaTitleTextView.setText(item.getMangaTitle());
 
         holder.chapterTitleTextView.setText(item.getChapterTitle());
-
+        holder.mangaSource.setText(item.getSource());
         // format timestamp
         String formattedTime = new SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
                 .format(new Date(item.getTimestamp()));
@@ -103,13 +103,14 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         private final TextView mangaTitleTextView;
         private final TextView chapterTitleTextView;
         private final TextView timestampTextView;
-
+        private final TextView mangaSource;
         public HistoryViewHolder(View itemView) {
             super(itemView);
             coverImageView = itemView.findViewById(R.id.historyCover);
             mangaTitleTextView = itemView.findViewById(R.id.historyMangaTitle);
             chapterTitleTextView = itemView.findViewById(R.id.historyChapterTitle);
             timestampTextView = itemView.findViewById(R.id.historyTimestamp);
+            mangaSource = itemView.findViewById(R.id.historyMangaSource);
         }
     }
 }
