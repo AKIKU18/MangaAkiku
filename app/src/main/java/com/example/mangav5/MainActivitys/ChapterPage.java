@@ -101,12 +101,8 @@ public class ChapterPage extends AppCompatActivity {
         setCurrentChapterTitle(chapterTitle);
         tvChapterNumber.setText(chapterTitle);
         final String chapterUrlOrIdFinal;
-
-        if ("MangaDex".equals(source)) {
-            chapterUrlOrIdFinal = getCurrentChapterId(); // ID for MangaDex
-        } else {
-            chapterUrlOrIdFinal = chapterUrl; // use the one passed to method
-        }
+        Log.e("ChapterUrl", chapterUrl);
+        chapterUrlOrIdFinal =ServiceController.getChapterIdOrChapterUrl(source, getCurrentChapterId(), chapterUrl);
         // --- Load chapter pages ---
         GetChapterPages(chapterUrlOrIdFinal);
 
@@ -118,7 +114,7 @@ public class ChapterPage extends AppCompatActivity {
         SetMangaTitle(mangaId);
         GoToHomePage();
         updateLoadChapterList(0);
-        InsertChapterIntoHistory();
+        InsertChapterIntoHistory(chapterUrlOrIdFinal);
         FullScreenMode();
     }
 
@@ -137,20 +133,19 @@ public class ChapterPage extends AppCompatActivity {
         }
     }
 
-    private void GetChapterPages(String chapterUrl) {
+    // In ChapterPage.java
+
+    private void GetChapterPages(String chapterUrlOrId) {
         String source = getIntent().getStringExtra("source");
-        final String chapterUrlOrIdFinal;
 
-        chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, getCurrentChapterId(), chapterUrl);
-
-        ServiceController.getChapterPages(this, source, chapterUrlOrIdFinal, new ServiceController.PagesCallback() {
+        ServiceController.getChapterPages(this, source, chapterUrlOrId, new ServiceController.PagesCallback() {
             @Override
             public void onSuccess(List<String> pages) {
                 Log.e("ChapterPageAdapter", "Pages: " + pages);
                 runOnUiThread(() -> {
                     chapters.clear();
                     chapters.addAll(pages);
-                    InsertChapterIntoHistory();
+                    InsertChapterIntoHistory(chapterUrlOrId);
                     chapterPageAdapter.notifyDataSetChanged();
                     recycleViewPage.scrollToPosition(0);
                     Log.e("ChapterPage", "Pages fetched successfully: " + pages.size());
@@ -165,10 +160,10 @@ public class ChapterPage extends AppCompatActivity {
     }
 
 
-    private void InsertChapterIntoHistory() {
+
+    private void InsertChapterIntoHistory(String chapterUrlOrId) {
         String mangaId = getIntent().getStringExtra("mangaId"); // always start with mangaId
         String source = getIntent().getStringExtra("source");
-
 
         String mangaUrl = getIntent().getStringExtra("mangaUrl");
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,mangaId, mangaUrl); // create final copy
@@ -190,11 +185,12 @@ public class ChapterPage extends AppCompatActivity {
                             System.currentTimeMillis(),
                             manga.getTitle(),
                             manga.getMangaUrl(),
-                            getIntent().getStringExtra("chapterUrl"),
+                            chapterUrlOrId,
                             manga.getSource()
                     );
+                    Log.e("ChapterPage", "Inserting chapter into history: " + historyItem.getChapterUrl());
                     db.historyDao().insertHistoryItem(historyItem);
-                    Log.e("ChapterPage", "Chapter inserted into history: " + getCurrentChapterTitle());
+                    Log.e("ChapterPage", "Chapter inserted into history: " + getIntent().getStringExtra("chapterUrl"));
                 });
             }
 
@@ -244,6 +240,8 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
+    // In ChapterPage.java
+
     private void loadChapter(String chapterId, String chapterTitle, String chapterUrl) {
         setCurrentChapterId(chapterId);
         setCurrentChapterTitle(chapterTitle);
@@ -253,30 +251,31 @@ public class ChapterPage extends AppCompatActivity {
         chapterPageAdapter.notifyDataSetChanged();
         recycleViewPage.scrollToPosition(0);
 
-
         String source = getIntent().getStringExtra("source");
-        final String chapterUrlOrIdFinal;
-        chapterUrlOrIdFinal = ServiceController.getMangaIdOrMangaUrl(source, getCurrentChapterId(), chapterUrl);
+        // Use the new chapter's data to determine the correct ID or URL
+        final String chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, chapterId, chapterUrl);
+        Log.e("ChapterUrl2", chapterUrlOrIdFinal);
         GetChapterPages(chapterUrlOrIdFinal);
 
         hideUI();
     }
 
+
+    // In ChapterPage.java
+
     private void ChapterRefresh() {
-        String source = getIntent().getStringExtra("source");
-        String chapterUrl = getIntent().getStringExtra("chapterUrl");
-        final String chapterUrlOrIdFinal;
+        btnRefresh.setOnClickListener(v -> {
+            String source = getIntent().getStringExtra("source");
+            String chapterUrl = getIntent().getStringExtra("chapterUrl"); // This is the original chapterUrl
 
-        chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, getCurrentChapterId(), chapterUrl);
-        btnRefresh.setOnClickListener(v ->
+            // Always use the CURRENT chapter's ID and the ORIGINAL chapterUrl as a fallback
+            final String chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, getCurrentChapterId(), chapterUrl);
 
-                GetChapterPages(chapterUrlOrIdFinal)
-        );
-
-        btnRefresh.setOnClickListener(v ->
-                Toast.makeText(this, "Refreshing...", Toast.LENGTH_SHORT).show()
-        );
+            Toast.makeText(this, "Refreshing...", Toast.LENGTH_SHORT).show();
+            GetChapterPages(chapterUrlOrIdFinal);
+        });
     }
+
 
     private void SetMangaTitle(String mangaId) {
         AppDatabase db = AppDatabase.getInstance(this);

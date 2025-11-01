@@ -24,7 +24,7 @@ import com.example.mangav5.Entity.MangaItemEntity;
         // Each entity corresponds to a table in the database.
         entities = {BookmarkEntity.class, ChapterItemEntity.class, MangaItemEntity.class, HistoryEntity.class},
         // The version of the database schema. Must be incremented when the schema changes.
-        version = 2,
+        version = 1,
         // Disables the export of the database schema into a folder.
         // For production apps, it's recommended to set this to true and check the schema into version control.
         exportSchema = false

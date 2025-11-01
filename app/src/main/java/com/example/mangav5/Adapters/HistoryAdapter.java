@@ -87,6 +87,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
                 intent.putExtra("mangaUrl", historyList.get(position).getMangaUrl());
                 intent.putExtra("chapterUrl",historyList.get(position).getChapterUrl());
                 intent.putExtra("source", historyList.get(position).getSource());
+                Log.e("HistoryAdapter", intent.putExtra("chapterTitle", historyList.get(position).getChapterTitle()).toString());
                 Log.e("HistoryAdapter", "Chapter Title: " + historyList.get(position).getChapterTitle());
                 context.startActivity(intent);
             }
