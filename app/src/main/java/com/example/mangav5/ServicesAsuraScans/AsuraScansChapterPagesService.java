@@ -10,6 +10,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.View;
 
 import org.json.JSONArray;
 
@@ -22,12 +23,12 @@ public class AsuraScansChapterPagesService {
 
     private static final String TAG = "ImagesScraper";
     private static final String JS_BRIDGE_NAME = "AndroidBridge";
-    private static final int MAX_JS_CHECKS = 10;
-    private static final int JS_CHECK_DELAY_MS = 500;
+    private static final int MAX_JS_CHECKS = 5;        // reduced from 10
+    private static final int JS_CHECK_DELAY_MS = 1000; // increased delay
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Set<String> processedUrls = new HashSet<>();
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     public void GetChapterPages(Context context, String chapterUrl, PagesCallback callback) {
         if (chapterUrl == null || chapterUrl.isEmpty()) {
             callback.onError("Chapter URL is empty");
@@ -37,10 +38,14 @@ public class AsuraScansChapterPagesService {
         Log.d(TAG, "Loading chapter URL: " + chapterUrl);
 
         WebView webView = new WebView(context);
+
+        // ⚠️ Avoid GPU crash
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
         WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
         ws.setDomStorageEnabled(true);
-        ws.setLoadsImagesAutomatically(true);
+        ws.setLoadsImagesAutomatically(false); // only load images via JS
         ws.setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
 
@@ -99,7 +104,6 @@ public class AsuraScansChapterPagesService {
 
     public interface PagesCallback {
         void onSuccess(List<String> pages);
-
         void onError(String message);
     }
 
@@ -133,15 +137,13 @@ public class AsuraScansChapterPagesService {
                             } else {
                                 Log.d(TAG, "Skipped image: " + src);
                             }
-
-
                         }
                     }
 
-                    if (pages.isEmpty()) {
-                        Log.d(TAG, "No comic images matched yet, waiting...");
-                    } else {
+                    if (!pages.isEmpty()) {
                         callback.onSuccess(pages);
+                    } else {
+                        Log.d(TAG, "No comic images matched yet, waiting...");
                     }
 
                 } catch (Exception e) {

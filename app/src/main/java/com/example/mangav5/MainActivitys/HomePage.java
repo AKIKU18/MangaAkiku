@@ -27,45 +27,85 @@ import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
-import com.example.mangav5.ServiceManhuas.ManhuausSearchService;
 import com.example.mangav5.ServiceMaster.ServiceController;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The main screen of the application. It displays a feed of manga,
+ * provides search functionality, and allows navigation to other parts of the app
+ * like bookmarks, history, and settings. It also manages data fetching from different sources.
+ */
 public class HomePage extends AppCompatActivity {
 
-    private RecyclerView searchResultView;
-    private RecyclerView mangaListView;
-    private HomePageAdapter searchResultAdapter;
-    private HomePageAdapter homeListAdapter;
-    private SearchView searchView;
-    private Button bookmarkPageButton;
-    private Button historyPageButton;
-    private Button button_mangadex;
-    private Button button_asurascans;
-    private Button button_manhuaus;
-    private ImageButton settingsPageButton;
-    private ImageView recycler_bg_blur;
-    private List<MangaItemModel> mangaList = new ArrayList<>();
-    private List<MangaItemModel> searchMangaList = new ArrayList<>();
-    private boolean isSearchListAnimated = false;
-    private boolean isLoading = false;
-    private int offset = 1;
-    private static final int LIMIT = 10;
-    private ActivityResultLauncher<Intent> bookmarkLauncher;
-    private ActivityResultLauncher<Intent> mangaPageLauncher;
-    private BookmarkDao bookmarkDao;
-    public static String serviceFeed = "AsuraScans";
-    private int asuraScansOffset = 0;
+    // UI Components
+    private RecyclerView searchResultView; // RecyclerView for displaying search results.
+    private RecyclerView mangaListView;      // RecyclerView for the main manga feed.
+    private HomePageAdapter searchResultAdapter; // Adapter for the search results RecyclerView.
+    private HomePageAdapter homeListAdapter;     // Adapter for the main feed RecyclerView.
+    private SearchView searchView;           // Input field for searching manga.
+    private Button bookmarkPageButton;       // Button to navigate to the Bookmarks page.
+    private Button historyPageButton;        // Button to navigate to the History page.
+    private Button button_mangadex;          // Button in the drawer to select MangaDex as the source.
+    private Button button_asurascans;        // Button in the drawer to select AsuraScans as the source.
+    private Button button_manhuaus;          // Button in the drawer to select Manhuaus as the source.
+    private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
+    private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
+
+    // Data and State Management
+    private List<MangaItemModel> mangaList = new ArrayList<>(); // Data source for the main manga feed.
+    private List<MangaItemModel> searchMangaList = new ArrayList<>(); // Data source for search results.
+    private boolean isSearchListAnimated = false; // Flag to check if search results animation has run.
+    private boolean isLoading = false;            // Flag to prevent multiple simultaneous data loads (pagination).
+    private int offset = 1;                       // Current offset for MangaDex pagination.
+    private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
+    private int asuraScansOffset = 0;             // Current page number for AsuraScans pagination.
+
+    // Activity Result Launchers
+    private ActivityResultLauncher<Intent> bookmarkLauncher; // Handles results from the Bookmarks page.
+    private ActivityResultLauncher<Intent> mangaPageLauncher;  // Handles results from the MangaPage.
+
+    // Database and Services
+    private BookmarkDao bookmarkDao;              // DAO for accessing bookmark data.
+    public static String serviceFeed = "AsuraScans"; // The current selected data source. Defaults to AsuraScans.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
-        // Initialize views
+        // Initialize all UI views from the layout file.
+        initializeViews();
+
+        // Get database instance and DAO.
+        AppDatabase db = AppDatabase.getInstance(this);
+        bookmarkDao = db.bookmarkDao();
+
+        // Set up the result launchers to handle data returned from other activities.
+        setupResultLaunchers();
+
+        // Configure adapters and layout managers for both RecyclerViews.
+        setupRecyclerViews();
+
+        // Remove the default title bar.
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
+        // Set up listeners and initial state.
+        setupSearchView();
+        loadFeed(offset, LIMIT); // Load the initial data for the main feed.
+        setupPagination();
+        setupNavigationButtons();
+        setupSourceSelectionDrawer();
+        showInitialSourceGlow(); // Visually indicate the default source.
+    }
+
+    /**
+     * Initializes all the view components from the activity's layout.
+     */
+    private void initializeViews() {
         searchResultView = findViewById(R.id.recycler_search_results);
         mangaListView = findViewById(R.id.recycler_main);
         searchView = findViewById(R.id.search_bar);
@@ -76,11 +116,12 @@ public class HomePage extends AppCompatActivity {
         button_mangadex = findViewById(R.id.source_mangadex);
         button_asurascans = findViewById(R.id.source_asurascans);
         button_manhuaus = findViewById(R.id.source_manhuaus);
-        AppDatabase db = AppDatabase.getInstance(this);
-        bookmarkDao = db.bookmarkDao();
+    }
 
-        CheckIfStillBookmarked();
-
+    /**
+     * Sets up the RecyclerViews with their respective adapters and layout managers.
+     */
+    private void setupRecyclerViews() {
         searchResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
         homeListAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
 
@@ -89,164 +130,119 @@ public class HomePage extends AppCompatActivity {
 
         searchResultView.setLayoutManager(new LinearLayoutManager(this));
         mangaListView.setLayoutManager(new LinearLayoutManager(this));
-
-        // Remove title bar
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
-        }
-
-        setupSearchView();
-        loadFeed(offset, LIMIT); // Load initial feed
-        loadMangaOffset();
-        BookmarkButtonGoTo();
-        HistoryButtonGoTo();
-        SettingsButtonGoTo();
-        SelectSourceDrawer();
-        ShowGlowButtonsSource();//Glow directly for Asurascans as it is the primary source
-
     }
 
-    private void SelectSourceDrawer(){
+    /**
+     * Configures the navigation drawer and the listeners for source selection buttons.
+     */
+    private void setupSourceSelectionDrawer() {
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         ImageButton menuButton = findViewById(R.id.button_menu);
 
-        // Open drawer when hamburger is clicked
+        // Open the drawer when the menu button is clicked.
         menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
-        // Use the same buttons that SwitchFeed() uses
+        // Set up listeners for each source button inside the drawer.
         button_mangadex.setOnClickListener(v -> {
-            serviceFeed = "MangaDex";
-            Toast.makeText(HomePage.this, "MangaDex", Toast.LENGTH_SHORT).show();
-
-            mangaList.clear();
-            offset = 0;
-            asuraScansOffset = 0;
-            homeListAdapter.notifyDataSetChanged();
-            mangaListView.scrollToPosition(0);
-
-            loadFeed(offset, LIMIT);
-
-            // Drawer glow animation
-            View glowAsura = findViewById(R.id.drawer_asurascans_glow);
-            View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
-            View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
-
-            glowAsura.clearAnimation();
-            glowManhuaus.clearAnimation();
-            glowAsura.setVisibility(View.GONE);
-            glowManhuaus.setVisibility(View.GONE);
-
-            glowMangaDex.setVisibility(View.VISIBLE);
-            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
-            pulse.setDuration(1000);
-            pulse.setRepeatMode(Animation.REVERSE);
-            pulse.setRepeatCount(Animation.INFINITE);
-            glowMangaDex.startAnimation(pulse);
+            switchSource("MangaDex");
             drawerLayout.closeDrawer(GravityCompat.START);
         });
 
         button_asurascans.setOnClickListener(v -> {
-            serviceFeed = "AsuraScans";
-            Toast.makeText(HomePage.this, "AsuraScans", Toast.LENGTH_SHORT).show();
-
-            mangaList.clear();
-            offset = 0;
-            asuraScansOffset = 0;
-            homeListAdapter.notifyDataSetChanged();
-            mangaListView.scrollToPosition(0);
-
-            loadFeed(asuraScansOffset, LIMIT);
-
-            View glowAsura = findViewById(R.id.drawer_asurascans_glow);
-            View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
-            View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
-
-            glowMangaDex.clearAnimation();
-            glowManhuaus.clearAnimation();
-            glowMangaDex.setVisibility(View.GONE);
-            glowManhuaus.setVisibility(View.GONE);
-
-            glowAsura.setVisibility(View.VISIBLE);
-            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
-            pulse.setDuration(1000);
-            pulse.setRepeatMode(Animation.REVERSE);
-            pulse.setRepeatCount(Animation.INFINITE);
-            glowAsura.startAnimation(pulse);
-
+            switchSource("AsuraScans");
             drawerLayout.closeDrawer(GravityCompat.START);
         });
 
         button_manhuaus.setOnClickListener(v -> {
-            serviceFeed = "Manhuaus";
-            Toast.makeText(HomePage.this, "Manhuaus", Toast.LENGTH_SHORT).show();
-
-            mangaList.clear();
-            offset = 0;
-            asuraScansOffset = 0;
-            homeListAdapter.notifyDataSetChanged();
-            mangaListView.scrollToPosition(0);
-
-            loadFeed(asuraScansOffset, LIMIT);
-
-            View glowAsura = findViewById(R.id.drawer_asurascans_glow);
-            View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
-            View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
-
-            glowAsura.clearAnimation();
-            glowMangaDex.clearAnimation();
-            glowAsura.setVisibility(View.GONE);
-            glowMangaDex.setVisibility(View.GONE);
-
-            glowManhuaus.setVisibility(View.VISIBLE);
-            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
-            pulse.setDuration(1000);
-            pulse.setRepeatMode(Animation.REVERSE);
-            pulse.setRepeatCount(Animation.INFINITE);
-            glowManhuaus.startAnimation(pulse);
-
+            switchSource("Manhuaus");
             drawerLayout.closeDrawer(GravityCompat.START);
         });
-
     }
 
-    private void ShowGlowButtonsSource(){
+    /**
+     * Switches the data source, clears existing data, and reloads the feed from the new source.
+     * @param newSource The name of the new source to switch to (e.g., "MangaDex").
+     */
+    private void switchSource(String newSource) {
+        serviceFeed = newSource;
+        Toast.makeText(HomePage.this, "Source: " + newSource, Toast.LENGTH_SHORT).show();
+
+        // Clear current list and reset pagination counters.
+        mangaList.clear();
+        offset = (newSource.equals("MangaDex")) ? 0 : 1; // MangaDex is 0-based, others are 1-based.
+        asuraScansOffset = 1;
+        homeListAdapter.notifyDataSetChanged();
+        mangaListView.scrollToPosition(0);
+
+        // Load data from the new source.
+        loadFeed(offset, LIMIT);
+        updateSourceGlow(); // Update the visual indicator for the selected source.
+    }
+
+    /**
+     * Updates the glowing animation to highlight the currently selected data source in the drawer.
+     */
+    private void updateSourceGlow() {
         View glowAsura = findViewById(R.id.drawer_asurascans_glow);
         View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
         View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
 
+        // Turn off all glows initially.
+        glowAsura.clearAnimation();
         glowMangaDex.clearAnimation();
         glowManhuaus.clearAnimation();
+        glowAsura.setVisibility(View.GONE);
         glowMangaDex.setVisibility(View.GONE);
         glowManhuaus.setVisibility(View.GONE);
 
-        glowAsura.setVisibility(View.VISIBLE);
-        AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
-        pulse.setDuration(1000);
-        pulse.setRepeatMode(Animation.REVERSE);
-        pulse.setRepeatCount(Animation.INFINITE);
-        glowAsura.startAnimation(pulse);
+        View targetGlow = null;
+        switch (serviceFeed) {
+            case "AsuraScans":
+                targetGlow = glowAsura;
+                break;
+            case "MangaDex":
+                targetGlow = glowMangaDex;
+                break;
+            case "Manhuaus":
+                targetGlow = glowManhuaus;
+                break;
+        }
+
+        if (targetGlow != null) {
+            targetGlow.setVisibility(View.VISIBLE);
+            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
+            pulse.setDuration(1000);
+            pulse.setRepeatMode(Animation.REVERSE);
+            pulse.setRepeatCount(Animation.INFINITE);
+            targetGlow.startAnimation(pulse);
+        }
+    }
+
+    /**
+     * Shows the glow animation for the default source on app start.
+     */
+    private void showInitialSourceGlow() {
+        updateSourceGlow();
     }
 
 
-
-
-
-    private void CheckIfStillBookmarked() {
+    /**
+     * Initializes ActivityResultLaunchers to handle data returned from other activities,
+     * such as bookmark status changes.
+     */
+    private void setupResultLaunchers() {
+        // Launcher for the bookmarks page. Refreshes bookmark states if anything changed.
         bookmarkLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK) {
-                        Intent data = result.getData();
-                        boolean bookmarkChanged = false;
-                        if (data != null) {
-                            bookmarkChanged = data.getBooleanExtra("bookmarkChanged", false);
-                        }
                         homeListAdapter.refreshBookmarkStates();
                         searchResultAdapter.refreshBookmarkStates();
-                        if (bookmarkChanged) Log.e("HomePage", "Bookmark changed detected!");
+                        Log.d("HomePage", "Returned from Bookmarks, refreshing states.");
                     }
                 });
 
+        // Launcher for the manga details page. Refreshes if a bookmark was added/removed.
         mangaPageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -254,69 +250,81 @@ public class HomePage extends AppCompatActivity {
                         Intent data = result.getData();
                         if (data != null && data.getBooleanExtra("bookmarkChanged", false)) {
                             homeListAdapter.refreshBookmarkStates();
+                            searchResultAdapter.refreshBookmarkStates();
                         }
                     }
                 });
     }
 
-    private void SettingsButtonGoTo() {
+    /**
+     * Sets up click listeners for the main navigation buttons (Settings, Bookmarks, History).
+     */
+    private void setupNavigationButtons() {
         settingsPageButton.setOnClickListener(v -> startActivity(new Intent(HomePage.this, SettingsPage.class)));
-    }
 
-    private void BookmarkButtonGoTo() {
         bookmarkPageButton.setOnClickListener(v -> {
             Intent intent = new Intent(HomePage.this, BookmarksPage.class);
             bookmarkLauncher.launch(intent);
         });
-    }
 
-    private void HistoryButtonGoTo() {
         historyPageButton.setOnClickListener(v -> startActivity(new Intent(HomePage.this, HistoryPage.class)));
     }
 
+
+    /**
+     * Configures the SearchView, including its listeners for text changes and submissions.
+     * Handles the visibility and animation of the search results view.
+     */
     private void setupSearchView() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 performSearch(query);
+                searchView.clearFocus(); // Hide keyboard on submit.
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (!newText.trim().isEmpty()) {
+                    // Make search results visible and animate them if not already visible.
                     if (searchResultView.getVisibility() != View.VISIBLE) {
                         searchResultView.setVisibility(View.VISIBLE);
                         recycler_bg_blur.setVisibility(View.VISIBLE);
-                    }
-                    if (!isSearchListAnimated) {
                         Animation slideDown = AnimationUtils.loadAnimation(HomePage.this, R.anim.slide_down);
                         searchResultView.startAnimation(slideDown);
-                        isSearchListAnimated = true;
                     }
                     performSearch(newText);
                 } else {
+                    // Hide search results when the query is empty.
                     searchResultView.setVisibility(View.GONE);
                     recycler_bg_blur.setVisibility(View.GONE);
-                    isSearchListAnimated = false;
                 }
                 return true;
             }
         });
     }
 
+    /**
+     * Executes a search query using the appropriate service controller based on the selected source.
+     * Updates the search results adapter with the fetched data.
+     * @param query The search term entered by the user.
+     */
     private void performSearch(String query) {
         if (query == null || query.trim().isEmpty()) {
             searchMangaList.clear();
+            searchResultAdapter.notifyDataSetChanged();
             return;
         }
+
+        // Call the central service controller to perform the search.
         ServiceController.fetchSearchMangas(query, serviceFeed, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> results) {
                 runOnUiThread(() -> {
                     searchMangaList.clear();
                     searchMangaList.addAll(results);
-                    searchResultAdapter.refreshBookmarkStates();
+                    searchResultAdapter.refreshBookmarkStates(); // Ensure bookmark icons are correct.
                     searchResultAdapter.notifyDataSetChanged();
                 });
             }
@@ -324,14 +332,19 @@ public class HomePage extends AppCompatActivity {
             @Override
             public void onError(String message) {
                 Log.e("HomePageSearch", "Error: " + message);
+                runOnUiThread(() -> Toast.makeText(HomePage.this, "Search failed: " + message, Toast.LENGTH_SHORT).show());
             }
         });
     }
 
-    private void loadMangaOffset() {
+    /**
+     * Sets up the scroll listener on the main RecyclerView to handle infinite scrolling/pagination.
+     */
+    private void setupPagination() {
         mangaListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
                 LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
                 if (layoutManager == null || isLoading) return;
 
@@ -339,48 +352,63 @@ public class HomePage extends AppCompatActivity {
                 int totalItemCount = layoutManager.getItemCount();
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
-                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5) {
-                    if (serviceFeed.equals("MangaDex")) loadFeed(offset, LIMIT);
-                    else if (serviceFeed.equals("AsuraScans")) loadFeed(asuraScansOffset, LIMIT);
+                // Load more items when the user is near the end of the list.
+                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5 && totalItemCount > 0) {
+                    if (serviceFeed.equals("MangaDex")) {
+                        loadFeed(offset, LIMIT);
+                    } else if (serviceFeed.equals("AsuraScans")) {
+                        loadFeed(asuraScansOffset, LIMIT);
+                    }
+                    // Add other sources here if they support pagination.
                 }
             }
         });
     }
 
-    private void loadFeed(int offset, int limit) {
-        if (isLoading) return;
+    /**
+     * Fetches a list of manga from the currently selected service and appends it to the main list.
+     * Handles loading state and pagination offsets.
+     * @param pageOrOffset The page number or offset for the API request.
+     * @param limit The number of items to load.
+     */
+    private void loadFeed(int pageOrOffset, int limit) {
+        if (isLoading) return; // Prevent concurrent loads.
         isLoading = true;
 
-        ServiceController.fetchMangaListController(serviceFeed, offset, limit, new ServiceController.MangaListCallback() {
+        ServiceController.fetchMangaListController(serviceFeed, pageOrOffset, limit, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> mangas) {
                 runOnUiThread(() -> {
-                    if (offset == 1) {
+                    // For the first page, clear the list. For subsequent pages, append.
+                    if (pageOrOffset == 0 || pageOrOffset == 1) {
                         mangaList.clear();
                         mangaList.addAll(mangas);
                         homeListAdapter.notifyDataSetChanged();
                     } else {
-                        int start = mangaList.size();
+                        int startPosition = mangaList.size();
                         mangaList.addAll(mangas);
-                        homeListAdapter.notifyItemRangeInserted(start, mangas.size());
+                        homeListAdapter.notifyItemRangeInserted(startPosition, mangas.size());
                     }
 
                     isLoading = false;
-                    homeListAdapter.refreshBookmarkStates();
+                    homeListAdapter.refreshBookmarkStates(); // Update bookmark icons for new items.
 
-                    if (serviceFeed.equals("MangaDex")) HomePage.this.offset += limit;
-                    else if (serviceFeed.equals("AsuraScans")) HomePage.this.asuraScansOffset += 1;
+                    // Increment the correct offset for the next page load.
+                    if (serviceFeed.equals("MangaDex")) {
+                        HomePage.this.offset += limit;
+                    } else if (serviceFeed.equals("AsuraScans")) {
+                        HomePage.this.asuraScansOffset += 1;
+                    }
                 });
             }
 
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
-                    Toast.makeText(HomePage.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(HomePage.this, "Error loading feed: " + message, Toast.LENGTH_SHORT).show();
                     isLoading = false;
                 });
             }
         });
     }
-
 }

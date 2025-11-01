@@ -104,8 +104,6 @@ public class AsuraScansFeedService {
                     for (Element link : chapterLinks) {
                         Elements h3s = link.select("h3");
                         String[] parts = link.absUrl("href").split("/");
-
-
                         String chapterTitle = h3s.size() > 0 ? h3s.get(0).text() : "No title";
                         String dateUploaded = h3s.size() > 1 ? h3s.get(1).text() : "";
                         String chapterUrl = link.absUrl("href");
