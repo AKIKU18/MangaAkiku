@@ -7,11 +7,14 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -25,7 +28,6 @@ import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesMangaDex.MangaDexSearchService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,8 +70,8 @@ public class HomePage extends AppCompatActivity {
         historyPageButton = findViewById(R.id.button_history);
         settingsPageButton = findViewById(R.id.button_settings);
         recycler_bg_blur = findViewById(R.id.recycler_bg_blur);
-        button_mangadex = findViewById(R.id.button_mangadex);
-        button_asurascans = findViewById(R.id.button_asurascans);
+        button_mangadex = findViewById(R.id.source_mangadex);
+        button_asurascans = findViewById(R.id.source_asurascans);
 
         AppDatabase db = AppDatabase.getInstance(this);
         bookmarkDao = db.bookmarkDao();
@@ -96,10 +98,46 @@ public class HomePage extends AppCompatActivity {
         BookmarkButtonGoTo();
         HistoryButtonGoTo();
         SettingsButtonGoTo();
-        SwitchFeed();
+        SelectSourceDrawer();
+
     }
 
-    private void SwitchFeed() {
+    private void SelectSourceDrawer(){
+        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        ImageButton menuButton = findViewById(R.id.button_menu);
+
+        // Open drawer when hamburger is clicked
+        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+
+        // Use the same buttons that SwitchFeed() uses
+        button_mangadex.setOnClickListener(v -> {
+            serviceFeed = "MangaDex";
+            Toast.makeText(HomePage.this, "MangaDex", Toast.LENGTH_SHORT).show();
+
+            mangaList.clear();
+            offset = 0;
+            asuraScansOffset = 0;
+            homeListAdapter.notifyDataSetChanged();
+            mangaListView.scrollToPosition(0);
+
+            loadFeed(offset, LIMIT);
+
+            // Drawer glow animation
+            View glowViewAsuraScans = findViewById(R.id.drawer_asurascans_glow);
+            View glowViewMangaDex = findViewById(R.id.drawer_mangadex_glow);
+            glowViewAsuraScans.clearAnimation();
+            glowViewAsuraScans.setVisibility(View.GONE);
+
+            glowViewMangaDex.setVisibility(View.VISIBLE);
+            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
+            pulse.setDuration(1000);
+            pulse.setRepeatMode(Animation.REVERSE);
+            pulse.setRepeatCount(Animation.INFINITE);
+            glowViewMangaDex.startAnimation(pulse);
+
+            drawerLayout.closeDrawer(GravityCompat.START); // close drawer
+        });
+
         button_asurascans.setOnClickListener(v -> {
             serviceFeed = "AsuraScans";
             Toast.makeText(HomePage.this, "AsuraScans", Toast.LENGTH_SHORT).show();
@@ -111,20 +149,27 @@ public class HomePage extends AppCompatActivity {
             mangaListView.scrollToPosition(0);
 
             loadFeed(asuraScansOffset, LIMIT);
-        });
 
-        button_mangadex.setOnClickListener(v -> {
-            serviceFeed = "MangaDex";
-            Toast.makeText(HomePage.this, "MangaDex", Toast.LENGTH_SHORT).show();
+            // Drawer glow animation
+            View glowViewAsuraScans = findViewById(R.id.drawer_asurascans_glow);
+            View glowViewMangaDex = findViewById(R.id.drawer_mangadex_glow);
+            glowViewMangaDex.clearAnimation();
+            glowViewMangaDex.setVisibility(View.GONE);
 
-            mangaList.clear();
-            offset = 0;
-            asuraScansOffset = 0;
-            homeListAdapter.notifyDataSetChanged();
+            glowViewAsuraScans.setVisibility(View.VISIBLE);
+            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
+            pulse.setDuration(1000);
+            pulse.setRepeatMode(Animation.REVERSE);
+            pulse.setRepeatCount(Animation.INFINITE);
+            glowViewAsuraScans.startAnimation(pulse);
 
-            loadFeed(offset, LIMIT);
+            drawerLayout.closeDrawer(GravityCompat.START); // close drawer
         });
     }
+
+
+
+
 
     private void CheckIfStillBookmarked() {
         bookmarkLauncher = registerForActivityResult(
@@ -205,7 +250,7 @@ public class HomePage extends AppCompatActivity {
             searchMangaList.clear();
             return;
         }
-        MangaDexSearchService.searchManga(query.trim(), 0, 50, new MangaDexSearchService.MangaListCallback() {
+        ServiceController.fetchSearchMangas(query, serviceFeed, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> results) {
                 runOnUiThread(() -> {

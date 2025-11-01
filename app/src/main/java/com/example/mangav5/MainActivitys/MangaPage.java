@@ -1,5 +1,6 @@
 package com.example.mangav5.MainActivitys;
 
+import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Adapters.MangaPageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
@@ -78,7 +80,7 @@ public class MangaPage extends AppCompatActivity {
 
         PrevOrNextChapter();
         handleBackPress();
-        OnClickToggleMangaPage(bookmarkStar, mangaItem, bookmarkDao);
+        OnClickToggleMangaPage(bookmarkStar, bookmarkDao);
         CheckIfStillBookmarked();
         ScrollButton();
         HomePageGoTo();
@@ -101,8 +103,10 @@ public class MangaPage extends AppCompatActivity {
         });
     }
 
-    private void OnClickToggleMangaPage(ImageView holder, MangaItemModel manb, BookmarkDao bookmarkDao){
-        MangaDexFeedManga.fetchMangaById(getMangaId, new MangaDexFeedManga.MangaCallback() {
+    private void OnClickToggleMangaPage(ImageView holder, BookmarkDao bookmarkDao){
+
+        final String mangaUrlorId = ServiceController.getMangaIdOrMangaUrl(HomePage.serviceFeed, getMangaId, getIntent().getStringExtra("mangaUrl"));
+        ServiceController.getMangaItem(HomePage.serviceFeed, mangaUrlorId, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 runOnUiThread(() -> {
@@ -120,7 +124,9 @@ public class MangaPage extends AppCompatActivity {
             }
 
             @Override
-            public void onError(String errorMessage) {}
+            public void onError(String errorMessage) {
+                onError(errorMessage);
+            }
         });
     }
 
@@ -142,11 +148,13 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void GetFirstOrLastChapter(String descAsc){
-        String mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
+        String mangaUrl = getIntent().getStringExtra("mangaUrl");
         String source = getIntent().getStringExtra("source");
 
 
-        ServiceController.fetchChapterListController(source,getMangaId, mangaUrlOrId, 0, 1, descAsc, new ServiceController.ChapterListCallback() {
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
+
+        ServiceController.fetchChapterListController(source,mangaIdOrUrlFinal, 0, 1, descAsc, new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 if (fetchedChapters.isEmpty()) return;
@@ -175,23 +183,12 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void LoadMangaInfo(){
-        String mangaUrlOrId = getMangaId; // always start with mangaId
         String source = getIntent().getStringExtra("source");
+        String mangaUrl = getIntent().getStringExtra("mangaUrl");
+        Log.e("MangaPage", "mangaUrl: " + ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl));
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
 
-        if ("MangaDex".equals(source)) {
-            // Use only the ID for MangaDex
-            mangaUrlOrId = getMangaId;
-        } else {
-            // For other sources, fallback to mangaUrl
-            if (getIntent().getStringExtra("mangaUrl") != null) {
-                mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
-            }
-        }
-
-        Log.d("MangaPageLog", "Fetching manga: source=" + source + " , id/url=" + mangaUrlOrId);
-        final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
-
-        ServiceController.fetchMangaDetails(source, mangaUrlOrId, new ServiceController.MangaCallback() {
+        ServiceController.fetchMangaDetails(source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 if (manga == null) return;
@@ -237,23 +234,13 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void updateLoadChapterListInfo(int offset){
-        String mangaUrlOrId = getMangaId; // always start with mangaId
         String source = getIntent().getStringExtra("source");
 
-        if ("MangaDex".equals(source)) {
-            // Use only the ID for MangaDex
-            mangaUrlOrId = getMangaId;
-        } else {
-            // For other sources, fallback to mangaUrl
-            if (getIntent().getStringExtra("mangaUrl") != null) {
-                mangaUrlOrId = getIntent().getStringExtra("mangaUrl");
-            }
-        }
+        String mangaUrl = getIntent().getStringExtra("mangaUrl");
+        Log.e("MangaPage", "mangaUrl: " + ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl));
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
 
-        Log.d("MangaPageLog", "Fetching manga: source=" + source + " , id/url=" + mangaUrlOrId);
-        final String mangaIdOrUrlFinal = mangaUrlOrId; // create final copy
-
-        ServiceController.fetchChapterListController(source,getMangaId, mangaUrlOrId, offset, LIMIT, "desc", new ServiceController.ChapterListCallback() {
+        ServiceController.fetchChapterListController(source,mangaIdOrUrlFinal, offset, LIMIT, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
                 if (chapters.isEmpty()) return;

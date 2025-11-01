@@ -99,12 +99,11 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
 
-        SwitchLastChapterFeed(manga,holder);
+        SwitchLastChapterFeed(manga, holder);
 
         // Bookmark star
         holder.bookmarkStar.setImageResource(manga.getIsBookmarked() ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, manga, bookmarkDao);
-
 
 
         holder.lastChapter.setOnClickListener(v -> goToChapterPage(manga));
@@ -115,12 +114,11 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     private void SwitchLastChapterFeed(MangaItemModel manga, MangaViewHolder holder) {
         // Set a placeholder while loading
         holder.lastChapter.setText("Loading...");
-
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(),manga.getMangaId(), manga.getMangaUrl()); // create final copy
         // Fetch last chapter dynamically from the correct source
         ServiceController.fetchChapterListController(
                 manga.getSource(),
-                manga.getMangaId(),
-                manga.getMangaUrl(),
+                mangaIdOrUrlFinal,
                 0,
                 1,
                 "desc",
@@ -159,13 +157,13 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                             manga.getCoverImageUrl(),
                             manga.getDescription(),
                             manga.getMangaUrl()
-                            ,manga.getLastChapter(),
+                            , manga.getLastChapter(),
                             manga.getSource()
                     )
             );
         });
-
-        ServiceController.fetchChapterListController(manga.getSource(),manga.getMangaId(),manga.getMangaUrl(), 0, 1, "desc" ,new ServiceController.ChapterListCallback() {
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(),manga.getMangaId(), manga.getMangaUrl()); // create final copy
+        ServiceController.fetchChapterListController(manga.getSource(),mangaIdOrUrlFinal, 0, 1, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -197,7 +195,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     private void goToMangaPage(MangaItemModel manga) {
         Intent intent = new Intent(context, MangaPage.class);
 
-        switch (serviceFeed){
+        switch (serviceFeed) {
             case "MangaDex":
                 intent.putExtra("mangaId", manga.getMangaId());
                 intent.putExtra("source", manga.getSource());
@@ -211,7 +209,6 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                 mangaPageLauncher.launch(intent);
                 break;
         }
-
 
 
     }
@@ -236,12 +233,12 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             // push updates back to main thread
             new Handler(Looper.getMainLooper()).post(() -> {
 
-                if(mangaList.size() != snapshot.size()){
+                if (mangaList.size() != snapshot.size()) {
                     int minSize = Math.min(mangaList.size(), snapshot.size());
                     for (int i = 0; i < minSize; i++) {
                         mangaList.get(i).setIsBookmarked(snapshot.get(i).getIsBookmarked());
                     }
-                }else{
+                } else {
                     synchronized (mangaList) {
                         for (int i = 0; i < mangaList.size(); i++) {
                             mangaList.get(i).setIsBookmarked(snapshot.get(i).getIsBookmarked());

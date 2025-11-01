@@ -7,8 +7,10 @@ import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.ServicesAsuraScans.AsuraScansChapterPagesService;
 import com.example.mangav5.ServicesAsuraScans.AsuraScansFeedService;
+import com.example.mangav5.ServicesAsuraScans.AsuraScansSearchService;
 import com.example.mangav5.ServicesMangaDex.MangaDexChaptersService;
 import com.example.mangav5.ServicesMangaDex.MangaDexFeedManga;
+import com.example.mangav5.ServicesMangaDex.MangaDexSearchService;
 
 import java.util.Collections;
 import java.util.List;
@@ -139,7 +141,40 @@ public class ServiceController {
         }
     }
 
-    public static void fetchChapterListController(String serviceFeed, String mangaId, String mangaUrl, int offset, int limit, String descAsc, ChapterListCallback callback) {
+    public static String getMangaIdOrMangaUrl(String source, String mangaId, String mangaUrl) {
+        final String mangaUrlOrIdFinal;
+        switch (source) {
+            case "MangaDex":
+                mangaUrlOrIdFinal = mangaId;
+                break;
+            case "AsuraScans":
+                mangaUrlOrIdFinal = mangaUrl;
+                break;
+            default:
+                return "";
+
+        }
+        return mangaUrlOrIdFinal;
+    }
+
+    public static String getChapterIdOrChapterUrl(String source, String chapterId, String chapterUrl) {
+        final String chapterIdOrUrlFinal;
+
+        switch (source) {
+            case "MangaDex":
+                chapterIdOrUrlFinal = chapterId;
+                break;
+            case "AsuraScans":
+                chapterIdOrUrlFinal = chapterUrl;
+                break;
+            default:
+                return "";
+
+        }
+        return chapterIdOrUrlFinal;
+    }
+
+    public static void fetchChapterListController(String serviceFeed, String mangaUrlOrId, int offset, int limit, String descAsc, ChapterListCallback callback) {
         if (callback == null) {
             Log.e(TAG, "Callback is null!");
             return;
@@ -147,7 +182,7 @@ public class ServiceController {
 
         switch (serviceFeed) {
             case "MangaDex":
-                MangaDexChaptersService.fetchAllChapters(mangaId, descAsc, offset, limit, new MangaDexChaptersService.ChapterListCallback() {
+                MangaDexChaptersService.fetchAllChapters(mangaUrlOrId, descAsc, offset, limit, new MangaDexChaptersService.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapters) {
                         callback.onSuccess(chapters);
@@ -160,7 +195,7 @@ public class ServiceController {
                 });
                 break;
             case "AsuraScans":
-                AsuraScansFeedService.getMangaChaptersAsuraScans(mangaUrl, new AsuraScansFeedService.ChapterListCallback() {
+                AsuraScansFeedService.getMangaChaptersAsuraScans(mangaUrlOrId, new AsuraScansFeedService.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapters) {
                         if ("asc".equalsIgnoreCase(descAsc)) {
@@ -179,6 +214,40 @@ public class ServiceController {
                 callback.onError("Unknown service feed: " + serviceFeed);
                 Log.e(TAG, "Unknown service feed chapter List: " + serviceFeed);
                 break;
+        }
+    }
+
+    public static void getMangaItem(String source, String mangaUrlId, MangaCallback callback) {
+        if (callback == null) {
+            Log.e(TAG, "Callback is null!");
+            return;
+        }
+        switch (source) {
+            case "MangaDex":
+                MangaDexFeedManga.fetchMangaById(mangaUrlId, new MangaDexFeedManga.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        onError(errorMessage);
+                    }
+                });
+                break;
+            case "AsuraScans":
+                AsuraScansFeedService.getMangaInfoAsuraScans(mangaUrlId, new AsuraScansFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        onError(errorMessage);
+                    }
+                });
         }
     }
 
@@ -218,6 +287,41 @@ public class ServiceController {
                 });
         }
 
+    }
+
+    public static void fetchSearchMangas(String query, String source, MangaListCallback callback) {
+        if (callback == null) {
+            Log.e(TAG, "Callback is null!");
+            return;
+        }
+
+        switch (source) {
+            case "MangaDex":
+                MangaDexSearchService.searchManga(query.trim(), 0, 50, new MangaDexSearchService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e("HomePageSearch", "Error: " + message);
+                    }
+                });
+                break;
+            case "AsuraScans":
+                AsuraScansSearchService.search(query, new AsuraScansSearchService.SearchCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+
+                    }
+                });
+        }
     }
 
     public interface ChapterListCallback {

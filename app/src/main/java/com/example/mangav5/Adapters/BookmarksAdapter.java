@@ -146,7 +146,10 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
 
     private void GetLastChapter(MangaItemModel mangaItem) {
-        ServiceController.fetchChapterListController(mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl(), 0, 1, "desc", new ServiceController.ChapterListCallback() {
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(mangaItem.getSource(),mangaItem.getMangaId(), mangaItem.getMangaUrl()); // create final copy
+
+
+        ServiceController.fetchChapterListController(mangaItem.getSource(), mangaIdOrUrlFinal, 0, 1, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 Intent intent = new Intent(context, ChapterPage.class);
@@ -167,8 +170,10 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     }
 
     private void GetLastChapterTitle(MangaItemModel mangaItem, TextView currentItemView, TextView viewedChapterView) {
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(mangaItem.getSource(),mangaItem.getMangaId(), mangaItem.getMangaUrl()); // create final copy
 
-        ServiceController.fetchChapterListController(mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl(), 0, 1, "desc",
+
+        ServiceController.fetchChapterListController(mangaItem.getSource(), mangaIdOrUrlFinal, 0, 1, "desc",
                 new ServiceController.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapters) {

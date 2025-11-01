@@ -84,7 +84,7 @@
             android:background="@android:color/transparent"
             android:gravity="center"
             android:text="HOME"
-            android:textColor="@android:color/white"
+            android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textAllCaps="false" />
     </FrameLayout>

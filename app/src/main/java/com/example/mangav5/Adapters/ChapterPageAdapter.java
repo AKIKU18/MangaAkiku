@@ -46,15 +46,18 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     public void onBindViewHolder(@NonNull ChapterPageViewer holder, int position) {
         String imageUrl = pages.get(position);
         // Use screen width to avoid loading massive bitmaps
-        int targetWidth = context.getResources().getDisplayMetrics().widthPixels;
+        int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+
         Glide.with(context)
                 .load(imageUrl)
                 .placeholder(android.R.drawable.ic_menu_gallery)
-                .override(targetWidth, Target.SIZE_ORIGINAL) // ✅ scale down to screen width
+                .override(Target.SIZE_ORIGINAL, 4096)
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .dontTransform()
                 .error(android.R.drawable.ic_dialog_alert)
                 .into(holder.imageContainer);
+
+
     }
 
 
