@@ -287,9 +287,10 @@ public class MangaPage extends AppCompatActivity {
 
     private void HomePageGoTo(){
         button_homeMangaPage.setOnClickListener(v -> {
-            Intent resultIntent = new Intent();
+            Intent resultIntent = new Intent(this, HomePage.class);
             resultIntent.putExtra("bookmarkChanged", bookmarkChanged);
             setResult(RESULT_OK, resultIntent);
+            startActivity(resultIntent);
             finish();
         });
     }

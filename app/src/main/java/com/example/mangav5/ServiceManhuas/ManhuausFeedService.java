@@ -145,7 +145,7 @@ public class ManhuausFeedService {
                 String title = titleElement != null ? titleElement.attr("alt").trim() : "No title";
 
                 // Description (optional, use summary if exists)
-                Element description = doc.selectFirst(".summary_content .post-content"); // empty fallback
+                Element description = doc.selectFirst("div.summary__content.show-more"); // empty fallback
                 String descText = description != null ? description.text().trim() : "";
 
                 // Cover image

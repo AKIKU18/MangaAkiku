@@ -325,6 +325,7 @@ public class HomePage extends AppCompatActivity {
                     searchMangaList.clear();
                     searchMangaList.addAll(results);
                     searchResultAdapter.refreshBookmarkStates(); // Ensure bookmark icons are correct.
+                    refreshBookmarks();
                     searchResultAdapter.notifyDataSetChanged();
                 });
             }
@@ -411,4 +412,25 @@ public class HomePage extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // update the current intent
+        refreshBookmarks(); // refresh when Home button sends intent
+    }
+
+    private void refreshBookmarks() {
+        if (homeListAdapter != null) homeListAdapter.refreshBookmarkStates();
+        if (searchResultAdapter != null) searchResultAdapter.refreshBookmarkStates();
+        Log.d("HomePage", "Bookmarks refreshed");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshBookmarks(); // refresh whenever activity comes to foreground
+    }
+
+
 }

@@ -23,6 +23,9 @@ public interface HistoryDao {
     @Query("SELECT * FROM history WHERE mangaId = :mangaId")
     HistoryEntity getHistoryItem(String mangaId);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert()
     void insertHistoryItem(HistoryEntity historyItem);
+
+    @Query("SELECT * FROM history WHERE mangaId = :mangaId")
+    List<HistoryEntity> getSameHistoryItemByMangaId(String mangaId);
 }

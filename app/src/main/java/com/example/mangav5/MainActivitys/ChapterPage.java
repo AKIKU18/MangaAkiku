@@ -14,6 +14,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -48,6 +49,7 @@ public class ChapterPage extends AppCompatActivity {
 
     private String currentChapterId;
     private String currentChapterTitle;
+    private boolean bookmarkChanged = false;
 
     public String getCurrentChapterTitle() {
         return currentChapterTitle;
@@ -105,6 +107,7 @@ public class ChapterPage extends AppCompatActivity {
         chapterUrlOrIdFinal =ServiceController.getChapterIdOrChapterUrl(source, getCurrentChapterId(), chapterUrl);
         // --- Load chapter pages ---
         GetChapterPages(chapterUrlOrIdFinal);
+        handleBackPress();
 
         // --- Setup UI ---
         setupRecyclerScroll();
@@ -114,7 +117,6 @@ public class ChapterPage extends AppCompatActivity {
         SetMangaTitle(mangaId);
         GoToHomePage();
         updateLoadChapterList(0);
-        InsertChapterIntoHistory(chapterUrlOrIdFinal);
         FullScreenMode();
     }
 
@@ -132,6 +134,9 @@ public class ChapterPage extends AppCompatActivity {
             );
         }
     }
+
+
+
 
     // In ChapterPage.java
 
@@ -341,7 +346,17 @@ public class ChapterPage extends AppCompatActivity {
 
     }
 
-
+    private void handleBackPress() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("bookmarkChanged", bookmarkChanged);
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            }
+        });
+    }
     private void setupRecyclerScroll() {
         // Toggle UI with button
         btnToggleUI.setOnClickListener(v -> toggleUiVisibility());

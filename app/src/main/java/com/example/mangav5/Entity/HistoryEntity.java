@@ -6,7 +6,8 @@ import androidx.room.PrimaryKey;
 
 @Entity(tableName = "history")
 public class HistoryEntity {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    public int id; // unique ID for each record
     @NonNull
     public String mangaId;
     public String chapterId;

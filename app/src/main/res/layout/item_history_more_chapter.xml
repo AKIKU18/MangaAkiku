@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    android:foreground="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Chapter title -->
+        <TextView
+            android:id="@+id/historyChapterTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Chapter 12: The Beginning"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/teal_700"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_marginBottom="4dp"/>
+
+        <!-- Timestamp -->
+        <TextView
+            android:id="@+id/historyTimestamp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="12 Feb 2025, 14:32"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            android:textColor="@android:color/white"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

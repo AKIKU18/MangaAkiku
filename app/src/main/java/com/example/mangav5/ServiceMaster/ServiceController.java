@@ -19,6 +19,52 @@ import java.util.Collections;
 import java.util.List;
 
 public class ServiceController {
+        /*
+    ServiceController.java
+
+    HOW TO ADD A NEW MANGA SOURCE:
+
+    1. Create new service classes for your source:
+       - Feed Service (fetches manga lists, e.g., `NewSourceFeedService`)
+       - Manga Details Service (fetches single manga info)
+       - Chapters Service (fetches chapters for a manga)
+       - Search Service (optional, if search is supported)
+
+    2. Implement appropriate callback interfaces in each service:
+       - MangaListCallback: returns a List<MangaItemModel>
+       - MangaCallback: returns a single MangaItemModel
+       - ChapterListCallback: returns a List<ChapterModel>
+       - PagesCallback: returns a List<String> for chapter pages
+
+    3. Update ServiceController methods to handle the new source:
+       - fetchMangaListController(): add a new case for the source and call the new feed service
+       - fetchMangaDetails(): add a new case for the source and call the new manga details service
+       - mangaGetDescription(): add a new case to fetch the description from your service
+       - fetchChapterListController(): add a new case to fetch chapters
+       - getChapterPages(): add a new case to fetch chapter pages
+       - fetchSearchMangas(): add a new case if your source supports search
+       - getMangaItem(): add a new case for fetching a single manga item
+
+    4. Update getMangaIdOrMangaUrl() and getChapterIdOrChapterUrl():
+       - Define whether your source uses manga ID or manga URL for identification
+       - Same for chapters
+
+    5. Optional:
+       - Logging: add descriptive log messages for easier debugging
+       - Error handling: ensure callbacks handle onError properly
+
+    Example case for a new source:
+        case "NewSource":
+            NewSourceFeedService.fetchMangaList(offsetOrPage, limit, new NewSourceFeedService.MangaListCallback() {
+                @Override
+                public void onSuccess(List<MangaItemModel> mangas) { callback.onSuccess(mangas); }
+                @Override
+                public void onError(String message) { callback.onError(message); }
+            });
+            break;
+
+    */
+
 
     private static final String TAG = "ServiceController";
 
@@ -201,9 +247,12 @@ public class ServiceController {
 
     public static String getMangaIdOrMangaUrl(String source, String mangaId, String mangaUrl) {
         switch (source) {
-            case "MangaDex": return mangaId;
-            case "AsuraScans": return mangaUrl;
-            case "Manhuaus": return mangaUrl;
+            case "MangaDex":
+                return mangaId;
+            case "AsuraScans":
+                return mangaUrl;
+            case "Manhuaus":
+                return mangaUrl;
             default:
                 Log.e(TAG, "[getMangaIdOrMangaUrl] Unknown source: " + source);
                 return "";
@@ -212,9 +261,12 @@ public class ServiceController {
 
     public static String getChapterIdOrChapterUrl(String source, String chapterId, String chapterUrl) {
         switch (source) {
-            case "MangaDex": return chapterId;
-            case "AsuraScans": return chapterUrl;
-            case "Manhuaus": return chapterUrl;
+            case "MangaDex":
+                return chapterId;
+            case "AsuraScans":
+                return chapterUrl;
+            case "Manhuaus":
+                return chapterUrl;
             default:
                 Log.e(TAG, "[getChapterIdOrChapterUrl] Unknown source: " + source);
                 return "";
@@ -292,7 +344,10 @@ public class ServiceController {
             case "MangaDex":
                 MangaDexFeedManga.fetchMangaById(mangaUrlId, new MangaDexFeedManga.MangaCallback() {
                     @Override
-                    public void onSuccess(MangaItemModel manga) { callback.onSuccess(manga); }
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[getMangaItem:MangaDex] Error for manga ID " + mangaUrlId + ": " + errorMessage);
@@ -304,7 +359,10 @@ public class ServiceController {
             case "AsuraScans":
                 AsuraScansFeedService.getMangaInfoAsuraScans(mangaUrlId, new AsuraScansFeedService.MangaCallback() {
                     @Override
-                    public void onSuccess(MangaItemModel manga) { callback.onSuccess(manga); }
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[getMangaItem:AsuraScans] Error for manga URL " + mangaUrlId + ": " + errorMessage);
@@ -316,7 +374,10 @@ public class ServiceController {
             case "Manhuaus":
                 ManhuausFeedService.getMangaDetailsManhuaus(mangaUrlId, new ManhuausFeedService.MangaCallback() {
                     @Override
-                    public void onSuccess(MangaItemModel manga) { callback.onSuccess(manga); }
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[getMangaItem:Manhuaus] Error for manga URL " + mangaUrlId + ": " + errorMessage);
@@ -342,7 +403,10 @@ public class ServiceController {
             case "AsuraScans":
                 new AsuraScansChapterPagesService().GetChapterPages(context, chapterUrlId, new AsuraScansChapterPagesService.PagesCallback() {
                     @Override
-                    public void onSuccess(List<String> pages) { callback.onSuccess(pages); }
+                    public void onSuccess(List<String> pages) {
+                        callback.onSuccess(pages);
+                    }
+
                     @Override
                     public void onError(String message) {
                         Log.e(TAG, "[getChapterPages:AsuraScans] Error fetching pages for chapter " + chapterUrlId + ": " + message);
@@ -354,7 +418,10 @@ public class ServiceController {
             case "MangaDex":
                 MangaDexChaptersService.fetchChapterPages(chapterUrlId, new MangaDexChaptersService.PagesCallback() {
                     @Override
-                    public void onSuccess(List<String> pages) { callback.onSuccess(pages); }
+                    public void onSuccess(List<String> pages) {
+                        callback.onSuccess(pages);
+                    }
+
                     @Override
                     public void onError(String message) {
                         Log.e(TAG, "[getChapterPages:MangaDex] Error fetching pages for chapter " + chapterUrlId + ": " + message);
@@ -366,7 +433,10 @@ public class ServiceController {
             case "Manhuaus":
                 ManhuausChaptersService.getChapterMangaManhuaus(chapterUrlId, new ManhuausChaptersService.ChapterCallback() {
                     @Override
-                    public void onSuccess(List<String> chapter) { callback.onSuccess(chapter); }
+                    public void onSuccess(List<String> chapter) {
+                        callback.onSuccess(chapter);
+                    }
+
                     @Override
                     public void onError(String message) {
                         Log.e(TAG, "[getChapterPages:Manhuaus] Error fetching pages for chapter " + chapterUrlId + ": " + message);
@@ -392,7 +462,10 @@ public class ServiceController {
             case "MangaDex":
                 MangaDexSearchService.searchManga(query.trim(), 0, 50, new MangaDexSearchService.MangaListCallback() {
                     @Override
-                    public void onSuccess(List<MangaItemModel> results) { callback.onSuccess(results); }
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
                     @Override
                     public void onError(String message) {
                         Log.e(TAG, "[fetchSearchMangas:MangaDex] Error searching query '" + query + "': " + message);
@@ -403,7 +476,10 @@ public class ServiceController {
             case "AsuraScans":
                 AsuraScansSearchService.search(query, new AsuraScansSearchService.SearchCallback() {
                     @Override
-                    public void onSuccess(List<MangaItemModel> results) { callback.onSuccess(results); }
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
                     @Override
                     public void onError(String error) {
                         Log.e(TAG, "[fetchSearchMangas:AsuraScans] Error searching query '" + query + "': " + error);
@@ -414,7 +490,10 @@ public class ServiceController {
             case "Manhuaus":
                 ManhuausSearchService.search(query, new ManhuausSearchService.SearchCallback() {
                     @Override
-                    public void onSuccess(List<MangaItemModel> results) { callback.onSuccess(results); }
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
                     @Override
                     public void onError(String error) {
                         Log.e(TAG, "[fetchSearchMangas:Manhuaus] Error searching query '" + query + "': " + error);
@@ -432,26 +511,31 @@ public class ServiceController {
     // --- Callback Interfaces ---
     public interface ChapterListCallback {
         void onSuccess(List<ChapterModel> chapters);
+
         void onError(String message);
     }
 
     public interface PagesCallback {
         void onSuccess(List<String> chapters);
+
         void onError(String message);
     }
 
     public interface MangaListCallback {
         void onSuccess(List<MangaItemModel> mangas);
+
         void onError(String message);
     }
 
     public interface MangaCallback {
         void onSuccess(MangaItemModel manga);
+
         void onError(String errorMessage);
     }
 
     public interface DescriptionCallback {
         void onSuccess(String description);
+
         void onError(String errorMessage);
     }
 }
