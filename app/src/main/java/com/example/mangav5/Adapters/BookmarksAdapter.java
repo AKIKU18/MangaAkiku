@@ -111,11 +111,10 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         holder.viewedChapter.setOnClickListener(v -> {
             GetViewdChapter(mangaItemModel);
         });
+
+
     }
 
-    private static TextView getViewedChapter(@NonNull BookmarkMangaViewHolder holder) {
-        return holder.viewedChapter;
-    }
 
     private void GetViewdChapter(MangaItemModel mangaItem) {
         Intent intent = new Intent(context, ChapterPage.class);
@@ -180,9 +179,18 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                         AppDatabase db = AppDatabase.getInstance(context);
 
                         Executors.newSingleThreadExecutor().execute(() -> {
-                            HistoryEntity history = db.historyDao().getHistoryItem(mangaItem.getMangaId());
+                            HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
                             String viewedChapterTitle = (history != null && history.chapterTitle != null)
                                     ? history.chapterTitle : "-";
+
+                            if (history != null) {
+                                Log.e("History Chapter: ", history.chapterTitle);
+                            } else {
+                                Log.e("History Chapter: ", "null (no record found)" + mangaItem.getMangaId());
+                            }
+                            Log.e("History", "Viewed chapter title: " + viewedChapterTitle);
+
+
 
                             // Post viewed chapter safely
                             viewedChapterView.post(() ->
@@ -210,7 +218,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                         // Handle network or parsing errors
                         AppDatabase db = AppDatabase.getInstance(context);
                         Executors.newSingleThreadExecutor().execute(() -> {
-                            HistoryEntity history = db.historyDao().getHistoryItem(mangaItem.getMangaId());
+                            HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
                             String viewedChapterTitle = (history != null && history.chapterTitle != null)
                                     ? history.chapterTitle : "-";
 

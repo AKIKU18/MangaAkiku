@@ -384,6 +384,7 @@ public class HomePage extends AppCompatActivity {
                     if (pageOrOffset == 0 || pageOrOffset == 1) {
                         mangaList.clear();
                         mangaList.addAll(mangas);
+
                         homeListAdapter.notifyDataSetChanged();
                     } else {
                         int startPosition = mangaList.size();

@@ -109,6 +109,9 @@ public class ServiceController {
                 ManhuausFeedService.getMangaFeedManhuaus(new ManhuausFeedService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> mangas) {
+                        for (MangaItemModel item: mangas){
+                            Log.e("MangaId387", item.getMangaId());
+                        }
                         callback.onSuccess(mangas);
                     }
 

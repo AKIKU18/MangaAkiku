@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,16 +62,16 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     @Override
     public void onBindViewHolder(@NonNull MangaViewHolder holder, @SuppressLint("RecyclerView") int position) {
         MangaItemModel manga = mangaList.get(position);
+        // Set title
+        holder.title.setText(manga.getTitle() != null ? manga.getTitle() : "No title");
 
-        holder.title.setText(manga.getTitle());
-
+        // Fetch description asynchronously
         ServiceController.mangaGetDescription(manga.getSource(), manga.getMangaId(), manga.getMangaUrl(), new ServiceController.DescriptionCallback() {
             @Override
             public void onSuccess(String description) {
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    holder.description.setText(description);
+                    holder.description.setText(description != null ? description : "No description");
                 });
-
             }
 
             @Override
@@ -81,17 +82,16 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             }
         });
 
-        /// Load cover image
+        // Load cover image safely
         String coverUrl = manga.getCoverImageUrl();
         if (coverUrl != null && !coverUrl.isEmpty()) {
             boolean isAnimatedWebP = coverUrl.endsWith(".webp"); // adjust if needed
-
             Glide.with(context)
                     .load(coverUrl)
                     .placeholder(R.drawable.error_placeholder)
                     .error(R.drawable.error_placeholder)
-                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) // cache to disk
-                    .skipMemoryCache(!isAnimatedWebP)              // skip memory only for animated
+                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                    .skipMemoryCache(!isAnimatedWebP)
                     .dontAnimate()
                     .format(DecodeFormat.PREFER_RGB_565)
                     .into(holder.cover);
@@ -99,22 +99,24 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
 
+        // Last chapter placeholder and fetch
         SwitchLastChapterFeed(manga, holder);
 
-        // Bookmark star
-        holder.bookmarkStar.setImageResource(manga.getIsBookmarked() ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
+        // Bookmark star null-safe
+        boolean isBookmarked = Boolean.TRUE.equals(manga.getIsBookmarked());
+        holder.bookmarkStar.setImageResource(isBookmarked ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, manga, bookmarkDao);
 
-
+        // Click listeners
         holder.lastChapter.setOnClickListener(v -> goToChapterPage(manga));
-
         holder.title.setOnClickListener(v -> goToMangaPage(manga));
     }
+
 
     private void SwitchLastChapterFeed(MangaItemModel manga, MangaViewHolder holder) {
         // Set a placeholder while loading
         holder.lastChapter.setText("Loading...");
-        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(),manga.getMangaId(), manga.getMangaUrl()); // create final copy
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(), manga.getMangaId(), manga.getMangaUrl()); // create final copy
         // Fetch last chapter dynamically from the correct source
         ServiceController.fetchChapterListController(
                 manga.getSource(),
@@ -162,8 +164,9 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                     )
             );
         });
-        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(),manga.getMangaId(), manga.getMangaUrl()); // create final copy
-        ServiceController.fetchChapterListController(manga.getSource(),mangaIdOrUrlFinal, 0, 1, "desc", new ServiceController.ChapterListCallback() {
+
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(), manga.getMangaId(), manga.getMangaUrl()); // create final copy
+        ServiceController.fetchChapterListController(manga.getSource(), mangaIdOrUrlFinal, 0, 1, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -194,7 +197,6 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
 
     private void goToMangaPage(MangaItemModel manga) {
         Intent intent = new Intent(context, MangaPage.class);
-
         switch (serviceFeed) {
             case "MangaDex":
                 intent.putExtra("mangaId", manga.getMangaId());

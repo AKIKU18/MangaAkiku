@@ -131,12 +131,21 @@ public class AsuraScansChapterPagesService {
                         String src = arr.optString(i, "").trim();
                         if (!processedUrls.contains(src)) {
                             processedUrls.add(src);
-                            if (src.contains("/storage/media/") || src.contains("/storage/comics/")) {
+                            if ((src.contains("/storage/media/") || src.contains("/storage/comics/"))
+                                    && !src.equals("https://gg.asuracomic.net/storage/media/350641/conversions/01K4J8MAYW37AF3GF1HK6KXPGF-thumb-small.webp")
+                                    && !src.equals("https://gg.asuracomic.net/storage/media/272496/conversions/01JMHFP0DBPD906JMCZNAKG1RH-optimized.webp")
+                                    && !src.equals("https://gg.asuracomic.net/storage/media/316680/conversions/01JWCZWMSHZA9GC005W65PMXGY-optimized.webp")
+                                    && !src.equals("https://gg.asuracomic.net/storage/media/16/conversions/6dbf7d83-optimized.webp")
+                                    && !src.equals("https://gg.asuracomic.net/storage/media/26/conversions/e67cec65-optimized.webp")
+                                    && !src.equals("https://gg.asuracomic.net/storage/media/267698/conversions/01JJST2HQ54CXEV2YQN2621FTB-optimized.webp"))
+                            {
                                 pages.add(src);
                                 Log.d(TAG, "Matched comic image: " + src);
                             } else {
                                 Log.d(TAG, "Skipped image: " + src);
+                                pages.add("https://upload.wikimedia.org/wikipedia/commons/f/f5/No-Image-Placeholder-landscape.svg");
                             }
+
                         }
                     }
 

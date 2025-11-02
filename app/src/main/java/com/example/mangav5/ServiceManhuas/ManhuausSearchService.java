@@ -23,7 +23,6 @@ public class ManhuausSearchService {
                 String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
                 String searchUrl = "https://manhuaus.com/?s=" + encodedQuery + "&post_type=wp-manga&op=&author=&artist=&release=&adult=";
 
-                Log.d(TAG, "Searching URL: " + searchUrl);
 
                 Document doc = Jsoup.connect(searchUrl)
                         .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
@@ -42,11 +41,8 @@ public class ManhuausSearchService {
                         String url = titleA != null ? titleA.attr("href").trim() : "";
 
                         // Post ID from URL (last part of URL)
-                        String postId = "";
-                        if (!url.isEmpty()) {
-                            String[] parts = url.split("/");
-                            postId = parts[parts.length - 1]; // e.g., "martial-peak-3"
-                        }
+                        String mangaId =item.attr("data-post").trim();
+
 
                         // Cover image
                         Element img = item.selectFirst(".tab-thumb img");
@@ -64,7 +60,7 @@ public class ManhuausSearchService {
                         String lastChapter = chapterA != null ? chapterA.text().trim() : "";
 
                         MangaItemModel m = new MangaItemModel();
-                        m.setMangaId(postId);
+                        m.setMangaId(mangaId);
                         m.setTitle(title);
                         m.setMangaUrl(url);
                         m.setCoverImageUrl(cover);

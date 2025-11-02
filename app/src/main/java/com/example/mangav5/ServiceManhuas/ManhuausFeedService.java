@@ -47,17 +47,15 @@ public class ManhuausFeedService {
                         String title = titleA != null ? titleA.text().trim() : "";
                         String url = titleA != null ? titleA.attr("href").trim() : "";
 
-                        // Manga ID from URL (last segment, like search)
-                        String mangaId = "";
-                        if (!url.isEmpty()) {
-                            String[] parts = url.split("/");
-                            for (int i = parts.length - 1; i >= 0; i--) {
-                                if (!parts[i].isEmpty()) {
-                                    mangaId = parts[i];
-                                    break;
-                                }
-                            }
-                        }
+                        //GetMangaId
+                        Element thumbDiv = item.selectFirst(".item-thumb");
+                        String mangaId = thumbDiv != null && thumbDiv.hasAttr("data-post-id")
+                                ? thumbDiv.attr("data-post-id").trim()
+                                : "";
+
+                        Log.e("MangaId50",mangaId);
+
+
 
                         // Cover image
                         Element img = item.selectFirst("img");
@@ -87,7 +85,6 @@ public class ManhuausFeedService {
 
                         mangaList.add(m);
 
-                        Log.d(TAG, "Parsed item: id=" + mangaId + " title=" + title + " url=" + url);
 
                     } catch (Exception innerEx) {
                         Log.e(TAG, "Failed parsing single item: " + innerEx.getMessage(), innerEx);
@@ -99,7 +96,7 @@ public class ManhuausFeedService {
                 mainHandler.post(() -> callback.onSuccess(mangaList));
             } catch (IOException e) {
                 final String err = e.getMessage() != null ? e.getMessage() : "IO Error";
-                Log.e(TAG, "Error fetching ManhuaUS homepage: " + err, e);
+                Log.e(TAG, "Error fetching Manhuaus homepage: " + err, e);
                 mainHandler.post(() -> callback.onError(err));
             } catch (Exception e) {
                 final String err = e.getMessage() != null ? e.getMessage() : "Unknown Error";
@@ -139,7 +136,7 @@ public class ManhuausFeedService {
                 // Manga ID from bookmark button
                 Element bookmarkEl = doc.selectFirst(".add-bookmark .wp-manga-action-button");
                 String mangaId = bookmarkEl != null ? bookmarkEl.attr("data-post").trim() : "";
-
+                Log.e("ManhuausFeedServiceLine130", mangaId);
                 // Title
                 Element titleElement = doc.selectFirst(".summary_image a img"); // the image alt can be used
                 String title = titleElement != null ? titleElement.attr("alt").trim() : "No title";
@@ -157,7 +154,6 @@ public class ManhuausFeedService {
                     else if (coverElement.hasAttr("src")) cover = coverElement.attr("src").trim();
                 }
 
-                Log.e("Description", description.text());
 
                 // Build MangaItemModel exactly like your constructor
                 MangaItemModel manga = new MangaItemModel(

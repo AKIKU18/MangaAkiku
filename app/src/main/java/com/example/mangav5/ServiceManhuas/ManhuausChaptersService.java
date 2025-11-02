@@ -25,7 +25,6 @@ public class ManhuausChaptersService {
         String siteName = url.replaceAll("https?://(www\\.)?", "").split("/")[0];
         String hash = String.valueOf((url + title).hashCode());
         String id = siteName + "-" + hash;
-        Log.e("ServiceManhuaus", "generateChapterId:" + id);
         return id;
     }
 
@@ -98,7 +97,6 @@ public class ManhuausChaptersService {
                         String url = img.attr("data-src").trim(); // get data-src
                         if (!url.isEmpty()) {
                             imageUrls.add(url);
-                            Log.e("ServiceManhuaus", url);
                         }
                     }
                     mainHandler.post(() -> callback.onSuccess(imageUrls));

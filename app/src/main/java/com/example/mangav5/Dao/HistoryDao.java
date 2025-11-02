@@ -28,4 +28,7 @@ public interface HistoryDao {
 
     @Query("SELECT * FROM history WHERE mangaId = :mangaId")
     List<HistoryEntity> getSameHistoryItemByMangaId(String mangaId);
+
+    @Query("SELECT * FROM history WHERE mangaId = :mangaId ORDER BY timestamp DESC LIMIT 1")
+    HistoryEntity getHistoryItemInOrder(String mangaId);
 }
