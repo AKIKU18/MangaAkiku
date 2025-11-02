@@ -237,7 +237,6 @@ public class MangaPage extends AppCompatActivity {
         String source = getIntent().getStringExtra("source");
 
         String mangaUrl = getIntent().getStringExtra("mangaUrl");
-        Log.e("MangaPage", "mangaUrl: " + ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl));
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
 
         ServiceController.fetchChapterListController(source,mangaIdOrUrlFinal, offset, LIMIT, "desc", new ServiceController.ChapterListCallback() {

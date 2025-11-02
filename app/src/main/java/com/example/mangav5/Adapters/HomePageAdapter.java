@@ -197,6 +197,22 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
 
     private void goToMangaPage(MangaItemModel manga) {
         Intent intent = new Intent(context, MangaPage.class);
+        // Make sure we always have a valid identifier
+        String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(
+                manga.getSource(),
+                manga.getMangaId(),
+                manga.getMangaUrl()
+        );
+        if (mangaIdOrUrlFinal == null || mangaIdOrUrlFinal.isEmpty()) {
+            Log.e("MangaPageDebug", "Invalid mangaId/mangaUrl for source: " + manga.getSource());
+            Toast.makeText(context, "Invalid manga ID/URL", Toast.LENGTH_SHORT).show();
+            return;
+        }else{
+            Log.e("MangaPageDebug", "Valid mangaId/mangaUrl for source: " + manga.getSource());
+        }
+
+
+
         switch (serviceFeed) {
             case "MangaDex":
                 intent.putExtra("mangaId", manga.getMangaId());
@@ -214,6 +230,8 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
                 intent.putExtra("mangaUrl", manga.getMangaUrl());
                 intent.putExtra("mangaId", manga.getMangaId());
                 intent.putExtra("source", manga.getSource());
+                Log.e("MangaPage80", manga.getMangaId());
+
                 mangaPageLauncher.launch(intent);
                 break;
 

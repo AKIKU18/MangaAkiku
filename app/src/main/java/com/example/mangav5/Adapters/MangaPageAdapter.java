@@ -76,6 +76,7 @@ public class MangaPageAdapter extends RecyclerView.Adapter<MangaPageAdapter.Mang
             //Log.e("MangaPageAdapter", "chapterTitle " + chapterTitle);
             context.startActivity(intent);
         });
+
     }
 
 

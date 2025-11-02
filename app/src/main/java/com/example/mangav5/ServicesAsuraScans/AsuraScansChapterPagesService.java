@@ -143,7 +143,6 @@ public class AsuraScansChapterPagesService {
                                 Log.d(TAG, "Matched comic image: " + src);
                             } else {
                                 Log.d(TAG, "Skipped image: " + src);
-                                pages.add("https://upload.wikimedia.org/wikipedia/commons/f/f5/No-Image-Placeholder-landscape.svg");
                             }
 
                         }

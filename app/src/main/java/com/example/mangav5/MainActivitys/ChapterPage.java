@@ -97,7 +97,7 @@ public class ChapterPage extends AppCompatActivity {
         String chapterUrl = getIntent().getStringExtra("chapterUrl");
         String mangaId = getIntent().getStringExtra("mangaId");
         String source = getIntent().getStringExtra("source");
-
+        String mangaUrl = getIntent().getStringExtra("mangaUrl");
 
         setCurrentChapterId(chapterId);
         setCurrentChapterTitle(chapterTitle);
@@ -283,10 +283,15 @@ public class ChapterPage extends AppCompatActivity {
 
 
     private void SetMangaTitle(String mangaId) {
+
+        Log.e("SetMangaTitle286", mangaId);
+
         AppDatabase db = AppDatabase.getInstance(this);
         Executors.newSingleThreadExecutor().execute(() -> {
             MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
-            if (manga != null) runOnUiThread(() -> tvMangaTitle.setText(manga.getTitle()));
+
+            if (manga != null) runOnUiThread(() -> tvMangaTitle.setText(manga.getTitle()
+            ));
         });
         tvMangaTitle.setOnClickListener(v -> GoToMangaItem(mangaId));
     }

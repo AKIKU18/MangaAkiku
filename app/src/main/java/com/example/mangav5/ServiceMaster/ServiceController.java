@@ -262,6 +262,7 @@ public class ServiceController {
         }
     }
 
+
     public static String getChapterIdOrChapterUrl(String source, String chapterId, String chapterUrl) {
         switch (source) {
             case "MangaDex":
