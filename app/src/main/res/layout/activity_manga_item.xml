@@ -23,12 +23,25 @@
             android:contentDescription="Manga Cover" />
 
         <!-- Text container -->
+        <!-- Text container -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
             android:layout_marginStart="12dp">
+
+            <!-- Manga Source -->
+            <TextView
+                android:id="@+id/mangaSource"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Source"
+                android:textSize="12sp"
+                android:textColor="#FF5722"
+                android:textStyle="italic"
+                android:ellipsize="end"
+                android:maxLines="1" />
 
             <!-- Manga Title -->
             <TextView
@@ -74,6 +87,7 @@
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
+
 
         <!-- Bookmark star -->
         <ImageView

@@ -71,6 +71,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             public void onSuccess(String description) {
                 new Handler(Looper.getMainLooper()).post(() -> {
                     holder.description.setText(description != null ? description : "No description");
+                    holder.source.setText(manga.getSource());
                 });
             }
 
@@ -212,30 +213,10 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         }
 
 
-
-        switch (serviceFeed) {
-            case "MangaDex":
-                intent.putExtra("mangaId", manga.getMangaId());
-                intent.putExtra("source", manga.getSource());
-
-                mangaPageLauncher.launch(intent);
-                break;
-            case "AsuraScans":
-                intent.putExtra("mangaUrl", manga.getMangaUrl());
-                intent.putExtra("mangaId", manga.getMangaId());
-                intent.putExtra("source", manga.getSource());
-                mangaPageLauncher.launch(intent);
-                break;
-            case "Manhuaus":
-                intent.putExtra("mangaUrl", manga.getMangaUrl());
-                intent.putExtra("mangaId", manga.getMangaId());
-                intent.putExtra("source", manga.getSource());
-                Log.e("MangaPage80", manga.getMangaId());
-
-                mangaPageLauncher.launch(intent);
-                break;
-
-        }
+        intent.putExtra("mangaUrl", manga.getMangaUrl());
+        intent.putExtra("mangaId", manga.getMangaId());
+        intent.putExtra("source", manga.getSource());
+        mangaPageLauncher.launch(intent);
 
 
     }
@@ -287,7 +268,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
     public static class MangaViewHolder extends RecyclerView.ViewHolder {
         ImageView cover;
         ImageView bookmarkStar;
-        TextView title, description, lastChapter;
+        TextView title, description, lastChapter, source;
 
         public MangaViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -296,6 +277,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             title = itemView.findViewById(R.id.mangaTitle);
             description = itemView.findViewById(R.id.mangaDescription);
             lastChapter = itemView.findViewById(R.id.lastChapter);
+            source = itemView.findViewById(R.id.mangaSource);
         }
     }
 }

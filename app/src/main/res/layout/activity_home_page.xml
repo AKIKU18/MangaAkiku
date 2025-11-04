@@ -275,10 +275,10 @@
                 android:id="@+id/source_asurascans"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@drawable/bg_gradient"
                 android:text="AsuraScans"
                 android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp"/>
+                android:textSize="14sp" />
         </FrameLayout>
 
         <!-- Manhuaus Drawer Button -->
@@ -302,6 +302,30 @@
                 android:background="@drawable/bg_gradient"
                 android:textSize="14sp"/>
         </FrameLayout>
+
+        <!-- ManhuaPlus Drawer Button -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="10dp">
+
+            <View
+                android:id="@+id/drawer_manhuaPlus_glow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/glow_around_button"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/source_manhuaPlus"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ManhuaPlus"
+                android:textColor="?android:attr/textColorPrimary"
+                android:background="@drawable/bg_gradient"
+                android:textSize="14sp" />
+        </FrameLayout>
+
 
     </LinearLayout>
 

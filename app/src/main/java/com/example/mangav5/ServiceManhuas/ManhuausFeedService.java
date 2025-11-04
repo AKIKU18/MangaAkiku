@@ -53,8 +53,7 @@ public class ManhuausFeedService {
                                 ? thumbDiv.attr("data-post-id").trim()
                                 : "";
 
-                        Log.e("MangaId50",mangaId);
-
+                        Log.e("MangaId50", mangaId);
 
 
                         // Cover image
@@ -116,12 +115,6 @@ public class ManhuausFeedService {
         return tokens.length > 0 ? tokens[0] : "";
     }
 
-    // callback interface
-    public interface MangaListCallback {
-        void onSuccess(List<MangaItemModel> mangas);
-        void onError(String message);
-    }
-
     public static void getMangaDetailsManhuaus(String mangaUrl, MangaCallback callback) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -175,6 +168,13 @@ public class ManhuausFeedService {
                 mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Unknown Error"));
             }
         });
+    }
+
+    // callback interface
+    public interface MangaListCallback {
+        void onSuccess(List<MangaItemModel> mangas);
+
+        void onError(String message);
     }
 
 

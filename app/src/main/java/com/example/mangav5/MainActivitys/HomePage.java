@@ -25,8 +25,14 @@ import android.widget.Toast;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusChaptersService;
+import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusFeedService;
+import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusSearchService;
+import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
+import com.example.mangav5.ServiceManhuas.ManhuausSearchService;
 import com.example.mangav5.ServiceMaster.ServiceController;
 
 import java.util.ArrayList;
@@ -50,6 +56,7 @@ public class HomePage extends AppCompatActivity {
     private Button button_mangadex;          // Button in the drawer to select MangaDex as the source.
     private Button button_asurascans;        // Button in the drawer to select AsuraScans as the source.
     private Button button_manhuaus;          // Button in the drawer to select Manhuaus as the source.
+    private Button button_manhuaPlus; // Button in the drawer to select ManhuaPlus as the source.
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
 
@@ -61,7 +68,7 @@ public class HomePage extends AppCompatActivity {
     private int offset = 1;                       // Current offset for MangaDex pagination.
     private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
     private int asuraScansOffset = 0;             // Current page number for AsuraScans pagination.
-
+    private int manhuaPlusOffset = 0;              // Current page number for ManhuaPlus pagination.
     // Activity Result Launchers
     private ActivityResultLauncher<Intent> bookmarkLauncher; // Handles results from the Bookmarks page.
     private ActivityResultLauncher<Intent> mangaPageLauncher;  // Handles results from the MangaPage.
@@ -85,7 +92,7 @@ public class HomePage extends AppCompatActivity {
         // Set up the result launchers to handle data returned from other activities.
         setupResultLaunchers();
 
-        // Configure adapters and layout managers for both RecyclerViews.
+        // Configure adaMangaPageDebugpters and layout managers for both RecyclerViews.
         setupRecyclerViews();
 
         // Remove the default title bar.
@@ -116,6 +123,7 @@ public class HomePage extends AppCompatActivity {
         button_mangadex = findViewById(R.id.source_mangadex);
         button_asurascans = findViewById(R.id.source_asurascans);
         button_manhuaus = findViewById(R.id.source_manhuaus);
+        button_manhuaPlus = findViewById(R.id.source_manhuaPlus);
     }
 
     /**
@@ -157,6 +165,11 @@ public class HomePage extends AppCompatActivity {
             switchSource("Manhuaus");
             drawerLayout.closeDrawer(GravityCompat.START);
         });
+
+        button_manhuaPlus.setOnClickListener(v -> {
+            switchSource("ManhuaPlus");
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
     }
 
     /**
@@ -186,6 +199,8 @@ public class HomePage extends AppCompatActivity {
         View glowAsura = findViewById(R.id.drawer_asurascans_glow);
         View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
         View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
+        View glowManhuaPlus = findViewById(R.id.drawer_manhuaPlus_glow);
+
 
         // Turn off all glows initially.
         glowAsura.clearAnimation();
@@ -194,6 +209,7 @@ public class HomePage extends AppCompatActivity {
         glowAsura.setVisibility(View.GONE);
         glowMangaDex.setVisibility(View.GONE);
         glowManhuaus.setVisibility(View.GONE);
+        glowManhuaPlus.setVisibility(View.GONE);
 
         View targetGlow = null;
         switch (serviceFeed) {
@@ -206,6 +222,10 @@ public class HomePage extends AppCompatActivity {
             case "Manhuaus":
                 targetGlow = glowManhuaus;
                 break;
+            case "ManhuaPlus":
+                targetGlow = glowManhuaPlus;
+                break;
+
         }
 
         if (targetGlow != null) {
@@ -318,7 +338,7 @@ public class HomePage extends AppCompatActivity {
         }
 
         // Call the central service controller to perform the search.
-        ServiceController.fetchSearchMangas(query, serviceFeed, new ServiceController.MangaListCallback() {
+        ServiceController.searchThroughAllSources(query, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> results) {
                 runOnUiThread(() -> {
@@ -359,6 +379,8 @@ public class HomePage extends AppCompatActivity {
                         loadFeed(offset, LIMIT);
                     } else if (serviceFeed.equals("AsuraScans")) {
                         loadFeed(asuraScansOffset, LIMIT);
+                    }else if(serviceFeed.equals("ManhuaPlus")){
+                        loadFeed(manhuaPlusOffset, LIMIT);
                     }
                     // Add other sources here if they support pagination.
                 }
@@ -400,6 +422,8 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.offset += limit;
                     } else if (serviceFeed.equals("AsuraScans")) {
                         HomePage.this.asuraScansOffset += 1;
+                    }else if (serviceFeed.equals("ManhuaPlus")){
+                        HomePage.this.manhuaPlusOffset += 1;
                     }
                 });
             }

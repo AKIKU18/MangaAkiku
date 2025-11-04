@@ -5,6 +5,9 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusChaptersService;
+import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusFeedService;
+import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusSearchService;
 import com.example.mangav5.ServiceManhuas.ManhuausChaptersService;
 import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
 import com.example.mangav5.ServiceManhuas.ManhuausSearchService;
@@ -15,6 +18,7 @@ import com.example.mangav5.ServicesMangaDex.MangaDexChaptersService;
 import com.example.mangav5.ServicesMangaDex.MangaDexFeedManga;
 import com.example.mangav5.ServicesMangaDex.MangaDexSearchService;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -109,9 +113,6 @@ public class ServiceController {
                 ManhuausFeedService.getMangaFeedManhuaus(new ManhuausFeedService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> mangas) {
-                        for (MangaItemModel item: mangas){
-                            Log.e("MangaId387", item.getMangaId());
-                        }
                         callback.onSuccess(mangas);
                     }
 
@@ -122,10 +123,24 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "ManhuaPlus":
+                ManhuaPlusFeedService.getMangaFeedManhuaPlus(offsetOrPage, new ManhuaPlusFeedService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> mangas) {
+                        callback.onSuccess(mangas);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchMangaListController:ManhuaPlus] Error fetching manga list: " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[fetchMangaListController] Unknown service feed: " + serviceFeed);
-                callback.onError("Unknown service feed: " + serviceFeed);
+                callback.onError("Unknown service feed: FetchMangaList " + serviceFeed);
                 break;
         }
     }
@@ -180,11 +195,24 @@ public class ServiceController {
                         callback.onError(message);
                     }
                 });
+            case "ManhuaPlus":
+                ManhuaPlusFeedService.getMangaDetailsManhuaPlus(mangaUrlOrId, new ManhuaPlusFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[fetchMangaDetails:ManhuaPlus] Error fetching manga URL " + mangaUrlOrId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
                 break;
 
             default:
                 Log.e(TAG, "[fetchMangaDetails] Unknown service feed: " + serviceFeed);
-                callback.onError("Unknown service feed: " + serviceFeed);
+                callback.onError("Unknown service feed: fetchMangaDetail " + serviceFeed);
                 break;
         }
     }
@@ -239,11 +267,24 @@ public class ServiceController {
                         callback.onError(message);
                     }
                 });
+            case "ManhuaPlus":
+                ManhuaPlusFeedService.getMangaDetailsManhuaPlus(mangaUrl, new ManhuaPlusFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga.getDescription());
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[mangaGetDescription:ManhuaPlus] Error fetching description for manga URL " + mangaUrl + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
                 break;
 
             default:
                 Log.e(TAG, "[mangaGetDescription] Unknown service feed: " + serviceFeed);
-                callback.onError("Unknown service feed: " + serviceFeed);
+                callback.onError("Unknown service feed:MangaGetDescription " + serviceFeed);
                 break;
         }
     }
@@ -256,8 +297,10 @@ public class ServiceController {
                 return mangaUrl;
             case "Manhuaus":
                 return mangaUrl;
+            case "ManhuaPlus":
+                return mangaUrl;
             default:
-                Log.e(TAG, "[getMangaIdOrMangaUrl] Unknown source: " + source);
+                Log.e(TAG, "[getMangaIdOrMangaUrl] Unknown source:getMangaIdOrUrl " + source);
                 return "";
         }
     }
@@ -271,8 +314,10 @@ public class ServiceController {
                 return chapterUrl;
             case "Manhuaus":
                 return chapterUrl;
+            case "ManhuaPlus":
+                return chapterUrl;
             default:
-                Log.e(TAG, "[getChapterIdOrChapterUrl] Unknown source: " + source);
+                Log.e(TAG, "[getChapterIdOrChapterUrl] Unknown source:getChapterIdOrUrl " + source);
                 return "";
         }
     }
@@ -330,9 +375,24 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "ManhuaPlus":
+                ManhuaPlusChaptersService.getChaptersManhuaPlus(mangaUrlOrId, new ManhuaPlusChaptersService.ChapterListCallback() {
+                    @Override
+                    public void onSuccess(List<ChapterModel> chapters) {
+                        if ("asc".equalsIgnoreCase(descAsc)) Collections.reverse(chapters);
+                        callback.onSuccess(chapters);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchChapterListController:ManhuaPlus] Error fetching chapters for manga URL " + mangaUrlOrId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
-                Log.e(TAG, "[fetchChapterListController] Unknown service feed: " + serviceFeed);
+                Log.e(TAG, "[fetchChapterListController] Unknown service feed:getChapters " + serviceFeed);
                 callback.onError("Unknown service feed: " + serviceFeed);
                 break;
         }
@@ -389,10 +449,24 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "ManhuaPlus":
+                ManhuaPlusFeedService.getMangaDetailsManhuaPlus(mangaUrlId, new ManhuaPlusFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[getMangaItem:ManhuaPlus] Error for manga URL " + mangaUrlId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[getMangaItem] Unknown source: " + source);
-                callback.onError("Unknown source: " + source);
+                callback.onError("Unknown source:getMangaItem " + source);
                 break;
         }
     }
@@ -448,11 +522,54 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "ManhuaPlus":
+                ManhuaPlusChaptersService.getChapterMangaManhuaPlus(context, chapterUrlId, new ManhuaPlusChaptersService.ChapterCallback() {
+                    @Override
+                    public void onSuccess(List<String> chapter) {
+
+                        callback.onSuccess(chapter);
+                    }
+
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[getChapterPages:ManhuaPlus] Error fetching pages for chapter " + chapterUrlId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
-                Log.e(TAG, "[getChapterPages] Unknown source: " + source);
+                Log.e(TAG, "[getChapterPages] Unknown source:getChapterPages " + source);
                 callback.onError("Unknown source: " + source);
                 break;
+        }
+    }
+
+    public static void searchThroughAllSources(String query, MangaListCallback callback) {
+        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus");
+        List<MangaItemModel> allResults = new ArrayList<>();
+        int[] completed = {0}; // simple counter for async completion
+
+        for (String source : sources) {
+            fetchSearchMangas(query, source, new MangaListCallback() {
+                @Override
+                public void onSuccess(List<MangaItemModel> results) {
+                    allResults.addAll(results);
+                    completed[0]++;
+                    if (completed[0] == sources.size()) {
+                        callback.onSuccess(allResults); // called once after all sources complete
+                    }
+                }
+
+                @Override
+                public void onError(String message) {
+                    completed[0]++;
+                    if (completed[0] == sources.size()) {
+                        callback.onSuccess(allResults); // still call success even if some fail
+                    }
+                }
+            });
         }
     }
 
@@ -504,13 +621,28 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "ManhuaPlus":
+                ManhuaPlusSearchService.search(query, new ManhuaPlusSearchService.SearchCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "[fetchSearchMangas:ManhuaPlus] Error searching query '" + query + "': " + error);
+                    }
+                });
+                break;
 
             default:
-                Log.e(TAG, "[fetchSearchMangas] Unknown source: " + source);
+                Log.e(TAG, "[fetchSearchMangas] Unknown source:fetchSearchManga " + source);
                 callback.onError("Unknown source: " + source);
                 break;
         }
     }
+
+
 
     // --- Callback Interfaces ---
     public interface ChapterListCallback {
