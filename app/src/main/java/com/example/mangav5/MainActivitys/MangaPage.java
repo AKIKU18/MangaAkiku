@@ -50,6 +50,7 @@ public class MangaPage extends AppCompatActivity {
     private final int LIMIT = 100;
     private MangaItemModel mangaItem;
     private String getMangaId;
+    private String getMangaSource;
     private BookmarkDao bookmarkDao;
     private boolean bookmarkChanged = false;
 
@@ -60,6 +61,7 @@ public class MangaPage extends AppCompatActivity {
         setContentView(R.layout.activity_manga_page);
 
         getMangaId = getIntent().getStringExtra("mangaId");
+        getMangaSource = getIntent().getStringExtra("source");
         AppDatabase db = AppDatabase.getInstance(this);
         this.bookmarkDao = db.bookmarkDao();
 
@@ -105,15 +107,15 @@ public class MangaPage extends AppCompatActivity {
 
     private void OnClickToggleMangaPage(ImageView holder, BookmarkDao bookmarkDao){
 
-        final String mangaUrlorId = ServiceController.getMangaIdOrMangaUrl(HomePage.serviceFeed, getMangaId, getIntent().getStringExtra("mangaUrl"));
-        ServiceController.getMangaItem(HomePage.serviceFeed, mangaUrlorId, new ServiceController.MangaCallback() {
+        final String mangaUrlorId = ServiceController.getMangaIdOrMangaUrl(getMangaSource, getMangaId, getIntent().getStringExtra("mangaUrl"));
+        ServiceController.getMangaItem(getMangaSource, mangaUrlorId, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 runOnUiThread(() -> {
                     holder.setOnClickListener(v -> {
                         Executors.newSingleThreadExecutor().execute(() -> {
                             ToggleBookmarkMangaPage(manga, bookmarkDao);
-                            boolean isBookmarked = bookmarkDao.isBookmarked(manga.getMangaId());
+                            boolean isBookmarked = bookmarkDao.isBookmarked(mangaUrlorId);
                             new Handler(Looper.getMainLooper()).post(() -> {
                                 holder.setImageResource(isBookmarked ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
                             });
@@ -125,8 +127,12 @@ public class MangaPage extends AppCompatActivity {
 
             @Override
             public void onError(String errorMessage) {
-                onError(errorMessage);
+                runOnUiThread(() -> {
+                    Toast.makeText(MangaPage.this, "Error loading manga: " + errorMessage, Toast.LENGTH_SHORT).show();
+                });
+                Log.e("MangaPage", "Error fetching manga: " + errorMessage);
             }
+
         });
     }
 
@@ -150,7 +156,7 @@ public class MangaPage extends AppCompatActivity {
     private void GetFirstOrLastChapter(String descAsc){
         String mangaUrl = getIntent().getStringExtra("mangaUrl");
         String source = getIntent().getStringExtra("source");
-
+        Log.e("SourceManga", source);
 
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
 

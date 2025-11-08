@@ -1,10 +1,11 @@
-package com.example.mangav5.ServiceManhuas;
+package com.example.mangav5.ServiceManhuaFast;
 
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -17,21 +18,21 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ManhuausFeedService {
+public class ManhuaFastFeedService {
     private static final String TAG = "ManhuausFeedService";
     private static final int TIMEOUT_MS = 60_000;
 
     /**
      * Fetch the homepage and parse visible items only (no AJAX).
      */
-    public static void getMangaFeedManhuaus(MangaListCallback callback) {
+    public static void getMangaFeedManhuaFast(int offsetPage,ManhuausFeedService.MangaListCallback callback) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
         executor.execute(() -> {
             List<MangaItemModel> mangaList = new ArrayList<>();
             try {
-                Document doc = Jsoup.connect("https://manhuaus.com/")
+                Document doc = Jsoup.connect("https://manhuafast.com/page" + offsetPage)
                         .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
                         .timeout(TIMEOUT_MS)
                         .get();
@@ -78,7 +79,7 @@ public class ManhuausFeedService {
                         m.setMangaUrl(url);
                         m.setDescription("");
                         m.setLastChapter(lastChapter);
-                        m.setSource("Manhuaus");
+                        m.setSource("ManhuaFast");
 
                         mangaList.add(m);
 
@@ -93,7 +94,7 @@ public class ManhuausFeedService {
                 mainHandler.post(() -> callback.onSuccess(mangaList));
             } catch (IOException e) {
                 final String err = e.getMessage() != null ? e.getMessage() : "IO Error";
-                Log.e(TAG, "Error fetching Manhuaus homepage: " + err, e);
+                Log.e(TAG, "Error fetching ManhuaFast homepage: " + err, e);
                 mainHandler.post(() -> callback.onError(err));
             } catch (Exception e) {
                 final String err = e.getMessage() != null ? e.getMessage() : "Unknown Error";
@@ -113,7 +114,7 @@ public class ManhuausFeedService {
         return tokens.length > 0 ? tokens[0] : "";
     }
 
-    public static void getMangaDetailsManhuaus(String mangaUrl, MangaCallback callback) {
+    public static void getMangaDetailsManhuaFast(String mangaUrl, ManhuausFeedService.MangaCallback callback) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -154,7 +155,7 @@ public class ManhuausFeedService {
                         false,
                         mangaUrl,
                         "",
-                        "Manhuaus"
+                        "ManhuaFast"
                 );
 
                 mainHandler.post(() -> callback.onSuccess(manga));
@@ -181,5 +182,4 @@ public class ManhuausFeedService {
 
         void onError(String errorMessage);
     }
-
 }

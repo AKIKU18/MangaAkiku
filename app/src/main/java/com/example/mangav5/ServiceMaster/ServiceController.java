@@ -195,6 +195,7 @@ public class ServiceController {
                         callback.onError(message);
                     }
                 });
+                break;
             case "ManhuaPlus":
                 ManhuaPlusFeedService.getMangaDetailsManhuaPlus(mangaUrlOrId, new ManhuaPlusFeedService.MangaCallback() {
                     @Override
@@ -267,6 +268,7 @@ public class ServiceController {
                         callback.onError(message);
                     }
                 });
+                break;
             case "ManhuaPlus":
                 ManhuaPlusFeedService.getMangaDetailsManhuaPlus(mangaUrl, new ManhuaPlusFeedService.MangaCallback() {
                     @Override
@@ -277,6 +279,7 @@ public class ServiceController {
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[mangaGetDescription:ManhuaPlus] Error fetching description for manga URL " + mangaUrl + ": " + errorMessage);
+                        Log.e(TAG,"[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + errorMessage);
                         callback.onError(errorMessage);
                     }
                 });
@@ -641,7 +644,6 @@ public class ServiceController {
                 break;
         }
     }
-
 
 
     // --- Callback Interfaces ---

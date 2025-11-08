@@ -28,11 +28,10 @@ import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusChaptersService;
-import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusFeedService;
-import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusSearchService;
+import com.example.mangav5.ServiceManhuaFast.ManhuaFastChaptersService;
+import com.example.mangav5.ServiceManhuaFast.ManhuaFastFeedService;
+import com.example.mangav5.ServiceManhuaFast.ManhuaFastSearchService;
 import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
-import com.example.mangav5.ServiceManhuas.ManhuausSearchService;
 import com.example.mangav5.ServiceMaster.ServiceController;
 
 import java.util.ArrayList;
@@ -45,6 +44,8 @@ import java.util.List;
  */
 public class HomePage extends AppCompatActivity {
 
+    private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
+    public static String serviceFeed = "AsuraScans"; // The current selected data source. Defaults to AsuraScans.
     // UI Components
     private RecyclerView searchResultView; // RecyclerView for displaying search results.
     private RecyclerView mangaListView;      // RecyclerView for the main manga feed.
@@ -59,23 +60,19 @@ public class HomePage extends AppCompatActivity {
     private Button button_manhuaPlus; // Button in the drawer to select ManhuaPlus as the source.
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
-
     // Data and State Management
     private List<MangaItemModel> mangaList = new ArrayList<>(); // Data source for the main manga feed.
     private List<MangaItemModel> searchMangaList = new ArrayList<>(); // Data source for search results.
     private boolean isSearchListAnimated = false; // Flag to check if search results animation has run.
     private boolean isLoading = false;            // Flag to prevent multiple simultaneous data loads (pagination).
     private int offset = 1;                       // Current offset for MangaDex pagination.
-    private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
     private int asuraScansOffset = 0;             // Current page number for AsuraScans pagination.
     private int manhuaPlusOffset = 0;              // Current page number for ManhuaPlus pagination.
     // Activity Result Launchers
     private ActivityResultLauncher<Intent> bookmarkLauncher; // Handles results from the Bookmarks page.
     private ActivityResultLauncher<Intent> mangaPageLauncher;  // Handles results from the MangaPage.
-
     // Database and Services
     private BookmarkDao bookmarkDao;              // DAO for accessing bookmark data.
-    public static String serviceFeed = "AsuraScans"; // The current selected data source. Defaults to AsuraScans.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +104,17 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
+        ManhuaFastSearchService.search("Martial Peak", new ManhuaFastSearchService.SearchCallback() {
+            @Override
+            public void onSuccess(List<MangaItemModel> results) {
+                Log.e("Search found: ", results.get(0).getTitle());
+            }
+
+            @Override
+            public void onError(String error) {
+
+            }
+        });
     }
 
     /**
@@ -178,6 +186,7 @@ public class HomePage extends AppCompatActivity {
 
     /**
      * Switches the data source, clears existing data, and reloads the feed from the new source.
+     *
      * @param newSource The name of the new source to switch to (e.g., "MangaDex").
      */
     private void switchSource(String newSource) {
@@ -332,6 +341,7 @@ public class HomePage extends AppCompatActivity {
     /**
      * Executes a search query using the appropriate service controller based on the selected source.
      * Updates the search results adapter with the fetched data.
+     *
      * @param query The search term entered by the user.
      */
     private void performSearch(String query) {
@@ -383,7 +393,7 @@ public class HomePage extends AppCompatActivity {
                         loadFeed(offset, LIMIT);
                     } else if (serviceFeed.equals("AsuraScans")) {
                         loadFeed(asuraScansOffset, LIMIT);
-                    }else if(serviceFeed.equals("ManhuaPlus")){
+                    } else if (serviceFeed.equals("ManhuaPlus")) {
                         loadFeed(manhuaPlusOffset, LIMIT);
                     }
                     // Add other sources here if they support pagination.
@@ -395,8 +405,9 @@ public class HomePage extends AppCompatActivity {
     /**
      * Fetches a list of manga from the currently selected service and appends it to the main list.
      * Handles loading state and pagination offsets.
+     *
      * @param pageOrOffset The page number or offset for the API request.
-     * @param limit The number of items to load.
+     * @param limit        The number of items to load.
      */
     private void loadFeed(int pageOrOffset, int limit) {
         if (isLoading) return; // Prevent concurrent loads.
@@ -426,7 +437,7 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.offset += limit;
                     } else if (serviceFeed.equals("AsuraScans")) {
                         HomePage.this.asuraScansOffset += 1;
-                    }else if (serviceFeed.equals("ManhuaPlus")){
+                    } else if (serviceFeed.equals("ManhuaPlus")) {
                         HomePage.this.manhuaPlusOffset += 1;
                     }
                 });

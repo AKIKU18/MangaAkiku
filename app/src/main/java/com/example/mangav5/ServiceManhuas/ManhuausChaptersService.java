@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ManhuausChaptersService {
     private static final int TIMEOUT_MS = 60000; // 60 seconds
@@ -48,14 +50,18 @@ public class ManhuausChaptersService {
                     String source
                             */
                     List<ChapterModel> chapters = new ArrayList<>();
-                    Elements chapterLinks = doc.select("li.wp-manga-chapter > a");
+                    Elements chapterLinks = doc.select("li.wp-manga-chapter a[href]");
+
                     for (Element link : chapterLinks) {
                         String chapterTitle = link.text().trim();
-                        String[] parts = chapterTitle.split(" ");
-                        String chapterNumber = parts.length > 1 ? parts[1] : "0"; // safe fallback
+                        String chapterNumber = "0";
+                        Matcher matcher = Pattern.compile("(\\d+)").matcher(chapterTitle);
+                        if (matcher.find()) {
+                            chapterNumber = matcher.group(1);
+                        }
                         String chapterId = generateChapterId(mangaUrl, chapterTitle);
                         String chapterUrl = link.attr("href");
-                        String source = "Manhuaus";
+                        String source = "ManhuaFast";
 
                         ChapterModel chapter = new ChapterModel(chapterId, chapterTitle, chapterNumber, chapterUrl, source);
                         chapters.add(chapter);

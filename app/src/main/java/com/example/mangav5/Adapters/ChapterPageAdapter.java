@@ -2,6 +2,7 @@ package com.example.mangav5.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,7 +27,9 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     private final Context context;
     private String chapterNumber;
 
-
+    // ✅ Replace with your loading + error image URLs
+    private static final String LOADING_GIF = "https://i.imgur.com/llF5iyg.gif"; // working loading animation
+    private static final String ERROR_IMAGE = "https://i.imgur.com/qkPM0Ez.png"; // “No image” placeholder
     public ChapterPageAdapter(List<String> pages, Context context, String chapterNumber) {
         this.pages = pages;
         this.context = context;
@@ -49,12 +52,12 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
         int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
 
         Glide.with(context)
+                .asBitmap()
                 .load(imageUrl)
-                .placeholder(android.R.drawable.ic_menu_gallery)
-                .override(Target.SIZE_ORIGINAL, 4096)
+                .placeholder(Drawable.createFromPath(LOADING_GIF)) // optional local drawable
+                .error(ERROR_IMAGE) // show when fail
+                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                .dontTransform()
-                .error(android.R.drawable.ic_dialog_alert)
                 .into(holder.imageContainer);
 
 

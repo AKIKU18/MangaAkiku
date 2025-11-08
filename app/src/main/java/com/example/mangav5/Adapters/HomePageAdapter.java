@@ -64,7 +64,6 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         MangaItemModel manga = mangaList.get(position);
         // Set title
         holder.title.setText(manga.getTitle() != null ? manga.getTitle() : "No title");
-
         // Fetch description asynchronously
         ServiceController.mangaGetDescription(manga.getSource(), manga.getMangaId(), manga.getMangaUrl(), new ServiceController.DescriptionCallback() {
             @Override
