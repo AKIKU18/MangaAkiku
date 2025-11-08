@@ -153,21 +153,25 @@ public class HomePage extends AppCompatActivity {
         // Set up listeners for each source button inside the drawer.
         button_mangadex.setOnClickListener(v -> {
             switchSource("MangaDex");
+            serviceFeed = "MangaDex";
             drawerLayout.closeDrawer(GravityCompat.START);
         });
 
         button_asurascans.setOnClickListener(v -> {
             switchSource("AsuraScans");
+            serviceFeed = "AsuraScans";
             drawerLayout.closeDrawer(GravityCompat.START);
         });
 
         button_manhuaus.setOnClickListener(v -> {
             switchSource("Manhuaus");
+            serviceFeed = "Manhuaus";
             drawerLayout.closeDrawer(GravityCompat.START);
         });
 
         button_manhuaPlus.setOnClickListener(v -> {
             switchSource("ManhuaPlus");
+            serviceFeed = "ManhuaPlus";
             drawerLayout.closeDrawer(GravityCompat.START);
         });
     }

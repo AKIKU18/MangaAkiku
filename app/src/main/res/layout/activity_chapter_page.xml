@@ -192,4 +192,46 @@
                 android:gravity="center"/>
         </FrameLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- OVERLAY REFRESH (appears when no pages or error) -->
+    <FrameLayout
+        android:id="@+id/overlay_refresh_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:background="@android:color/transparent"
+        app:layout_constraintTop_toTopOf="@id/recyclerPages"
+        app:layout_constraintBottom_toBottomOf="@id/recyclerPages"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="center">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_overlay_refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reload Chapter"
+                android:textSize="16sp"
+                android:padding="16dp"
+                android:background="@drawable/bg_gradient"
+                android:textColor="@android:color/white"/>
+
+            <TextView
+                android:id="@+id/overlay_refresh_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tap to reload the chapter"
+                android:textSize="14sp"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="8dp"
+                android:gravity="center"/>
+        </LinearLayout>
+    </FrameLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
