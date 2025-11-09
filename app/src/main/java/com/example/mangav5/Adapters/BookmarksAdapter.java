@@ -121,7 +121,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
         AppDatabase db = AppDatabase.getInstance(context);
         Executors.newSingleThreadExecutor().execute(() -> {
-            var historyItem = db.historyDao().getHistoryItem(mangaItem.getMangaId());
+            var historyItem = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
 
             if (historyItem != null) {
                 String viewedChapterTitle = historyItem.chapterTitle;

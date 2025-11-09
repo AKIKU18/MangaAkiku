@@ -36,6 +36,7 @@ import com.example.mangav5.ServiceMaster.ServiceController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The main screen of the application. It displays a feed of manga,
@@ -158,30 +159,22 @@ public class HomePage extends AppCompatActivity {
         // Open the drawer when the menu button is clicked.
         menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
-        // Set up listeners for each source button inside the drawer.
-        button_mangadex.setOnClickListener(v -> {
-            switchSource("MangaDex");
-            serviceFeed = "MangaDex";
-            drawerLayout.closeDrawer(GravityCompat.START);
-        });
+        // Map your buttons to their sources
+        Map<Button, String> sourceButtons = Map.of(
+                button_mangadex, "MangaDex",
+                button_asurascans, "AsuraScans",
+                button_manhuaus, "Manhuaus",
+                button_manhuaPlus, "ManhuaPlus"
+        );
 
-        button_asurascans.setOnClickListener(v -> {
-            switchSource("AsuraScans");
-            serviceFeed = "AsuraScans";
-            drawerLayout.closeDrawer(GravityCompat.START);
-        });
-
-        button_manhuaus.setOnClickListener(v -> {
-            switchSource("Manhuaus");
-            serviceFeed = "Manhuaus";
-            drawerLayout.closeDrawer(GravityCompat.START);
-        });
-
-        button_manhuaPlus.setOnClickListener(v -> {
-            switchSource("ManhuaPlus");
-            serviceFeed = "ManhuaPlus";
-            drawerLayout.closeDrawer(GravityCompat.START);
-        });
+        // Set up all listeners in one loop
+        for (Map.Entry<Button, String> entry : sourceButtons.entrySet()) {
+            entry.getKey().setOnClickListener(v -> {
+                switchSource(entry.getValue());
+                serviceFeed = entry.getValue();
+                drawerLayout.closeDrawer(GravityCompat.START);
+            });
+        }
     }
 
     /**
@@ -197,6 +190,7 @@ public class HomePage extends AppCompatActivity {
         mangaList.clear();
         offset = (newSource.equals("MangaDex")) ? 0 : 1; // MangaDex is 0-based, others are 1-based.
         asuraScansOffset = 1;
+        manhuaPlusOffset = 1;
         homeListAdapter.notifyDataSetChanged();
         mangaListView.scrollToPosition(0);
 
@@ -209,40 +203,29 @@ public class HomePage extends AppCompatActivity {
      * Updates the glowing animation to highlight the currently selected data source in the drawer.
      */
     private void updateSourceGlow() {
-        View glowAsura = findViewById(R.id.drawer_asurascans_glow);
-        View glowMangaDex = findViewById(R.id.drawer_mangadex_glow);
-        View glowManhuaus = findViewById(R.id.drawer_manhuaus_glow);
-        View glowManhuaPlus = findViewById(R.id.drawer_manhuaPlus_glow);
+        // Map sources to their glow view IDs
+        Map<String, Integer> glowMap = Map.of(
+                "AsuraScans", R.id.drawer_asurascans_glow,
+                "MangaDex", R.id.drawer_mangadex_glow,
+                "Manhuaus", R.id.drawer_manhuaus_glow,
+                "ManhuaPlus", R.id.drawer_manhuaPlus_glow
+        );
 
-
-        // Turn off all glows initially.
-        glowAsura.clearAnimation();
-        glowMangaDex.clearAnimation();
-        glowManhuaus.clearAnimation();
-        glowAsura.setVisibility(View.GONE);
-        glowMangaDex.setVisibility(View.GONE);
-        glowManhuaus.setVisibility(View.GONE);
-        glowManhuaPlus.setVisibility(View.GONE);
-
-        View targetGlow = null;
-        switch (serviceFeed) {
-            case "AsuraScans":
-                targetGlow = glowAsura;
-                break;
-            case "MangaDex":
-                targetGlow = glowMangaDex;
-                break;
-            case "Manhuaus":
-                targetGlow = glowManhuaus;
-                break;
-            case "ManhuaPlus":
-                targetGlow = glowManhuaPlus;
-                break;
-
+        // Hide all glows first
+        for (int id : glowMap.values()) {
+            View glow = findViewById(id);
+            glow.clearAnimation();
+            glow.setVisibility(View.GONE);
         }
 
+        // Find the target glow based on the current serviceFeed
+        Integer glowId = glowMap.get(serviceFeed);
+        if (glowId == null) return;
+
+        View targetGlow = findViewById(glowId);
         if (targetGlow != null) {
             targetGlow.setVisibility(View.VISIBLE);
+
             AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
             pulse.setDuration(1000);
             pulse.setRepeatMode(Animation.REVERSE);
