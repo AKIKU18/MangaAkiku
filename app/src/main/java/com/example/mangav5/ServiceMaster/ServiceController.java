@@ -552,29 +552,37 @@ public class ServiceController {
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
         List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus");
         List<MangaItemModel> allResults = new ArrayList<>();
-        int[] completed = {0}; // simple counter for async completion
+        final int totalSources = sources.size();
+        final int[] completed = {0};
 
         for (String source : sources) {
             fetchSearchMangas(query, source, new MangaListCallback() {
                 @Override
                 public void onSuccess(List<MangaItemModel> results) {
-                    allResults.addAll(results);
-                    completed[0]++;
-                    if (completed[0] == sources.size()) {
-                        callback.onSuccess(allResults); // called once after all sources complete
+                    synchronized (allResults) {
+                        allResults.addAll(results);
                     }
+                    checkCompletion();
                 }
 
                 @Override
                 public void onError(String message) {
-                    completed[0]++;
-                    if (completed[0] == sources.size()) {
-                        callback.onSuccess(allResults); // still call success even if some fail
+                    checkCompletion();
+                }
+
+                private void checkCompletion() {
+                    synchronized (completed) {
+                        completed[0]++;
+                        if (completed[0] == totalSources) {
+                            // return once after all have finished
+                            callback.onSuccess(new ArrayList<>(allResults));
+                        }
                     }
                 }
             });
         }
     }
+
 
     public static void fetchSearchMangas(String query, String source, MangaListCallback callback) {
         if (callback == null) {

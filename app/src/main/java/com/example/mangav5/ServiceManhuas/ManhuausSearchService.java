@@ -15,6 +15,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
@@ -27,6 +28,8 @@ public class ManhuausSearchService {
                 String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
                 String searchUrl = "https://manhuaus.com/?s=" + encodedQuery + "&post_type=wp-manga&op=&author=&artist=&release=&adult=";
 
+                Log.d(TAG, "Searching Manhuaus: " + searchUrl);
+
                 Document doc = Jsoup.connect(searchUrl)
                         .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
                         .timeout(15000)
@@ -36,12 +39,25 @@ public class ManhuausSearchService {
                 Elements items = doc.select("div.c-tabs-item__content");
 
                 List<MangaItemModel> tempResults = new ArrayList<>();
+                String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
 
                 for (Element item : items) {
                     try {
                         Element titleA = item.selectFirst(".post-title a");
                         String title = titleA != null ? titleA.text().trim() : "";
                         String url = titleA != null ? titleA.attr("href").trim() : "";
+
+                        // Skip invalid items
+                        if (title.isEmpty() || url.isEmpty()) continue;
+
+                        // ✅ Filter: only titles that closely match the query
+                        String normalizedTitle = title.toLowerCase(Locale.ROOT);
+                        if (!normalizedTitle.contains(normalizedQuery)
+                                && !normalizedQuery.contains(normalizedTitle)
+                                && !normalizedTitle.replaceAll("\\s+", "")
+                                .contains(normalizedQuery.replaceAll("\\s+", ""))) {
+                            continue; // skip unrelated
+                        }
 
                         Element img = item.selectFirst(".tab-thumb img");
                         String cover = "";
@@ -98,9 +114,7 @@ public class ManhuausSearchService {
                     });
                 }
 
-                // Wait for all threads to finish
                 latch.await();
-
                 results.addAll(tempResults);
 
                 new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(results));

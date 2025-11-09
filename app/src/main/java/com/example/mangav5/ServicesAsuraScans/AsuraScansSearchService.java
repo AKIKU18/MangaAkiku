@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class AsuraScansSearchService {
     private static final String TAG = "AsuraSearch";
@@ -31,46 +32,43 @@ public class AsuraScansSearchService {
                         .get();
 
                 List<MangaItemModel> results = new ArrayList<>();
-                // Each manga is inside this grid container
                 String baseUrl = "https://asuracomic.net/";
 
-                // Select each manga block (anchor <a> inside the grid)
                 Elements mangas = doc.select("div.grid.grid-cols-2.sm\\:grid-cols-2.md\\:grid-cols-5.gap-3.p-4 a");
 
+                String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
+
                 for (Element manga : mangas) {
-                    // ✅ Manga URL (relative -> full)
                     String mangaUrl = baseUrl + manga.attr("href");
 
-                    // ✅ Manga ID (last part of href, e.g., "nano-machine-42c424da")
                     String href = manga.attr("href");
                     String mangaId = href.substring(href.lastIndexOf("-") + 1);
 
-                    // ✅ Title
                     Element titleEl = manga.selectFirst("span.block.text-\\[13\\.3px\\].font-bold");
                     String title = titleEl != null ? titleEl.text() : "Unknown";
 
-                    // ✅ Description (none available in search results → keep blank)
-                    String description = "";
+                    // ✅ Only include manga whose title closely matches the query
+                    String normalizedTitle = title.toLowerCase(Locale.ROOT);
+                    if (!normalizedTitle.contains(normalizedQuery) &&
+                            !normalizedQuery.contains(normalizedTitle) &&
+                            !normalizedTitle.replaceAll("\\s+", "").contains(normalizedQuery.replaceAll("\\s+", ""))) {
+                        continue; // skip loosely related ones
+                    }
 
-                    // ✅ Cover Image
                     Element imgEl = manga.selectFirst("img");
                     String coverImageUrl = imgEl != null ? imgEl.attr("src") : "";
 
-                    // ✅ Last Chapter (e.g., "Chapter 284")
                     Element chapterEl = manga.selectFirst("span.text-\\[13px\\].text-\\[\\#999\\]");
                     String lastChapter = chapterEl != null ? chapterEl.text() : "";
 
-                    // ✅ Bookmark status (default false)
                     boolean isBookmarked = false;
-
-                    // ✅ Source name
+                    String description = "";
                     String source = "AsuraScans";
 
-                    results.add(new MangaItemModel(mangaId, title, description, coverImageUrl, isBookmarked, mangaUrl, lastChapter,source));
+                    results.add(new MangaItemModel(
+                            mangaId, title, description, coverImageUrl, isBookmarked, mangaUrl, lastChapter, source
+                    ));
                 }
-
-
-                callback.onSuccess(results);
 
                 if (results.isEmpty()) {
                     callback.onError("No results found");
@@ -85,9 +83,8 @@ public class AsuraScansSearchService {
         }).start();
     }
 
-    public static interface SearchCallback {
+    public interface SearchCallback {
         void onSuccess(List<MangaItemModel> results);
-
         void onError(String error);
     }
 }

@@ -15,6 +15,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 
 public class ManhuaPlusSearchService {
@@ -25,7 +26,7 @@ public class ManhuaPlusSearchService {
             try {
                 String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
                 String searchUrl = "https://manhuaplus.org/search?keyword=" + encodedQuery;
-                Log.e(TAG, "🔍 Searching: " + searchUrl);
+                Log.d(TAG, "🔍 Searching: " + searchUrl);
 
                 Document doc = Jsoup.connect(searchUrl)
                         .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
@@ -33,30 +34,44 @@ public class ManhuaPlusSearchService {
                         .get();
 
                 List<MangaItemModel> results = new ArrayList<>();
-
-                // Select all individual manga blocks inside the grid
                 Elements items = doc.select("div.grid.gtc-f141a.gg-20.p-13.mh-77vh > div");
-                Log.e(TAG, "Found items: " + items.size());
+
+                Log.d(TAG, "Found items: " + items.size());
+
+                String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
 
                 for (Element item : items) {
                     try {
-                        // ✅ Get manga link & title
                         Element titleLink = item.selectFirst("a[title]");
                         String title = titleLink != null ? titleLink.attr("title").trim() : "";
                         String url = titleLink != null ? titleLink.attr("href").trim() : "";
+                        if (title.isEmpty() || url.isEmpty()) continue;
+
+                        // ✅ Filter: only keep results that closely match the query
+                        String normalizedTitle = title.toLowerCase(Locale.ROOT);
+                        if (!normalizedTitle.contains(normalizedQuery)
+                                && !normalizedQuery.contains(normalizedTitle)
+                                && !normalizedTitle.replaceAll("\\s+", "")
+                                .contains(normalizedQuery.replaceAll("\\s+", ""))) {
+                            continue; // skip unrelated
+                        }
+
+                        // ✅ Manga ID (last part of URL)
                         String mangaId = url.replace("https://manhuaplus.org/manga/", "").trim();
-                        // ✅ Get cover image
+
+                        // ✅ Cover image
                         Element img = item.selectFirst("img");
                         String cover = "";
                         if (img != null) {
                             if (img.hasAttr("data-src") && !img.attr("data-src").isEmpty()) {
-                                cover = "https://manhuaplus.org" + img.attr("data-src").trim();
+                                String src = img.attr("data-src").trim();
+                                cover = src.startsWith("http") ? src : "https://manhuaplus.org" + src;
                             } else if (img.hasAttr("src")) {
                                 cover = img.attr("src").trim();
                             }
                         }
 
-                        // ✅ Get latest chapter
+                        // ✅ Last chapter
                         Element chapterEl = item.selectFirst("a[href*=\"/chapter-\"]");
                         String lastChapter = chapterEl != null ? chapterEl.text().trim() : "";
 
@@ -68,11 +83,12 @@ public class ManhuaPlusSearchService {
                         m.setLastChapter(lastChapter);
                         m.setDescription("");
                         m.setSource("ManhuaPlus");
-                        m.setMangaId(mangaId); // can be filled later when opening details
+                        m.setMangaId(mangaId);
 
                         results.add(m);
 
-                        Log.e(TAG, "Parsed: " + title + " | " + lastChapter + " | " + cover + " | " + url + " | " + mangaId);
+                        Log.d(TAG, "✅ Added: " + title + " | " + lastChapter);
+
                     } catch (Exception innerEx) {
                         Log.e(TAG, "Error parsing item: " + innerEx.getMessage());
                     }
@@ -93,7 +109,6 @@ public class ManhuaPlusSearchService {
         });
     }
 
-    // Callback interface
     public interface SearchCallback {
         void onSuccess(List<MangaItemModel> results);
         void onError(String error);
