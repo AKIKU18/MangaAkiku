@@ -108,6 +108,7 @@ public class MangaPage extends AppCompatActivity {
     private void OnClickToggleMangaPage(ImageView holder, BookmarkDao bookmarkDao){
 
         final String mangaUrlorId = ServiceController.getMangaIdOrMangaUrl(getMangaSource, getMangaId, getIntent().getStringExtra("mangaUrl"));
+        Log.e("MangaPageCheckBookmark", "mangaUrlorId: " + mangaUrlorId + " mangaUrl: " + getIntent().getStringExtra("mangaUrl"));
         ServiceController.getMangaItem(getMangaSource, mangaUrlorId, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
@@ -115,7 +116,7 @@ public class MangaPage extends AppCompatActivity {
                     holder.setOnClickListener(v -> {
                         Executors.newSingleThreadExecutor().execute(() -> {
                             ToggleBookmarkMangaPage(manga, bookmarkDao);
-                            boolean isBookmarked = bookmarkDao.isBookmarked(mangaUrlorId);
+                            boolean isBookmarked = bookmarkDao.isBookmarked(manga.getMangaId());
                             new Handler(Looper.getMainLooper()).post(() -> {
                                 holder.setImageResource(isBookmarked ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
                             });

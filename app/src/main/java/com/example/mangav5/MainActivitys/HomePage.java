@@ -295,24 +295,24 @@ public class HomePage extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                // Make search results visible and animate them if not already visible.
+                if (searchResultView.getVisibility() != View.VISIBLE) {
+                    searchResultView.setVisibility(View.VISIBLE);
+                    recycler_bg_blur.setVisibility(View.VISIBLE);
+                    Animation slideDown = AnimationUtils.loadAnimation(HomePage.this, R.anim.slide_down);
+                    searchResultView.startAnimation(slideDown);
+                }
+                searchMangaList.clear();           // remove current search results
+                searchResultAdapter.notifyDataSetChanged();
                 performSearch(query);
-                searchView.clearFocus(); // Hide keyboard on submit.
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (!newText.trim().isEmpty()) {
-                    // Make search results visible and animate them if not already visible.
-                    if (searchResultView.getVisibility() != View.VISIBLE) {
-                        searchResultView.setVisibility(View.VISIBLE);
-                        recycler_bg_blur.setVisibility(View.VISIBLE);
-                        Animation slideDown = AnimationUtils.loadAnimation(HomePage.this, R.anim.slide_down);
-                        searchResultView.startAnimation(slideDown);
-                    }
-                    performSearch(newText);
-                } else {
-                    // Hide search results when the query is empty.
+                if (newText.trim().isEmpty()) {
+                    searchMangaList.clear();           // remove current search results
+                    searchResultAdapter.notifyDataSetChanged();
                     searchResultView.setVisibility(View.GONE);
                     recycler_bg_blur.setVisibility(View.GONE);
                 }
@@ -327,6 +327,8 @@ public class HomePage extends AppCompatActivity {
      *
      * @param query The search term entered by the user.
      */
+
+
     private void performSearch(String query) {
         if (query == null || query.trim().isEmpty()) {
             searchMangaList.clear();
@@ -335,7 +337,7 @@ public class HomePage extends AppCompatActivity {
         }
 
         // Call the central service controller to perform the search.
-        ServiceController.searchThroughAllSources(query, new ServiceController.MangaListCallback() {
+        ServiceController.fetchSearchMangas(query,serviceFeed, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> results) {
                 runOnUiThread(() -> {
@@ -344,6 +346,7 @@ public class HomePage extends AppCompatActivity {
                     searchResultAdapter.refreshBookmarkStates(); // Ensure bookmark icons are correct.
                     refreshBookmarks();
                     searchResultAdapter.notifyDataSetChanged();
+                    Log.e("SearchResult", "Search found: " + results.size());
                 });
             }
 

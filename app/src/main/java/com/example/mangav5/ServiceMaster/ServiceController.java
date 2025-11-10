@@ -21,6 +21,8 @@ import com.example.mangav5.ServicesMangaDex.MangaDexSearchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServiceController {
         /*
@@ -550,16 +552,17 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus");
-        List<MangaItemModel> allResults = new ArrayList<>();
+        List<String> sources = List.of("MangaDex", "AsuraScans", "ManhuaPlus", "Manhuaus");
+        CopyOnWriteArrayList<MangaItemModel> allResults = new CopyOnWriteArrayList<>();
+        AtomicInteger completed = new AtomicInteger(0);
+        List<String> errors = new ArrayList<>();
         final int totalSources = sources.size();
-        final int[] completed = {0};
 
         for (String source : sources) {
             fetchSearchMangas(query, source, new MangaListCallback() {
                 @Override
                 public void onSuccess(List<MangaItemModel> results) {
-                    synchronized (allResults) {
+                    if (results != null && !results.isEmpty()) {
                         allResults.addAll(results);
                     }
                     checkCompletion();
@@ -567,14 +570,15 @@ public class ServiceController {
 
                 @Override
                 public void onError(String message) {
+                    errors.add(source + ": " + message);
                     checkCompletion();
                 }
 
                 private void checkCompletion() {
-                    synchronized (completed) {
-                        completed[0]++;
-                        if (completed[0] == totalSources) {
-                            // return once after all have finished
+                    if (completed.incrementAndGet() == totalSources) {
+                        if (allResults.isEmpty() && !errors.isEmpty()) {
+                            callback.onError(String.join("; ", errors));
+                        } else {
                             callback.onSuccess(new ArrayList<>(allResults));
                         }
                     }
@@ -582,6 +586,7 @@ public class ServiceController {
             });
         }
     }
+
 
 
     public static void fetchSearchMangas(String query, String source, MangaListCallback callback) {
