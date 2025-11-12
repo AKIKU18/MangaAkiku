@@ -41,6 +41,7 @@ public class ChapterPage extends AppCompatActivity {
 
     private final List<String> chapters = new ArrayList<>();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    AppDatabase db;
     private RecyclerView recycleViewPage;
     private ChapterPageAdapter chapterPageAdapter;
     private TextView tvChapterNumber, tvMangaTitle;
@@ -61,7 +62,7 @@ public class ChapterPage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chapter_page);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
-
+        db = AppDatabase.getInstance(this);
         initViews();
         setupRecyclerView();
         handleBackPress();
@@ -94,6 +95,8 @@ public class ChapterPage extends AppCompatActivity {
             finish();
             return;
         }
+
+
 
         mangaId = intent.getStringExtra("mangaId");
         source = intent.getStringExtra("source");
@@ -160,8 +163,6 @@ public class ChapterPage extends AppCompatActivity {
             public void onSuccess(List<String> pages) {
                 runOnUiThread(() -> {
                     chapters.clear();
-                    chapters.clear();
-                    chapters.clear();
                     if (pages != null && !pages.isEmpty()) {
                         for (String url : pages) {
                             if (url != null && !url.trim().isEmpty() &&
@@ -183,7 +184,7 @@ public class ChapterPage extends AppCompatActivity {
 
 
                     chapterPageAdapter.notifyDataSetChanged();
-                    recycleViewPage.scrollToPosition(scrollPosition);
+
                     InsertChapterIntoHistory(chapterUrlOrId);
                 });
             }
@@ -205,7 +206,6 @@ public class ChapterPage extends AppCompatActivity {
         ServiceController.fetchMangaDetails(source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
-                AppDatabase db = AppDatabase.getInstance(ChapterPage.this);
                 executor.execute(() -> {
                     HistoryEntity historyItem = new HistoryEntity(
                             manga.getMangaId(),
@@ -217,7 +217,8 @@ public class ChapterPage extends AppCompatActivity {
                             manga.getTitle(),
                             manga.getMangaUrl(),
                             chapterUrlOrId,
-                            manga.getSource()
+                            manga.getSource(),
+                            recycleViewPage.getScrollY()
                     );
                     db.historyDao().insertHistoryItem(historyItem);
                     Log.d("ChapterPage", "Added to history: " + getCurrentChapterTitle());
@@ -251,7 +252,6 @@ public class ChapterPage extends AppCompatActivity {
 
     private void NextChapter() {
         btnNext.setOnClickListener(v -> {
-            AppDatabase db = AppDatabase.getInstance(this);
             final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
             executor.execute(() -> {
                 ChapterItemEntity next = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, currentChapterId);
@@ -269,7 +269,6 @@ public class ChapterPage extends AppCompatActivity {
 
     private void PrevChapter() {
         btnPrevious.setOnClickListener(v -> {
-            AppDatabase db = AppDatabase.getInstance(this);
             final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
             executor.execute(() -> {
                 ChapterItemEntity prev = db.chapterDao().getPrevChapter(mangaIdOrUrlFinal, currentChapterId);
@@ -305,7 +304,6 @@ public class ChapterPage extends AppCompatActivity {
 
 
     private void SetMangaTitle(String mangaId) {
-        AppDatabase db = AppDatabase.getInstance(this);
         executor.execute(() -> {
             MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
             if (manga != null) {
@@ -340,7 +338,6 @@ public class ChapterPage extends AppCompatActivity {
                         if (chapterList.isEmpty()) return;
 
                         executor.execute(() -> {
-                            AppDatabase db = AppDatabase.getInstance(ChapterPage.this);
                             List<ChapterItemEntity> entities = new ArrayList<>();
                             for (ChapterModel c : chapterList) {
                                 entities.add(new ChapterItemEntity(
@@ -418,7 +415,6 @@ public class ChapterPage extends AppCompatActivity {
     }
 
 
-
     private void setupRecyclerScrollListener() {
         LinearLayoutManager layoutManager = (LinearLayoutManager) recycleViewPage.getLayoutManager();
 
@@ -426,14 +422,16 @@ public class ChapterPage extends AppCompatActivity {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (layoutManager == null) return;
-
+                if (layoutManager == null) {
+                    return;
+                }
                 // Save scroll position
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
                 View firstVisibleItemView = layoutManager.findViewByPosition(firstVisibleItemPosition);
                 int offset = 0;
                 if (firstVisibleItemView != null) {
                     offset = -firstVisibleItemView.getTop();
+
                 }
                 scrollPosition = firstVisibleItemPosition * (firstVisibleItemView != null ? firstVisibleItemView.getHeight() : 0) + offset;
             }

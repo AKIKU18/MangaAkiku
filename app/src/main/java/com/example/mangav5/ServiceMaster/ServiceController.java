@@ -1,6 +1,8 @@
 package com.example.mangav5.ServiceMaster;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
@@ -552,42 +554,66 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("MangaDex", "AsuraScans", "ManhuaPlus", "Manhuaus");
-        CopyOnWriteArrayList<MangaItemModel> allResults = new CopyOnWriteArrayList<>();
+        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus");
+        List<MangaItemModel> allResults = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger completed = new AtomicInteger(0);
-        List<String> errors = new ArrayList<>();
-        final int totalSources = sources.size();
+        int totalSources = sources.size();
 
         for (String source : sources) {
-            fetchSearchMangas(query, source, new MangaListCallback() {
+            fetchSearchMangas(query, source, new ServiceController.MangaListCallback() {
+                private boolean called = false; // ensure only once
+
                 @Override
                 public void onSuccess(List<MangaItemModel> results) {
-                    if (results != null && !results.isEmpty()) {
-                        allResults.addAll(results);
+                    if (!called) {
+                        called = true;
+                        if (results != null && !results.isEmpty()) allResults.addAll(results);
+                        checkCompletion();
                     }
-                    checkCompletion();
                 }
 
                 @Override
                 public void onError(String message) {
-                    errors.add(source + ": " + message);
-                    checkCompletion();
+                    if (!called) {
+                        called = true;
+                        Log.e("SearchAllSources", "[" + source + "] " + message);
+                        checkCompletion();
+                    }
                 }
 
                 private void checkCompletion() {
                     if (completed.incrementAndGet() == totalSources) {
-                        if (allResults.isEmpty() && !errors.isEmpty()) {
-                            callback.onError(String.join("; ", errors));
-                        } else {
-                            callback.onSuccess(new ArrayList<>(allResults));
-                        }
+                        Handler mainHandler = new Handler(Looper.getMainLooper());
+                        mainHandler.post(() -> {
+                            if (allResults.isEmpty()) {
+                                callback.onError("No results found.");
+                            } else {
+                                callback.onSuccess(new ArrayList<>(allResults));
+                                Log.d("SearchAllSources", "Total results: " + allResults.size());
+                            }
+                        });
                     }
                 }
             });
+
+            // Optional: failsafe timeout in case fetchSearchMangas never calls callback
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (completed.get() < totalSources) {
+                    completed.incrementAndGet();
+                    Log.e("SearchAllSources", "[" + source + "] timed out");
+                    if (completed.get() == totalSources) {
+                        Handler mainHandler = new Handler(Looper.getMainLooper());
+                        mainHandler.post(() -> {
+                            if (allResults.isEmpty()) callback.onError("No results found.");
+                            else callback.onSuccess(new ArrayList<>(allResults));
+                        });
+                    }
+                }
+            }, 1000); // 5 seconds timeout
         }
+
+
     }
-
-
 
     public static void fetchSearchMangas(String query, String source, MangaListCallback callback) {
         if (callback == null) {
@@ -597,7 +623,7 @@ public class ServiceController {
 
         switch (source) {
             case "MangaDex":
-                MangaDexSearchService.searchManga(query.trim(), 0, 50, new MangaDexSearchService.MangaListCallback() {
+                MangaDexSearchService.searchManga(query, 0, 50, new MangaDexSearchService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> results) {
                         callback.onSuccess(results);
@@ -611,7 +637,7 @@ public class ServiceController {
                 break;
 
             case "AsuraScans":
-                AsuraScansSearchService.search(query, new AsuraScansSearchService.SearchCallback() {
+                AsuraScansSearchService.search(query, new AsuraScansSearchService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> results) {
                         callback.onSuccess(results);
@@ -625,7 +651,7 @@ public class ServiceController {
                 break;
 
             case "Manhuaus":
-                ManhuausSearchService.search(query, new ManhuausSearchService.SearchCallback() {
+                ManhuausSearchService.search(query, new ManhuausSearchService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> results) {
                         callback.onSuccess(results);

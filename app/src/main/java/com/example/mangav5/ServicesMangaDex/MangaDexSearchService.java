@@ -1,5 +1,9 @@
 package com.example.mangav5.ServicesMangaDex;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import com.example.mangav5.Models.MangaItemModel;
 
 import org.json.JSONArray;
@@ -85,9 +89,14 @@ public class MangaDexSearchService {
                         mangaList.add(new MangaItemModel(id, title, description, coverUrl,false,url,"","MangaDex"));
                     }
 
-                    callback.onSuccess(mangaList);
-                } catch (JSONException e) {
-                    callback.onError("Parse error: " + e.getMessage());
+                    Handler mainHandler = new Handler(Looper.getMainLooper());
+                    if (mangaList.isEmpty()) {
+                        mainHandler.post(() -> callback.onError("No results found."));
+                    } else {
+                        mainHandler.post(() -> callback.onSuccess(mangaList));
+                    }
+                } catch (Exception innerEx) {
+                    Log.e("MangaDexSearchService", "Error parsing item: " + innerEx.getMessage());
                 }
             }
         });

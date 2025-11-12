@@ -36,8 +36,6 @@ public class ManhuaPlusSearchService {
                 List<MangaItemModel> results = new ArrayList<>();
                 Elements items = doc.select("div.grid.gtc-f141a.gg-20.p-13.mh-77vh > div");
 
-                Log.d(TAG, "Found items: " + items.size());
-
                 String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
 
                 for (Element item : items) {
@@ -87,7 +85,6 @@ public class ManhuaPlusSearchService {
 
                         results.add(m);
 
-                        Log.d(TAG, "✅ Added: " + title + " | " + lastChapter);
 
                     } catch (Exception innerEx) {
                         Log.e(TAG, "Error parsing item: " + innerEx.getMessage());

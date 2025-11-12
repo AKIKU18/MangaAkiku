@@ -20,6 +20,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mangav5.Adapters.HomePageAdapter;
@@ -60,6 +61,7 @@ public class HomePage extends AppCompatActivity {
     private Button button_manhuaus;          // Button in the drawer to select Manhuaus as the source.
     private Button button_manhuaPlus; // Button in the drawer to select ManhuaPlus as the source.
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
+    private TextView loadingText;             // Text view for displaying loading state.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
     // Data and State Management
     private List<MangaItemModel> mangaList = new ArrayList<>(); // Data source for the main manga feed.
@@ -105,17 +107,6 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
-        ManhuaFastSearchService.search("Martial Peak", new ManhuaFastSearchService.SearchCallback() {
-            @Override
-            public void onSuccess(List<MangaItemModel> results) {
-                Log.e("Search found: ", results.get(0).getTitle());
-            }
-
-            @Override
-            public void onError(String error) {
-
-            }
-        });
     }
 
     /**
@@ -133,6 +124,7 @@ public class HomePage extends AppCompatActivity {
         button_asurascans = findViewById(R.id.source_asurascans);
         button_manhuaus = findViewById(R.id.source_manhuaus);
         button_manhuaPlus = findViewById(R.id.source_manhuaPlus);
+        loadingText = findViewById(R.id.loading_text);
     }
 
     /**
@@ -295,14 +287,13 @@ public class HomePage extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // Make search results visible and animate them if not already visible.
                 if (searchResultView.getVisibility() != View.VISIBLE) {
                     searchResultView.setVisibility(View.VISIBLE);
                     recycler_bg_blur.setVisibility(View.VISIBLE);
                     Animation slideDown = AnimationUtils.loadAnimation(HomePage.this, R.anim.slide_down);
                     searchResultView.startAnimation(slideDown);
                 }
-                searchMangaList.clear();           // remove current search results
+                searchMangaList.clear();   // Clear **once** here
                 searchResultAdapter.notifyDataSetChanged();
                 performSearch(query);
                 return true;
@@ -311,14 +302,20 @@ public class HomePage extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (newText.trim().isEmpty()) {
-                    searchMangaList.clear();           // remove current search results
+                    searchMangaList.clear();
                     searchResultAdapter.notifyDataSetChanged();
-                    searchResultView.setVisibility(View.GONE);
-                    recycler_bg_blur.setVisibility(View.GONE);
+
+                    if (searchResultView != null)
+                        searchResultView.setVisibility(View.GONE);
+
+                    if (recycler_bg_blur != null)
+                        recycler_bg_blur.setVisibility(View.GONE);
                 }
                 return true;
             }
+
         });
+
     }
 
     /**
@@ -333,30 +330,32 @@ public class HomePage extends AppCompatActivity {
         if (query == null || query.trim().isEmpty()) {
             searchMangaList.clear();
             searchResultAdapter.notifyDataSetChanged();
+
             return;
         }
 
         // Call the central service controller to perform the search.
-        ServiceController.fetchSearchMangas(query,serviceFeed, new ServiceController.MangaListCallback() {
+        ServiceController.searchThroughAllSources(query, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> results) {
                 runOnUiThread(() -> {
                     searchMangaList.clear();
                     searchMangaList.addAll(results);
-                    searchResultAdapter.refreshBookmarkStates(); // Ensure bookmark icons are correct.
+                    searchResultAdapter.refreshBookmarkStates();
                     refreshBookmarks();
                     searchResultAdapter.notifyDataSetChanged();
-                    Log.e("SearchResult", "Search found: " + results.size());
                 });
             }
 
             @Override
             public void onError(String message) {
-                Log.e("HomePageSearch", "Error: " + message);
-                runOnUiThread(() -> Toast.makeText(HomePage.this, "Search failed: " + message, Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> {
+                    Toast.makeText(HomePage.this, "Search failed: " + message, Toast.LENGTH_SHORT).show();
+                });
             }
         });
     }
+
 
     /**
      * Sets up the scroll listener on the main RecyclerView to handle infinite scrolling/pagination.

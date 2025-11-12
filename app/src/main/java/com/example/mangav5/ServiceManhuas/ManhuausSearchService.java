@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 public class ManhuausSearchService {
     private static final String TAG = "ManhuausSearch";
 
-    public static void search(String query, SearchCallback callback) {
+    public static void search(String query, MangaListCallback callback) {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
@@ -142,7 +142,7 @@ public class ManhuausSearchService {
     }
 
 
-    public interface SearchCallback {
+    public interface MangaListCallback {
         void onSuccess(List<MangaItemModel> results);
         void onError(String error);
     }

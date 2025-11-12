@@ -35,7 +35,6 @@ public class AsuraScansChapterPagesService {
             return;
         }
 
-        Log.d(TAG, "Loading chapter URL: " + chapterUrl);
 
         WebView webView = new WebView(context);
 
@@ -59,19 +58,15 @@ public class AsuraScansChapterPagesService {
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                Log.d(TAG, "Page finished loading: " + url);
                 handler.postDelayed(() -> checkAndInject(view), JS_CHECK_DELAY_MS);
             }
 
             private void checkAndInject(WebView view) {
                 jsAttempts++;
-                Log.d(TAG, "JS injection attempt " + jsAttempts);
                 injectCollectorScript(view);
 
                 if (jsAttempts < MAX_JS_CHECKS) {
                     handler.postDelayed(() -> checkAndInject(view), JS_CHECK_DELAY_MS);
-                } else {
-                    Log.d(TAG, "Max JS attempts reached");
                 }
             }
         });
@@ -118,14 +113,12 @@ public class AsuraScansChapterPagesService {
         public void process(String json) {
             handler.post(() -> {
                 if (json == null || json.length() < 2) {
-                    Log.d(TAG, "JS returned empty JSON");
                     return;
                 }
 
                 try {
                     List<String> pages = new ArrayList<>();
                     JSONArray arr = new JSONArray(json);
-                    Log.d(TAG, "JS returned " + arr.length() + " images");
 
                     for (int i = 0; i < arr.length(); i++) {
                         String src = arr.optString(i, "").trim();
@@ -140,9 +133,6 @@ public class AsuraScansChapterPagesService {
                                     && !src.equals("https://gg.asuracomic.net/storage/media/267698/conversions/01JJST2HQ54CXEV2YQN2621FTB-optimized.webp"))
                             {
                                 pages.add(src);
-                                Log.d(TAG, "Matched comic image: " + src);
-                            } else {
-                                Log.d(TAG, "Skipped image: " + src);
                             }
 
                         }
@@ -150,8 +140,6 @@ public class AsuraScansChapterPagesService {
 
                     if (!pages.isEmpty()) {
                         callback.onSuccess(pages);
-                    } else {
-                        Log.d(TAG, "No comic images matched yet, waiting...");
                     }
 
                 } catch (Exception e) {
