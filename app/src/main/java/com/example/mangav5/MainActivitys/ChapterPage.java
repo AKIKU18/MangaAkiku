@@ -56,7 +56,6 @@ public class ChapterPage extends AppCompatActivity {
     private String mangaId, source, mangaUrl, chapterId, chapterUrl, chapterTitle;
     private boolean uiVisible = true;
     private int scrollPosition;
-    private boolean canUpdateScrollPosition;
 
 
     @Override
@@ -434,13 +433,6 @@ public class ChapterPage extends AppCompatActivity {
 
                 }
                 scrollPosition = firstVisibleItemPosition * (firstVisibleItemView != null ? firstVisibleItemView.getHeight() : 0) + offset;
-
-                if(canUpdateScrollPosition){
-                    executor.execute(() -> {
-                        db.historyDao().updateScrollPosition(chapterId, scrollPosition);
-                    });
-                }
-
             }
         });
     }
@@ -471,7 +463,4 @@ public class ChapterPage extends AppCompatActivity {
         this.currentChapterTitle = title;
     }
 
-    public interface OnAllPagesLoadedListener {
-        void onAllPagesLoaded();
-    }
 }
