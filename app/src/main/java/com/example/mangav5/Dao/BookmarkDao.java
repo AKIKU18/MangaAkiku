@@ -14,6 +14,8 @@ import java.util.List;
 public interface BookmarkDao {
     @Insert
     void insert(BookmarkEntity bookmark);
+    @Query("DELETE FROM bookmarks")
+    void deleteAllBookmarks();
 
     @Delete
     void delete(BookmarkEntity bookmark);

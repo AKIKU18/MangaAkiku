@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.example.mangav5.Adapters.SettingsAdapter;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.ChapterItemEntity;
@@ -30,6 +29,7 @@ public class SettingsPage extends AppCompatActivity {
     private List<MangaItemEntity> mangaList = new ArrayList<>();
     private Button button_home, button_clear_all;
     private TextView text_total_size;
+    AppDatabase db = AppDatabase.getInstance(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +52,11 @@ public class SettingsPage extends AppCompatActivity {
         button_clear_all = findViewById(R.id.button_clear_all);
 
         loadDataFromDB();
-        setupHomeButton();
+        goToHomePage();
         setupDeleteAllButton();
     }
 
-    private void setupHomeButton() {
+    private void goToHomePage() {
         button_home.setOnClickListener(v -> {
             startActivity(new Intent(SettingsPage.this, HomePage.class));
         });
@@ -64,20 +64,22 @@ public class SettingsPage extends AppCompatActivity {
 
     private void setupDeleteAllButton() {
         button_clear_all.setOnClickListener(v -> Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(SettingsPage.this);
+            db = AppDatabase.getInstance(SettingsPage.this);
             db.mangaItemDao().deleteAllManga();
             db.chapterDao().deleteChapters();
+            db.bookmarkDao().deleteAllBookmarks();
+            db.historyDao().deleteAllHistory();
             mangaList.clear();
             new Handler(Looper.getMainLooper()).post(() -> {
-                adapter.notifyDataSetChanged();
                 text_total_size.setText("0.000 KB");
+                adapter.notifyDataSetChanged();
             });
         }));
     }
 
     private void loadDataFromDB() {
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(this);
+            db = AppDatabase.getInstance(this);
             List<MangaItemEntity> data = db.mangaItemDao().getAllManga();
 
             new Handler(Looper.getMainLooper()).post(() -> {
@@ -89,9 +91,10 @@ public class SettingsPage extends AppCompatActivity {
         });
     }
 
+
     private void calculateTotalSize() {
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(this);
+            db = AppDatabase.getInstance(this);
             double totalBytes = 0;
 
             for (MangaItemEntity manga : mangaList) {
@@ -100,6 +103,8 @@ public class SettingsPage extends AppCompatActivity {
                 totalBytes += manga.getTitle() != null ? manga.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += manga.getMangaId() != null ? manga.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += manga.getDescription() != null ? manga.getDescription().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += manga.getLastChapter() != null ? manga.getLastChapter().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += manga.getSource() != null ? manga.getSource().getBytes(StandardCharsets.UTF_8).length : 0;
 
                 // Chapters
                 List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(manga.getMangaId());
@@ -107,6 +112,25 @@ public class SettingsPage extends AppCompatActivity {
                     totalBytes += chapter.getChapterId() != null ? chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
                     totalBytes += chapter.getNumber() != null ? chapter.getNumber().getBytes(StandardCharsets.UTF_8).length : 0;
                     totalBytes += chapter.getTitle() != null ? chapter.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += chapter.getChapterUrl() != null ? chapter.getChapterUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += chapter.getMangaId() != null ? chapter.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += chapter.getSource() != null ? chapter.getSource().getBytes(StandardCharsets.UTF_8).length : 0;
+                }
+
+                //History
+                List<com.example.mangav5.Entity.HistoryEntity> history = db.historyDao().getAllHistory();
+                for (com.example.mangav5.Entity.HistoryEntity h : history) {
+                    totalBytes += h.getMangaId() != null ? h.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += h.getChapterId() != null ? h.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += h.getChapterTitle() != null ? h.getChapterTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += h.getCoverUrl() != null ? h.getCoverUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += h.getDescription() != null ? h.getDescription().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += String.valueOf(h.getTimestamp()).getBytes(StandardCharsets.UTF_8).length;
+                    totalBytes += h.getMangaTitle() != null ? h.getMangaTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += h.getMangaUrl() != null ? h.getMangaUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += h.getChapterUrl() != null ? h.getChapterUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += h.getSource() != null ? h.getSource().getBytes(StandardCharsets.UTF_8).length : 0;
+                    totalBytes += String.valueOf(h.getScrollPosition()).getBytes(StandardCharsets.UTF_8).length;
                 }
             }
 

@@ -71,7 +71,6 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(context);
             MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
-            List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(mangaId);
 
             long totalBytes = 0;
 
@@ -80,12 +79,34 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
             totalBytes += manga.getTitle() != null ? manga.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
             totalBytes += manga.getMangaId() != null ? manga.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
             totalBytes += manga.getDescription() != null ? manga.getDescription().getBytes(StandardCharsets.UTF_8).length : 0;
+            totalBytes += manga.getLastChapter() != null ? manga.getLastChapter().getBytes(StandardCharsets.UTF_8).length : 0;
+            totalBytes += manga.getSource() != null ? manga.getSource().getBytes(StandardCharsets.UTF_8).length : 0;
 
             // Chapters
+            List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(manga.getMangaId());
             for (ChapterItemEntity chapter : chapters) {
                 totalBytes += chapter.getChapterId() != null ? chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += chapter.getNumber() != null ? chapter.getNumber().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += chapter.getTitle() != null ? chapter.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += chapter.getChapterUrl() != null ? chapter.getChapterUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += chapter.getMangaId() != null ? chapter.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += chapter.getSource() != null ? chapter.getSource().getBytes(StandardCharsets.UTF_8).length : 0;
+            }
+
+            //History
+            List<com.example.mangav5.Entity.HistoryEntity> history = db.historyDao().getAllHistory();
+            for (com.example.mangav5.Entity.HistoryEntity h : history) {
+                totalBytes += h.getMangaId() != null ? h.getMangaId().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += h.getChapterId() != null ? h.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += h.getChapterTitle() != null ? h.getChapterTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += h.getCoverUrl() != null ? h.getCoverUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += h.getDescription() != null ? h.getDescription().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += String.valueOf(h.getTimestamp()).getBytes(StandardCharsets.UTF_8).length;
+                totalBytes += h.getMangaTitle() != null ? h.getMangaTitle().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += h.getMangaUrl() != null ? h.getMangaUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += h.getChapterUrl() != null ? h.getChapterUrl().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += h.getSource() != null ? h.getSource().getBytes(StandardCharsets.UTF_8).length : 0;
+                totalBytes += String.valueOf(h.getScrollPosition()).getBytes(StandardCharsets.UTF_8).length;
             }
 
             String sizeText = formatSizeFromBytes(totalBytes);
