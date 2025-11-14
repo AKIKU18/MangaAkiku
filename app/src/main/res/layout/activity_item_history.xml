@@ -62,7 +62,7 @@
                     android:textSize="16sp"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    android:textColor="@color/teal_200"
+                    android:textColor="@color/teal_700"
                     android:layout_marginTop="2dp"/>
 
                 <!-- Last chapter read -->
@@ -85,11 +85,11 @@
                     android:id="@+id/historyTimestamp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:text="12 Feb 2025, 14:32"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="14sp"
-                    android:textStyle="italic"
-                    android:textColor="@android:color/white"
-                    android:layout_marginTop="2dp"/>
+                    android:textStyle="italic" />
             </LinearLayout>
         </LinearLayout>
 
@@ -111,7 +111,7 @@
             android:layout_height="wrap_content"
             android:text="Show more"
             android:textSize="14sp"
-            android:textColor="@color/teal_200"
+            android:textColor="@color/teal_700"
             android:textStyle="bold"
             android:layout_marginTop="4dp"
             android:clickable="true"

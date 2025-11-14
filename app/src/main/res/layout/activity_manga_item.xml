@@ -68,7 +68,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Long manga description goes here..."
-                    android:textColor="#666"
                     android:textSize="14sp" />
 
             </androidx.core.widget.NestedScrollView>
@@ -95,7 +94,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginStart="12dp"
-            android:src="@drawable/ic_star_border"
+            android:src="@drawable/ic_bookmark_border"
             android:clickable="true"
             android:focusable="true"
             android:contentDescription="Bookmark" />

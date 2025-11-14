@@ -271,7 +271,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
     private void StarToggle(ImageView holder) {
         for (BookmarkEntity bookmark : bookmarkList) {
-            holder.setImageResource(R.drawable.ic_star_filled);
+            holder.setImageResource(R.drawable.ic_bookmark_filled);
         }
     }
 

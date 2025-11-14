@@ -156,8 +156,10 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@android:color/transparent">
+                app:cardCornerRadius="28dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
                 <View
                     android:layout_width="match_parent"
@@ -188,8 +190,10 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@android:color/transparent">
+                app:cardCornerRadius="28dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
                 <View
                     android:layout_width="match_parent"
@@ -219,8 +223,10 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@android:color/transparent">
+                app:cardCornerRadius="28dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
                 <View
                     android:layout_width="match_parent"

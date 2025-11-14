@@ -43,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:text="Chapter Title"
                 android:textSize="16sp"
-                android:textColor="@android:color/white"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textStyle="bold"
                 android:maxLines="1"
                 android:ellipsize="end"

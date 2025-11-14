@@ -333,7 +333,9 @@ public class HomePage extends AppCompatActivity {
 
             return;
         }
-
+        runOnUiThread(() ->{
+            loadingText.setVisibility(View.VISIBLE);
+        });
         // Call the central service controller to perform the search.
         ServiceController.searchThroughAllSources(query, new ServiceController.MangaListCallback() {
             @Override
@@ -344,6 +346,7 @@ public class HomePage extends AppCompatActivity {
                     searchResultAdapter.refreshBookmarkStates();
                     refreshBookmarks();
                     searchResultAdapter.notifyDataSetChanged();
+                    loadingText.setVisibility(View.GONE);
                 });
             }
 

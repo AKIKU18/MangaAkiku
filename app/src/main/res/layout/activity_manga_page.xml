@@ -71,7 +71,9 @@
                                 android:text="Manga Title"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@android:color/white" />
+                                android:maxLines="3"
+                                android:ellipsize="end"
+                                android:textColor="?android:attr/textColorPrimary" />
 
                             <ImageView
                                 android:id="@+id/bookmarkButtonPage"
@@ -91,7 +93,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Full manga description here, can be long..."
-                                android:textColor="#E0E0E0"
+                                android:textColor="?android:attr/textColorPrimary"
                                 android:textSize="14sp" />
                         </ScrollView>
                     </LinearLayout>
@@ -164,7 +166,7 @@
                             android:layout_height="match_parent"
                             android:paddingHorizontal="8dp"
                             android:text="First Chapter"
-                            android:textColor="@android:color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:background="@android:color/transparent"
                             android:gravity="center"
                             android:autoSizeTextType="uniform"
@@ -206,7 +208,7 @@
                             android:layout_height="match_parent"
                             android:paddingHorizontal="8dp"
                             android:text="Home"
-                            android:textColor="@android:color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:background="@android:color/transparent"
                             android:gravity="center"
                             android:autoSizeTextType="uniform"
@@ -247,7 +249,7 @@
                             android:layout_height="match_parent"
                             android:paddingHorizontal="8dp"
                             android:text="Last Chapter"
-                            android:textColor="@android:color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:background="@android:color/transparent"
                             android:gravity="center"
                             android:autoSizeTextType="uniform"

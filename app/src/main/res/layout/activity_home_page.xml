@@ -127,6 +127,16 @@
                 android:padding="8dp"
                 android:visibility="gone"
                 app:cardCornerRadius="50dp" />
+            <TextView
+                android:id="@+id/loading_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Loading..."
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="18sp"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"/>
         </FrameLayout>
 
         <!-- Bottom Buttons -->

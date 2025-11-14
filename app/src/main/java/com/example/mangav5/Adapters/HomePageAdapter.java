@@ -1,7 +1,5 @@
 package com.example.mangav5.Adapters;
 
-import static com.example.mangav5.MainActivitys.HomePage.serviceFeed;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -104,7 +102,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
 
         // Bookmark star null-safe
         boolean isBookmarked = Boolean.TRUE.equals(manga.getIsBookmarked());
-        holder.bookmarkStar.setImageResource(isBookmarked ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
+        holder.bookmarkStar.setImageResource(isBookmarked ? R.drawable.ic_bookmark_filled : R.drawable.ic_bookmark_border);
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, manga, bookmarkDao);
 
         // Click listeners

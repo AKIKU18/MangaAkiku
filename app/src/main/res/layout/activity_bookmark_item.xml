@@ -95,7 +95,7 @@
             android:layout_height="32dp"
             android:layout_marginStart="12dp"
             android:contentDescription="Bookmark"
-            android:src="@drawable/ic_star_border"
+            android:src="@drawable/ic_bookmark_border"
             android:clickable="true"
             android:focusable="true" />
 

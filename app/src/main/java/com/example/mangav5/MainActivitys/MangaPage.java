@@ -1,6 +1,5 @@
 package com.example.mangav5.MainActivitys;
 
-import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Adapters.MangaPageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
@@ -30,7 +28,6 @@ import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesMangaDex.MangaDexFeedManga;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,7 +97,7 @@ public class MangaPage extends AppCompatActivity {
         Executors.newSingleThreadExecutor().execute(() -> {
             boolean isBookmarked = bookmarkDao.isBookmarked(getMangaId);
             new Handler(Looper.getMainLooper()).post(() -> {
-                bookmarkStar.setImageResource(isBookmarked ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
+                bookmarkStar.setImageResource(isBookmarked ? R.drawable.ic_bookmark_filled : R.drawable.ic_bookmark_border);
             });
         });
     }
@@ -118,7 +115,7 @@ public class MangaPage extends AppCompatActivity {
                             ToggleBookmarkMangaPage(manga, bookmarkDao);
                             boolean isBookmarked = bookmarkDao.isBookmarked(manga.getMangaId());
                             new Handler(Looper.getMainLooper()).post(() -> {
-                                holder.setImageResource(isBookmarked ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
+                                holder.setImageResource(isBookmarked ? R.drawable.ic_bookmark_filled : R.drawable.ic_bookmark_border);
                             });
                         });
                     });

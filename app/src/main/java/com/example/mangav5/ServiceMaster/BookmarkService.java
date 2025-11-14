@@ -23,9 +23,9 @@ public class BookmarkService {
                 // Update UI on main thread
                 new Handler(Looper.getMainLooper()).post(() -> {
                     if (isBookmarked) {
-                        holder.setImageResource(R.drawable.ic_star_filled);
+                        holder.setImageResource(R.drawable.ic_bookmark_filled);
                     } else {
-                        holder.setImageResource(R.drawable.ic_star_border);
+                        holder.setImageResource(R.drawable.ic_bookmark_border);
                     }
                 });
             });
