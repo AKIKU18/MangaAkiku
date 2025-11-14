@@ -56,6 +56,8 @@ public class ChapterPage extends AppCompatActivity {
     private String mangaId, source, mangaUrl, chapterId, chapterUrl, chapterTitle;
     private boolean uiVisible = true;
     private int scrollPosition;
+    private boolean canUpdateScrollPosition;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +97,6 @@ public class ChapterPage extends AppCompatActivity {
             finish();
             return;
         }
-
 
 
         mangaId = intent.getStringExtra("mangaId");
@@ -200,7 +201,6 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
-
     private void InsertChapterIntoHistory(String chapterUrlOrId) {
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
         ServiceController.fetchMangaDetails(source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
@@ -302,7 +302,6 @@ public class ChapterPage extends AppCompatActivity {
         GetChapterPages(chapterUrlOrIdFinal);
     }
 
-
     private void SetMangaTitle(String mangaId) {
         executor.execute(() -> {
             MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
@@ -376,6 +375,8 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
+
+
     private void setupRecyclerScroll() {
         btnToggleUI.setOnClickListener(v -> toggleUiVisibility());
         GestureDetector gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
@@ -414,7 +415,6 @@ public class ChapterPage extends AppCompatActivity {
         setUiVisibility(false);
     }
 
-
     private void setupRecyclerScrollListener() {
         LinearLayoutManager layoutManager = (LinearLayoutManager) recycleViewPage.getLayoutManager();
 
@@ -434,6 +434,13 @@ public class ChapterPage extends AppCompatActivity {
 
                 }
                 scrollPosition = firstVisibleItemPosition * (firstVisibleItemView != null ? firstVisibleItemView.getHeight() : 0) + offset;
+
+                if(canUpdateScrollPosition){
+                    executor.execute(() -> {
+                        db.historyDao().updateScrollPosition(chapterId, scrollPosition);
+                    });
+                }
+
             }
         });
     }
@@ -462,5 +469,9 @@ public class ChapterPage extends AppCompatActivity {
 
     private void setCurrentChapterTitle(String title) {
         this.currentChapterTitle = title;
+    }
+
+    public interface OnAllPagesLoadedListener {
+        void onAllPagesLoaded();
     }
 }

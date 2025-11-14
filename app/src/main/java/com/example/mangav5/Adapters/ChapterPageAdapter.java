@@ -30,6 +30,8 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     // ✅ Replace with your loading + error image URLs
     private static final String LOADING_GIF = "https://i.imgur.com/llF5iyg.gif"; // working loading animation
     private static final String ERROR_IMAGE = "https://i.imgur.com/qkPM0Ez.png"; // “No image” placeholder
+
+
     public ChapterPageAdapter(List<String> pages, Context context, String chapterNumber) {
         this.pages = pages;
         this.context = context;

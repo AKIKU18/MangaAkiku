@@ -22,28 +22,23 @@
             android:exported="false" />
         <activity
             android:name=".MainActivitys.BookmarksPage"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".MainActivitys.MangaPage"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".MainActivitys.ChapterPage"
-            android:exported="true" />
+            android:exported="false" />
+        <!-- 👇 YOUR LAUNCHER ACTIVITY (HomePage) -->
         <activity
-            android:name=".ServicesAsuraScans.AsuraScansChapterPagesService"
-            android:exported="true"/>
+            android:name=".MainActivitys.HomePage"
+            android:exported="true">
 
-            <activity
-                android:name=".MainActivitys.HomePage"
-                android:exported="true" >
-
-
-            <!-- 👇 THIS MUST BE INSIDE the <activity> tag -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
     </application>
 
