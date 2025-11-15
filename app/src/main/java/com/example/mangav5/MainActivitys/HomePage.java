@@ -315,6 +315,7 @@ public class HomePage extends AppCompatActivity {
                     searchResultAdapter.notifyDataSetChanged();
                     runOnUiThread(() ->{
                         loadingText.setVisibility(View.GONE);
+                        loadingText.setText("Loading...");
                     });
                     if (searchResultView != null)
                         searchResultView.setVisibility(View.GONE);
