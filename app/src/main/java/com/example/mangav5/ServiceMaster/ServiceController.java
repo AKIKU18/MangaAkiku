@@ -7,6 +7,9 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ServiceDemonicScans.DemonicScansChaptersService;
+import com.example.mangav5.ServiceDemonicScans.DemonicScansFeedService;
+import com.example.mangav5.ServiceDemonicScans.DemonicScansSearchService;
 import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusChaptersService;
 import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusFeedService;
 import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusSearchService;
@@ -23,7 +26,6 @@ import com.example.mangav5.ServicesMangaDex.MangaDexSearchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServiceController {
@@ -141,6 +143,20 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "DemonicScans":
+                DemonicScansFeedService.getMangaFeedDemonicScans(offsetOrPage, new DemonicScansFeedService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> mangas) {
+                        callback.onSuccess(mangas);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchMangaListController:DemonicScans] Error fetching manga list: " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[fetchMangaListController] Unknown service feed: " + serviceFeed);
@@ -214,6 +230,20 @@ public class ServiceController {
                     }
                 });
                 break;
+                case "DemonicScans":
+                    DemonicScansFeedService.getMangaDetailsDemonicScans(mangaUrlOrId, new DemonicScansFeedService.MangaCallback() {
+                        @Override
+                        public void onSuccess(MangaItemModel manga) {
+                            callback.onSuccess(manga);
+                        }
+
+                        @Override
+                        public void onError(String errorMessage) {
+                            Log.e(TAG, "[fetchMangaDetails:DemonicScans] Error fetching manga URL " + mangaUrlOrId + ": " + errorMessage);
+                            callback.onError(errorMessage);
+                        }
+                    });
+                    break;
 
             default:
                 Log.e(TAG, "[fetchMangaDetails] Unknown service feed: " + serviceFeed);
@@ -287,6 +317,21 @@ public class ServiceController {
                         callback.onError(errorMessage);
                     }
                 });
+
+            case "DemonicScans":
+                DemonicScansFeedService.getMangaDetailsDemonicScans(mangaUrl, new DemonicScansFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga.getDescription());
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[mangaGetDescription:DemonicScans] Error fetching description for manga URL " + mangaUrl + ": " + errorMessage);
+                        Log.e(TAG,"[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
                 break;
 
             default:
@@ -306,6 +351,8 @@ public class ServiceController {
                 return mangaUrl;
             case "ManhuaPlus":
                 return mangaUrl;
+            case "DemonicScans":
+                return mangaUrl;
             default:
                 Log.e(TAG, "[getMangaIdOrMangaUrl] Unknown source:getMangaIdOrUrl " + source);
                 return "";
@@ -322,6 +369,8 @@ public class ServiceController {
             case "Manhuaus":
                 return chapterUrl;
             case "ManhuaPlus":
+                return chapterUrl;
+            case "DemonicScans":
                 return chapterUrl;
             default:
                 Log.e(TAG, "[getChapterIdOrChapterUrl] Unknown source:getChapterIdOrUrl " + source);
@@ -397,6 +446,21 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "DemonicScans":
+                DemonicScansChaptersService.getChaptersDemonicScans(mangaUrlOrId, new DemonicScansChaptersService.ChapterListCallback() {
+                    @Override
+                    public void onSuccess(List<ChapterModel> chapters) {
+                        if ("asc".equalsIgnoreCase(descAsc)) Collections.reverse(chapters);
+                        callback.onSuccess(chapters);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchChapterListController:DemonicScans] Error fetching chapters for manga URL " + mangaUrlOrId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[fetchChapterListController] Unknown service feed:getChapters " + serviceFeed);
@@ -466,6 +530,20 @@ public class ServiceController {
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[getMangaItem:ManhuaPlus] Error for manga URL " + mangaUrlId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
+                case "DemonicScans":
+                    DemonicScansFeedService.getMangaDetailsDemonicScans(mangaUrlId, new DemonicScansFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[getMangaItem:DemonicScans] Error for manga URL " + mangaUrlId + ": " + errorMessage);
                         callback.onError(errorMessage);
                     }
                 });
@@ -545,6 +623,22 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "DemonicScans":
+                DemonicScansChaptersService.getChapterDemonicScans(chapterUrlId, new DemonicScansChaptersService.ChapterCallback() {
+                    @Override
+                    public void onSuccess(List<String> chapter) {
+
+                        callback.onSuccess(chapter);
+                    }
+
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[getChapterPages:DemonicScans] Error fetching pages for chapter " + chapterUrlId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[getChapterPages] Unknown source:getChapterPages " + source);
@@ -554,7 +648,7 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus");
+        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus","DemonicScans");
         List<MangaItemModel> allResults = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger completed = new AtomicInteger(0);
         int totalSources = sources.size();
@@ -664,7 +758,7 @@ public class ServiceController {
                 });
                 break;
             case "ManhuaPlus":
-                ManhuaPlusSearchService.search(query, new ManhuaPlusSearchService.SearchCallback() {
+                ManhuaPlusSearchService.search(query, new ManhuaPlusSearchService.MangaListCallBack() {
                     @Override
                     public void onSuccess(List<MangaItemModel> results) {
                         callback.onSuccess(results);
@@ -673,6 +767,19 @@ public class ServiceController {
                     @Override
                     public void onError(String error) {
                         Log.e(TAG, "[fetchSearchMangas:ManhuaPlus] Error searching query '" + query + "': " + error);
+                    }
+                });
+                break;
+            case "DemonicScans":
+                DemonicScansSearchService.search(query, new DemonicScansSearchService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "[fetchSearchMangas:DemonicScans] Error searching query '" + query + "': " + error);
                     }
                 });
                 break;

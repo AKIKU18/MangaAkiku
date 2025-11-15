@@ -41,9 +41,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
     private final List<BookmarkEntity> bookmarkList;
     private final Context context;
-    private List<MangaItemModel> mangaList;
     private BookmarkDao bookmarkDao;
-    private BookmarksAdapter bookmarkAdapter;
 
     public BookmarksAdapter(List<BookmarkEntity> bookmarkList, Context context) {
         this.bookmarkList = bookmarkList;
@@ -63,6 +61,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     @Override
     public void onBindViewHolder(@NonNull BookmarkMangaViewHolder holder, int position) {
         BookmarkEntity manga = bookmarkList.get(position);
+
         MangaItemModel mangaItemModel = new MangaItemModel();
         mangaItemModel.setMangaId(manga.getMangaId());
         mangaItemModel.setTitle(manga.getTitle());
@@ -70,8 +69,8 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         mangaItemModel.setDescription(manga.getDescription());
         mangaItemModel.setMangaUrl(manga.getMangaUrl());
         mangaItemModel.setSource(manga.getSource());
-        holder.mangaSource.setText(manga.getSource());
 
+        holder.mangaSource.setText(manga.getSource());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             holder.mangaBlurCard.setRenderEffect(
@@ -80,12 +79,10 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         }
 
         holder.title.setText(manga.getTitle());
-        // Load cover image using Picasso or Glide
-        // Load manga cover image with Glide
-        String coverUrl = manga.getCoverUrl();
-        if (coverUrl != null && !coverUrl.isEmpty()) {
+
+        if (manga.getCoverUrl() != null && !manga.getCoverUrl().isEmpty()) {
             Glide.with(context)
-                    .load(coverUrl)
+                    .load(manga.getCoverUrl())
                     .placeholder(android.R.drawable.ic_dialog_info)
                     .error(android.R.drawable.ic_dialog_alert)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -94,9 +91,11 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         } else {
             holder.cover.setImageResource(android.R.drawable.picture_frame);
         }
+
+        // FIXED — stable binding using tags
         GetLastChapterTitle(mangaItemModel, holder.lastChapter, holder.viewedChapter);
 
-        //Toggle bookmark star icon and delete or insert bookmark in database
+        // Bookmark toggle
         TooggleBookmark(holder, manga, bookmarkDao, position);
         StarToggle(holder.bookmarkStar);
 
@@ -111,10 +110,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         holder.viewedChapter.setOnClickListener(v -> {
             GetViewdChapter(mangaItemModel);
         });
-
-
     }
-
 
     private void GetViewdChapter(MangaItemModel mangaItem) {
         Intent intent = new Intent(context, ChapterPage.class);
@@ -143,97 +139,136 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         });
     }
 
-
     private void GetLastChapter(MangaItemModel mangaItem) {
-        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(mangaItem.getSource(),mangaItem.getMangaId(), mangaItem.getMangaUrl()); // create final copy
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(
+                mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
+        );
 
+        AppDatabase db = AppDatabase.getInstance(context);
 
-        ServiceController.fetchChapterListController(mangaItem.getSource(), mangaIdOrUrlFinal, 0, 1, "desc", new ServiceController.ChapterListCallback() {
-            @Override
-            public void onSuccess(List<ChapterModel> fetchedChapters) {
-                Intent intent = new Intent(context, ChapterPage.class);
-                intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
-                intent.putExtra("chapterTitle", fetchedChapters.get(0).getTitle());
-                intent.putExtra("mangaId", mangaItem.getMangaId());
-                intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
-                intent.putExtra("chapterUrl", fetchedChapters.get(0).getChapterUrl());
-                intent.putExtra("source", mangaItem.getSource());
-                context.startActivity(intent);
-            }
-
-            @Override
-            public void onError(String message) {
-                Toast.makeText(context, "Error: " + message, Toast.LENGTH_SHORT).show();
-            }
+        Executors.newSingleThreadExecutor().execute(() -> {
+            // Save manga in Room
+            db.mangaItemDao().insertManga(
+                    new com.example.mangav5.Entity.MangaItemEntity(
+                            mangaItem.getMangaId(),
+                            mangaItem.getTitle(),
+                            mangaItem.getCoverImageUrl(),
+                            mangaItem.getDescription(),
+                            mangaItem.getMangaUrl()
+                            , mangaItem.getLastChapter(),
+                            mangaItem.getSource()
+                    )
+            );
         });
-    }
 
-    private void GetLastChapterTitle(MangaItemModel mangaItem, TextView currentItemView, TextView viewedChapterView) {
-        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(mangaItem.getSource(),mangaItem.getMangaId(), mangaItem.getMangaUrl()); // create final copy
-
-
-        ServiceController.fetchChapterListController(mangaItem.getSource(), mangaIdOrUrlFinal, 0, 1, "desc",
+        ServiceController.fetchChapterListController(
+                mangaItem.getSource(),
+                mangaIdOrUrlFinal,
+                0,
+                1,
+                "desc",
                 new ServiceController.ChapterListCallback() {
                     @Override
+                    public void onSuccess(List<ChapterModel> fetchedChapters) {
+                        Intent intent = new Intent(context, ChapterPage.class);
+                        intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
+                        intent.putExtra("chapterTitle", fetchedChapters.get(0).getTitle());
+                        intent.putExtra("mangaId", mangaItem.getMangaId());
+                        intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
+                        intent.putExtra("chapterUrl", fetchedChapters.get(0).getChapterUrl());
+                        intent.putExtra("source", mangaItem.getSource());
+                        context.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Toast.makeText(context, "Error: " + message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    // 🔥 FIXED METHOD — uses tag-binding protection
+    private void GetLastChapterTitle(MangaItemModel mangaItem, TextView currentItemView, TextView viewedChapterView) {
+
+        // Tag views with mangaId — ESSENTIAL FIX
+        currentItemView.setTag(mangaItem.getMangaId());
+        viewedChapterView.setTag(mangaItem.getMangaId());
+
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(
+                mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
+        );
+
+        ServiceController.fetchChapterListController(
+                mangaItem.getSource(),
+                mangaIdOrUrlFinal,
+                0,
+                1,
+                "desc",
+                new ServiceController.ChapterListCallback() {
+
+                    @Override
                     public void onSuccess(List<ChapterModel> chapters) {
+
                         AppDatabase db = AppDatabase.getInstance(context);
 
                         Executors.newSingleThreadExecutor().execute(() -> {
+
                             HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
                             String viewedChapterTitle = (history != null && history.chapterTitle != null)
                                     ? history.chapterTitle : "-";
 
-                            if (history != null) {
-                                Log.e("History Chapter: ", history.chapterTitle);
-                            } else {
-                                Log.e("History Chapter: ", "null (no record found)" + mangaItem.getMangaId());
-                            }
-                            Log.e("History", "Viewed chapter title: " + viewedChapterTitle);
+                            // Update Viewed only if ViewHolder is still the same
+                            viewedChapterView.post(() -> {
+                                if (mangaItem.getMangaId().equals(viewedChapterView.getTag())) {
+                                    viewedChapterView.setText("Viewed: " + viewedChapterTitle);
+                                }
+                            });
 
-
-
-                            // Post viewed chapter safely
-                            viewedChapterView.post(() ->
-                                    viewedChapterView.setText("Viewed: " + viewedChapterTitle)
-                            );
-
-                            // If chapter list is empty or null, use viewed chapter as "current"
+                            // No chapters returned → fallback to viewed
                             if (chapters == null || chapters.isEmpty()) {
-                                currentItemView.post(() ->
-                                        currentItemView.setText("Current: " + viewedChapterTitle)
-                                );
+                                currentItemView.post(() -> {
+                                    if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
+                                        currentItemView.setText("Current: " + viewedChapterTitle);
+                                    }
+                                });
                             } else {
-                                // Normal case — use latest fetched chapter title
                                 ChapterModel latest = chapters.get(0);
-                                String latestTitle = (latest.getTitle() != null) ? latest.getTitle() : "-";
-                                currentItemView.post(() ->
-                                        currentItemView.setText("Current: " + latestTitle)
-                                );
+                                String latestTitle = latest.getTitle() != null ? latest.getTitle() : "-";
+
+                                currentItemView.post(() -> {
+                                    if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
+                                        currentItemView.setText("Current: " + latestTitle);
+                                    }
+                                });
                             }
                         });
                     }
 
                     @Override
                     public void onError(String message) {
-                        // Handle network or parsing errors
+
                         AppDatabase db = AppDatabase.getInstance(context);
+
                         Executors.newSingleThreadExecutor().execute(() -> {
                             HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
                             String viewedChapterTitle = (history != null && history.chapterTitle != null)
                                     ? history.chapterTitle : "-";
 
-                            // Use history as fallback if fetch failed
-                            currentItemView.post(() ->
-                                    currentItemView.setText("Current: " + viewedChapterTitle)
-                            );
-                            viewedChapterView.post(() ->
-                                    viewedChapterView.setText("Viewed: " + viewedChapterTitle)
-                            );
+                            currentItemView.post(() -> {
+                                if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
+                                    currentItemView.setText("Current: " + viewedChapterTitle);
+                                }
+                            });
+
+                            viewedChapterView.post(() -> {
+                                if (mangaItem.getMangaId().equals(viewedChapterView.getTag())) {
+                                    viewedChapterView.setText("Viewed: " + viewedChapterTitle);
+                                }
+                            });
                         });
                     }
                 });
     }
-
 
     public void GoToMangaItem(MangaItemModel manga) {
         Intent intent = new Intent(context, MangaPage.class);
@@ -243,26 +278,24 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         BookmarksPage.mangaPageLauncher.launch(intent);
     }
 
-
     private void TooggleBookmark(BookmarkMangaViewHolder holder, BookmarkEntity manga, BookmarkDao bookmarkDao, int position) {
         MangaItemModel mangaItemModel = new MangaItemModel();
         mangaItemModel.setMangaId(manga.getMangaId());
         mangaItemModel.setTitle(manga.getTitle());
         mangaItemModel.setCoverImageUrl(manga.getCoverUrl());
         mangaItemModel.setDescription(manga.getDescription());
+
         BookmarkService.OnClickToggleBookmark(holder.bookmarkStar, mangaItemModel, bookmarkDao);
+
         holder.bookmarkStar.setOnClickListener(v -> {
             new Thread(() -> {
-                bookmarkDao.delete(manga); // remove from DB
+                bookmarkDao.delete(manga);
 
-                // Update UI on main thread
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    int indexOfTheMangaToBeDeleted = bookmarkList.indexOf(manga);
-                    if (indexOfTheMangaToBeDeleted != -1) {
-                        bookmarkList.remove(indexOfTheMangaToBeDeleted); // remove from list
-                        notifyItemRemoved(indexOfTheMangaToBeDeleted);   // update UI
-                    } else {
-                        Log.w("BookmarksAdapter", "Item to remove was not found in the list (main kotlin.concurrent.thread). It might have been removed by another operation.");
+                    int index = bookmarkList.indexOf(manga);
+                    if (index != -1) {
+                        bookmarkList.remove(index);
+                        notifyItemRemoved(index);
                     }
                 });
             }).start();
@@ -270,9 +303,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     }
 
     private void StarToggle(ImageView holder) {
-        for (BookmarkEntity bookmark : bookmarkList) {
-            holder.setImageResource(R.drawable.ic_bookmark_filled);
-        }
+        holder.setImageResource(R.drawable.ic_bookmark_filled);
     }
 
     @Override
@@ -281,11 +312,9 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     }
 
     public static class BookmarkMangaViewHolder extends RecyclerView.ViewHolder {
-        ImageView cover;
-        ImageView bookmarkStar;
-        TextView title, lastChapter, viewedChapter,mangaSource;
+        ImageView cover, bookmarkStar;
+        TextView title, lastChapter, viewedChapter, mangaSource;
         CardView mangaBlurCard;
-
 
         public BookmarkMangaViewHolder(@NonNull View itemView) {
             super(itemView);

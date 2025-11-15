@@ -117,7 +117,12 @@ public class ManhuaPlusFeedService {
                 String title = titleEl != null ? titleEl.text() : "No title";
 
                 // Description
-                Element descEl = doc.selectFirst("#syn-target"); // Update selector if needed
+                Document docDescription = Jsoup.connect("https://manhuaplus.top/manga/"+mangaId)
+                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
+                        .timeout(TIMEOUT_MS)
+                        .get();
+
+                Element descEl = docDescription.selectFirst("#item-detail > div.detail-content > p"); // Update selector if needed
                 String desc = descEl != null ? descEl.text().trim() : "";
 
                 // Cover image

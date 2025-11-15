@@ -62,23 +62,27 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         MangaItemModel manga = mangaList.get(position);
         // Set title
         holder.title.setText(manga.getTitle() != null ? manga.getTitle() : "No title");
-        // Fetch description asynchronously
-        ServiceController.mangaGetDescription(manga.getSource(), manga.getMangaId(), manga.getMangaUrl(), new ServiceController.DescriptionCallback() {
-            @Override
-            public void onSuccess(String description) {
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    holder.description.setText(description != null ? description : "No description");
-                    holder.source.setText(manga.getSource());
-                });
-            }
 
-            @Override
-            public void onError(String errorMessage) {
-                new Handler(Looper.getMainLooper()).post(() -> {
+        // Description: only fetch if not cached
+        if (manga.getDescription() != null && !manga.getDescription().isEmpty()) {
+            holder.description.setText(manga.getDescription());
+        } else {
+            holder.description.setText("Loading...");
+            ServiceController.mangaGetDescription(manga.getSource(), manga.getMangaId(), manga.getMangaUrl(), new ServiceController.DescriptionCallback() {
+                @Override
+                public void onSuccess(String description) {
+                    manga.setDescription(description); // cache it
+                    holder.description.setText(description != null ? description : "No description");
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    manga.setDescription("Error loading"); // cache error
                     holder.description.setText("Error loading");
-                });
-            }
-        });
+                }
+            });
+        }
+
 
         // Load cover image safely
         String coverUrl = manga.getCoverImageUrl();
