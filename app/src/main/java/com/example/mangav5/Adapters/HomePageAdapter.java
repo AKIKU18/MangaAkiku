@@ -62,7 +62,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         MangaItemModel manga = mangaList.get(position);
         // Set title
         holder.title.setText(manga.getTitle() != null ? manga.getTitle() : "No title");
-
+        holder.source.setText(manga.getSource());
         // Description: only fetch if not cached
         if (manga.getDescription() != null && !manga.getDescription().isEmpty()) {
             holder.description.setText(manga.getDescription());

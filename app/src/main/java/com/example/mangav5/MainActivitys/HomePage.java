@@ -313,7 +313,9 @@ public class HomePage extends AppCompatActivity {
                 if (newText.trim().isEmpty()) {
                     searchMangaList.clear();
                     searchResultAdapter.notifyDataSetChanged();
-
+                    runOnUiThread(() ->{
+                        loadingText.setVisibility(View.GONE);
+                    });
                     if (searchResultView != null)
                         searchResultView.setVisibility(View.GONE);
 
@@ -339,7 +341,9 @@ public class HomePage extends AppCompatActivity {
         if (query == null || query.trim().isEmpty()) {
             searchMangaList.clear();
             searchResultAdapter.notifyDataSetChanged();
-
+            runOnUiThread(() ->{
+                loadingText.setVisibility(View.GONE);
+            });
             return;
         }
         runOnUiThread(() ->{
@@ -363,6 +367,9 @@ public class HomePage extends AppCompatActivity {
             public void onError(String message) {
                 runOnUiThread(() -> {
                     Toast.makeText(HomePage.this, "Search failed: " + message, Toast.LENGTH_SHORT).show();
+                    loadingText.setVisibility(View.VISIBLE);
+                    loadingText.setText("Nothing found...");
+
                 });
             }
         });
