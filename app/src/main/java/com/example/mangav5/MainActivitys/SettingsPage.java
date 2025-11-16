@@ -4,90 +4,83 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.app.AppCompatDelegate;
 
-import com.example.mangav5.Adapters.SettingsAdapter;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
+import com.example.mangav5.Entity.SettingsItemEntity;
 import com.example.mangav5.R;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
 public class SettingsPage extends AppCompatActivity {
-
-    private RecyclerView recyclerView;
-    private SettingsAdapter adapter;
-    private List<MangaItemEntity> mangaList = new ArrayList<>();
-    private Button button_home, button_clear_all;
-    private TextView text_total_size;
     AppDatabase db = AppDatabase.getInstance(this);
+    TextView text_total_size;
+    Button btn_home;
+    FrameLayout item_storage_usage;
+    FrameLayout item_clear_cache;
 
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_settings_page);
+        text_total_size = findViewById(R.id.text_storage_size);
+        btn_home = findViewById(R.id.button_home);
+        item_storage_usage = findViewById(R.id.item_storage_usage);
+        item_clear_cache = findViewById(R.id.item_clear_cache);
+        calculateTotalSize();
 
-        // Remove title bar
+        // Remove the default title bar.
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
-        setContentView(R.layout.activity_settings_page);
 
-        recyclerView = findViewById(R.id.recycler_settings_manga);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        text_total_size = findViewById(R.id.text_total_size);
-
-        adapter = new SettingsAdapter(mangaList, this, text_total_size);
-        recyclerView.setAdapter(adapter);
-
-        button_home = findViewById(R.id.button_home);
-        button_clear_all = findViewById(R.id.button_clear_all);
-
-        loadDataFromDB();
-        goToHomePage();
-        setupDeleteAllButton();
+        ThemeSpinner();
+        SetUpButtons();
     }
 
-    private void goToHomePage() {
-        button_home.setOnClickListener(v -> {
-            startActivity(new Intent(SettingsPage.this, HomePage.class));
-        });
+    private void SetUpButtons(){
+        btn_home.setOnClickListener(v -> startActivity(new Intent(SettingsPage.this, HomePage.class)));
+        item_storage_usage.setOnClickListener(v -> startActivity(new Intent(SettingsPage.this, StorateUsagePage.class)));
+        item_clear_cache.setOnClickListener(v ->
+                setupDeleteAllButton()
+        );
     }
 
     private void setupDeleteAllButton() {
-        button_clear_all.setOnClickListener(v -> Executors.newSingleThreadExecutor().execute(() -> {
-            db = AppDatabase.getInstance(SettingsPage.this);
-            db.mangaItemDao().deleteAllManga();
-            db.chapterDao().deleteChapters();
-            db.bookmarkDao().deleteAllBookmarks();
-            db.historyDao().deleteAllHistory();
-            mangaList.clear();
-            new Handler(Looper.getMainLooper()).post(() -> {
-                text_total_size.setText("0.000 KB");
-                adapter.notifyDataSetChanged();
-            });
-        }));
-    }
+        item_clear_cache.setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(SettingsPage.this)
+                    .setTitle("Clear All Data")
+                    .setMessage("Are you sure you want to delete all manga, chapters, bookmarks, and history? This action cannot be undone.")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        // Delete in background
+                        Executors.newSingleThreadExecutor().execute(() -> {
+                            db = AppDatabase.getInstance(SettingsPage.this);
+                            db.mangaItemDao().deleteAllManga();
+                            db.chapterDao().deleteChapters();
+                            db.bookmarkDao().deleteAllBookmarks();
+                            db.historyDao().deleteAllHistory();
 
-    private void loadDataFromDB() {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            db = AppDatabase.getInstance(this);
-            List<MangaItemEntity> data = db.mangaItemDao().getAllManga();
-
-            new Handler(Looper.getMainLooper()).post(() -> {
-                mangaList.clear();
-                mangaList.addAll(data);
-                adapter.notifyDataSetChanged();
-                calculateTotalSize();
-            });
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                text_total_size.setText("0.00 KB");
+                            });
+                        });
+                    })
+                    .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
     }
 
@@ -96,8 +89,8 @@ public class SettingsPage extends AppCompatActivity {
         Executors.newSingleThreadExecutor().execute(() -> {
             db = AppDatabase.getInstance(this);
             double totalBytes = 0;
-
-            for (MangaItemEntity manga : mangaList) {
+            List<MangaItemEntity> data = db.mangaItemDao().getAllManga();
+            for (MangaItemEntity manga : data) {
                 // Manga info
                 totalBytes += manga.getCoverUrl() != null ? manga.getCoverUrl().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += manga.getTitle() != null ? manga.getTitle().getBytes(StandardCharsets.UTF_8).length : 0;
@@ -139,6 +132,75 @@ public class SettingsPage extends AppCompatActivity {
             new Handler(Looper.getMainLooper()).post(() -> text_total_size.setText(sizeText));
         });
     }
+
+    private void ThemeSpinner() {
+        Spinner spinnerTheme = findViewById(R.id.spinner_theme);
+        String[] themes = {"System Default", "Light", "Dark"};
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, themes);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTheme.setAdapter(adapter);
+
+        // Load saved theme from DB
+        Executors.newSingleThreadExecutor().execute(() -> {
+            SettingsItemEntity saved = db.settingsDao().getSetting("theme");
+            String currentTheme = (saved != null) ? saved.getValue() : "System Default";
+
+            int pos = 0;
+            for (int i = 0; i < themes.length; i++) {
+                if (themes[i].equals(currentTheme)) {
+                    pos = i;
+                    break;
+                }
+            }
+
+            int finalPos = pos;
+            new Handler(Looper.getMainLooper()).post(() -> {
+                spinnerTheme.setSelection(finalPos);
+
+                // Apply theme immediately on main thread
+                switch (themes[finalPos]) {
+                    case "Light":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        break;
+                    case "Dark":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        break;
+                    default:
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                }
+            });
+        });
+
+        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedTheme = themes[position];
+
+                // Apply theme immediately on main thread
+                switch (selectedTheme) {
+                    case "Light":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        break;
+                    case "Dark":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        break;
+                    default:
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                }
+
+                // Save to DB in background
+                Executors.newSingleThreadExecutor().execute(() ->
+                        db.settingsDao().insertSetting(new SettingsItemEntity("theme", selectedTheme))
+                );
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
 
     private String formatSizeFromBytes(double bytes) {
         double kb = bytes / 1024.0;

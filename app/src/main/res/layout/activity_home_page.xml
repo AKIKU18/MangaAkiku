@@ -59,13 +59,13 @@
 
         <!-- Settings Button -->
         <ImageButton
-            android:id="@+id/button_settings"
+            android:id="@+id/button_settings_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Settings"
             android:padding="8dp"
-            android:src="@drawable/ic_settings"
+            android:src="@drawable/ic_settings_button"
             android:textColor="?android:attr/textColorPrimary"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

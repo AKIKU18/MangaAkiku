@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:padding="16dp"
+    android:background="@drawable/bg_gradient">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/text_settings_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="STORAGE USAGE"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="?android:attr/textColorPrimary"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp"/>
+
+    <!-- Storage size -->
+    <TextView
+        android:id="@+id/text_total_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0.00 MB"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/text_settings_title"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="12dp"/>
+
+    <!-- Clear All Button -->
+    <FrameLayout
+        android:id="@+id/button_clear_all_container"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        app:layout_constraintTop_toBottomOf="@id/text_settings_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="28dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <View
+                android:id="@+id/clearAllBlurBackground"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/glass_bg" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <Button
+            android:id="@+id/button_clear_all"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Clear All"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
+            android:background="@android:color/transparent"
+            android:gravity="center"/>
+    </FrameLayout>
+
+    <!-- RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_settings_manga"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/button_clear_all_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/button_home_container"/>
+
+    <!-- Home Button -->
+    <FrameLayout
+        android:id="@+id/button_home_container"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="28dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <View
+                android:id="@+id/homeBlurBackground"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/glass_bg" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <Button
+            android:id="@+id/button_home"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Home"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
+            android:background="@android:color/transparent"
+            android:gravity="center"/>
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

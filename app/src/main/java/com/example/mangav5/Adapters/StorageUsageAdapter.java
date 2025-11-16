@@ -24,13 +24,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.SettingsViewHolder> {
+public class StorageUsageAdapter extends RecyclerView.Adapter<StorageUsageAdapter.SettingsViewHolder> {
 
     private final List<MangaItemEntity> mangaList;
     private final Context context;
     private final TextView textTotalSize;
 
-    public SettingsAdapter(List<MangaItemEntity> mangaList, Context context, TextView textTotalSize) {
+    public StorageUsageAdapter(List<MangaItemEntity> mangaList, Context context, TextView textTotalSize) {
         this.mangaList = mangaList;
         this.context = context;
         this.textTotalSize = textTotalSize;
@@ -39,7 +39,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.Settin
     @NonNull
     @Override
     public SettingsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_settings_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_storage_usage_item, parent, false);
         return new SettingsViewHolder(view);
     }
 

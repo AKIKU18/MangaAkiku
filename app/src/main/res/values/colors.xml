@@ -8,6 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="colorOverlay">#FF888888</color>
+    <color name="red">#FF0000</color>
     <color name="hamburger_color_light">#000000</color> <!-- black for light theme -->
     <color name="hamburger_color_dark">#FFFFFF</color>  <!-- white for dark theme -->
     <color name="iconColor">?attr/colorOnBackground</color>

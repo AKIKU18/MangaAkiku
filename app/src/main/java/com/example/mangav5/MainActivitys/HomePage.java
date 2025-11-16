@@ -26,21 +26,15 @@ import android.widget.Toast;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Models.ChapterModel;
+import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.ServiceDemonicScans.DemonicScansChaptersService;
-import com.example.mangav5.ServiceDemonicScans.DemonicScansFeedService;
-import com.example.mangav5.ServiceDemonicScans.DemonicScansSearchService;
-import com.example.mangav5.ServiceManhuaFast.ManhuaFastChaptersService;
-import com.example.mangav5.ServiceManhuaFast.ManhuaFastFeedService;
-import com.example.mangav5.ServiceManhuaFast.ManhuaFastSearchService;
-import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
 import com.example.mangav5.ServiceMaster.ServiceController;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 /**
  * The main screen of the application. It displays a feed of manga,
@@ -123,7 +117,7 @@ public class HomePage extends AppCompatActivity {
         searchView = findViewById(R.id.search_bar);
         bookmarkPageButton = findViewById(R.id.button_bookmarks);
         historyPageButton = findViewById(R.id.button_history);
-        settingsPageButton = findViewById(R.id.button_settings);
+        settingsPageButton = findViewById(R.id.button_settings_button);
         recycler_bg_blur = findViewById(R.id.recycler_bg_blur);
         button_mangadex = findViewById(R.id.source_mangadex);
         button_asurascans = findViewById(R.id.source_asurascans);

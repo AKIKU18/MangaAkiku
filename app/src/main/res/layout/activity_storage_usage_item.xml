@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:text="12.5 MB"
             android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"/>
+            android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
 
     <!-- Delete button -->
