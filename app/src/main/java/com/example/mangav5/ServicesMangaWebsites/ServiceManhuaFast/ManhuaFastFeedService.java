@@ -1,11 +1,11 @@
-package com.example.mangav5.ServiceManhuaFast;
+package com.example.mangav5.ServicesMangaWebsites.ServiceManhuaFast;
 
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
-import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

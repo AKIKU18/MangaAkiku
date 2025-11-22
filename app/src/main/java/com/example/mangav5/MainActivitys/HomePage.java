@@ -28,10 +28,10 @@ import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.ServiceManhuaFast.ManhuaFastFeedService;
-import com.example.mangav5.ServiceManhuaFast.ManhuaFastSearchService;
-import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
 import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,6 +109,17 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
+        FlameComicsFeedService.getMangaDetailsFlameComics("https://flamecomics.xyz/series/140", new FlameComicsFeedService.MangaCallback() {
+            @Override
+            public void onSuccess(MangaItemModel manga) {
+
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+
+            }
+        });
     }
 
     /**

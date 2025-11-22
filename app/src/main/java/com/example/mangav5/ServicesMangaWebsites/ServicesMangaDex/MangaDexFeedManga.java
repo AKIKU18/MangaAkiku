@@ -1,4 +1,4 @@
-package com.example.mangav5.ServicesMangaDex;
+package com.example.mangav5.ServicesMangaWebsites.ServicesMangaDex;
 
 import com.example.mangav5.Dao.MangaItemDao;
 import com.example.mangav5.Models.ChapterModel;

@@ -1,4 +1,4 @@
-package com.example.mangav5.ServicesAsuraScans;
+package com.example.mangav5.ServicesMangaWebsites.ServicesAsuraScans;
 
 import android.os.Handler;
 import android.os.Looper;

@@ -1,11 +1,9 @@
-package com.example.mangav5.ServiceDemonicScans;
+package com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
-import com.example.mangav5.ServiceManhuaPlus.ManhuaPlusChaptersService;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

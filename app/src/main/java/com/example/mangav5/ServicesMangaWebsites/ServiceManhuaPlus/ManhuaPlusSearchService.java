@@ -1,4 +1,4 @@
-package com.example.mangav5.ServiceManhuaPlus;
+package com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus;
 
 import android.os.Handler;
 import android.os.Looper;

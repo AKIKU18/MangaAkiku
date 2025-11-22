@@ -1,15 +1,13 @@
-package com.example.mangav5.ServiceManhuaFast;
+package com.example.mangav5.ServicesMangaWebsites.ServiceManhuaFast;
 
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.example.mangav5.Models.ChapterModel;
-import com.example.mangav5.ServiceManhuas.ManhuausChaptersService;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
