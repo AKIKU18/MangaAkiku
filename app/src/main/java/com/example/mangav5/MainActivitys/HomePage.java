@@ -26,15 +26,16 @@ import android.widget.Toast;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceManhuaFast.ManhuaFastFeedService;
+import com.example.mangav5.ServiceManhuaFast.ManhuaFastSearchService;
+import com.example.mangav5.ServiceManhuas.ManhuausFeedService;
 import com.example.mangav5.ServiceMaster.ServiceController;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 /**
  * The main screen of the application. It displays a feed of manga,
@@ -58,6 +59,7 @@ public class HomePage extends AppCompatActivity {
     private Button button_manhuaus;          // Button in the drawer to select Manhuaus as the source.
     private Button button_manhuaPlus; // Button in the drawer to select ManhuaPlus as the source.
     private Button button_demonicScans; // Button in the drawer to select DemonicScans as the source.
+    private Button button_manhuaFast;   // Button in the drawer to select ManhuaFast as the source.
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private TextView loadingText;             // Text view for displaying loading state.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
@@ -70,6 +72,7 @@ public class HomePage extends AppCompatActivity {
     private int asuraScansOffset = 0;             // Current page number for AsuraScans pagination.
     private int manhuaPlusOffset = 0;              // Current page number for ManhuaPlus pagination.
     private int demonicScansOffset = 0;            // Current page number for DemonicScans pagination.
+    private int manhuaFastOffset = 0;              // Current page number for ManhuaFast pagination.
     // Activity Result Launchers
     private ActivityResultLauncher<Intent> bookmarkLauncher; // Handles results from the Bookmarks page.
     private ActivityResultLauncher<Intent> mangaPageLauncher;  // Handles results from the MangaPage.
@@ -124,7 +127,9 @@ public class HomePage extends AppCompatActivity {
         button_manhuaus = findViewById(R.id.source_manhuaus);
         button_manhuaPlus = findViewById(R.id.source_manhuaPlus);
         button_demonicScans = findViewById(R.id.source_demonicScans);
+        button_manhuaFast = findViewById(R.id.source_manhuaFast);
         loadingText = findViewById(R.id.loading_text);
+
     }
 
     /**
@@ -157,7 +162,8 @@ public class HomePage extends AppCompatActivity {
                 button_asurascans, "AsuraScans",
                 button_manhuaus, "Manhuaus",
                 button_manhuaPlus, "ManhuaPlus",
-                button_demonicScans,"DemonicScans"
+                button_demonicScans,"DemonicScans",
+                button_manhuaFast,"ManhuaFast"
         );
 
         // Set up all listeners in one loop
@@ -185,6 +191,8 @@ public class HomePage extends AppCompatActivity {
         asuraScansOffset = 1;
         manhuaPlusOffset = 1;
         demonicScansOffset = 1;
+        manhuaFastOffset = 1;
+
         homeListAdapter.notifyDataSetChanged();
         mangaListView.scrollToPosition(0);
 
@@ -203,7 +211,8 @@ public class HomePage extends AppCompatActivity {
                 "MangaDex", R.id.drawer_mangadex_glow,
                 "Manhuaus", R.id.drawer_manhuaus_glow,
                 "ManhuaPlus", R.id.drawer_manhuaPlus_glow,
-                "DemonicScans", R.id.drawer_demonicScans_glow
+                "DemonicScans", R.id.drawer_demonicScans_glow,
+                "ManhuaFast", R.id.drawer_manhuaFast_glow
         );
 
         // Hide all glows first
@@ -396,6 +405,8 @@ public class HomePage extends AppCompatActivity {
                         loadFeed(manhuaPlusOffset, LIMIT);
                     }else if (serviceFeed.equals("DemonicScans")){
                         loadFeed(demonicScansOffset, LIMIT);
+                    }else if (serviceFeed.equals("ManhuaFast")){
+                        loadFeed(manhuaFastOffset, LIMIT);
                     }
                     // Add other sources here if they support pagination.
                 }
@@ -442,6 +453,8 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.manhuaPlusOffset += 1;
                     }else if (serviceFeed.equals("DemonicScans")){
                         HomePage.this.demonicScansOffset += 1;
+                    }else if (serviceFeed.equals("ManhuaFast")){
+                        HomePage.this.manhuaFastOffset += 1;
                     }
                 });
             }

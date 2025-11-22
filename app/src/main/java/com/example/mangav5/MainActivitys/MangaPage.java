@@ -158,7 +158,7 @@ public class MangaPage extends AppCompatActivity {
 
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
 
-        ServiceController.fetchChapterListController(source,mangaIdOrUrlFinal, 0, 1, descAsc, new ServiceController.ChapterListCallback() {
+        ServiceController.fetchChapterListController(this,source,mangaIdOrUrlFinal, 0, 1, descAsc, new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> fetchedChapters) {
                 if (fetchedChapters.isEmpty()) return;
@@ -243,7 +243,7 @@ public class MangaPage extends AppCompatActivity {
         String mangaUrl = getIntent().getStringExtra("mangaUrl");
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
 
-        ServiceController.fetchChapterListController(source,mangaIdOrUrlFinal, offset, LIMIT, "desc", new ServiceController.ChapterListCallback() {
+        ServiceController.fetchChapterListController(this,source,mangaIdOrUrlFinal, offset, LIMIT, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
                 if (chapters.isEmpty()) return;

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -17,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.Entity.SettingsItemEntity;
@@ -54,7 +52,7 @@ public class SettingsPage extends AppCompatActivity {
 
     private void SetUpButtons(){
         btn_home.setOnClickListener(v -> startActivity(new Intent(SettingsPage.this, HomePage.class)));
-        item_storage_usage.setOnClickListener(v -> startActivity(new Intent(SettingsPage.this, StorateUsagePage.class)));
+        item_storage_usage.setOnClickListener(v -> startActivity(new Intent(SettingsPage.this, StorageUsagePage.class)));
         item_clear_cache.setOnClickListener(v ->
                 setupDeleteAllButton()
         );
@@ -162,13 +160,19 @@ public class SettingsPage extends AppCompatActivity {
                 // Apply theme immediately on main thread
                 switch (themes[finalPos]) {
                     case "Light":
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        runOnUiThread(() -> {
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        });
                         break;
                     case "Dark":
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        runOnUiThread(() -> {
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        });
                         break;
                     default:
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                        runOnUiThread(() -> {
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                        });
                 }
             });
         });

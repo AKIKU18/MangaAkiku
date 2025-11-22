@@ -71,52 +71,53 @@ public class ManhuaFastChaptersService {
 
     public static void getChaptersManhuaFast(Context context, String ajaxUrl, ChapterListCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(() -> {
 
         WebView webView = new WebView(context);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
+            // Add JS interface
+            webView.addJavascriptInterface(new Object() {
+                @JavascriptInterface
+                public void processHTML(String html) {
+                    try {
+                        List<ChapterModel> chapters = new ArrayList<>();
+                        Document doc = Jsoup.parse(html);
+                        Elements chapterLinks = doc.select("li.wp-manga-chapter > a");
 
-        // Add JS interface
-        webView.addJavascriptInterface(new Object() {
-            @JavascriptInterface
-            public void processHTML(String html) {
-                try {
-                    List<ChapterModel> chapters = new ArrayList<>();
-                    Document doc = Jsoup.parse(html);
-                    Elements chapterLinks = doc.select("li.wp-manga-chapter > a");
+                        for (Element link : chapterLinks) {
+                            String chapterTitle = link.text().trim();
+                            String[] parts = chapterTitle.split(" ");
+                            String chapterNumber = parts.length > 1 ? parts[1] : "0"; // safe fallback
+                            String chapterId = generateChapterId(ajaxUrl, chapterTitle);
+                            String chapterUrl = link.attr("href");
+                            String source = "ManhuaFast";
 
-                    for (Element link : chapterLinks) {
-                        String chapterTitle = link.text().trim();
-                        String[] parts = chapterTitle.split(" ");
-                        String chapterNumber = parts.length > 1 ? parts[1] : "0"; // safe fallback
-                        String chapterId = generateChapterId(ajaxUrl, chapterTitle);
-                        String chapterUrl = link.attr("href");
-                        String source = "ManhuaFast";
+                            ChapterModel chapter = new ChapterModel(chapterId, chapterTitle, chapterNumber, chapterUrl, source);
+                            chapters.add(chapter);
+                        }
 
-                        ChapterModel chapter = new ChapterModel(chapterId, chapterTitle, chapterNumber, chapterUrl, source);
-                        chapters.add(chapter);
+                        mainHandler.post(() -> callback.onSuccess(chapters));
+
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onError(e.getMessage()));
                     }
-
-                    mainHandler.post(() -> callback.onSuccess(chapters));
-
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onError(e.getMessage()));
                 }
-            }
-        }, "HtmlHandler");
+            }, "HtmlHandler");
 
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                // Inject JS to get HTML content
-                webView.evaluateJavascript(
-                        "(function() { HtmlHandler.processHTML(document.documentElement.outerHTML); })();",
-                        null
-                );
-            }
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    // Inject JS to get HTML content
+                    webView.evaluateJavascript(
+                            "(function() { HtmlHandler.processHTML(document.documentElement.outerHTML); })();",
+                            null
+                    );
+                }
+            });
+
+            webView.loadUrl(ajaxUrl);
         });
-
-        webView.loadUrl(ajaxUrl);
     }
 
     public interface ChapterListCallback {

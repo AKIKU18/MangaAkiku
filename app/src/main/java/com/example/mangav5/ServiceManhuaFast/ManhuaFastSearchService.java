@@ -16,13 +16,14 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
 public class ManhuaFastSearchService {
     private static final String TAG = "ManhuaFast Search";
 
-    public static void search(String query, ManhuaFastSearchService.SearchCallback callback) {
+    public static void search(String query, MangaListCallBack callback) {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
@@ -43,7 +44,7 @@ public class ManhuaFastSearchService {
                         Element titleA = item.selectFirst(".post-title a");
                         String title = titleA != null ? titleA.text().trim() : "";
                         String url = titleA != null ? titleA.attr("href").trim() : "";
-
+                        String mangaId = generateUuidHex(url);
                         Element img = item.selectFirst(".tab-thumb img");
                         String cover = "";
                         if (img != null) {
@@ -58,16 +59,14 @@ public class ManhuaFastSearchService {
                         String lastChapter = chapterA != null ? chapterA.text().trim() : "";
 
                         MangaItemModel m = new MangaItemModel();
-                        m.setMangaId(""); // will fill later
+                        m.setMangaId(mangaId);
                         m.setTitle(title);
                         m.setMangaUrl(url);
                         m.setCoverImageUrl(cover);
                         m.setLastChapter(lastChapter);
                         m.setDescription("");
                         m.setSource("ManhuaFast");
-
                         tempResults.add(m);
-
                     } catch (Exception ex) {
                         Log.e(TAG, "Failed parsing search item: " + ex.getMessage(), ex);
                     }
@@ -114,7 +113,35 @@ public class ManhuaFastSearchService {
         });
     }
 
-    public interface SearchCallback {
+    public static String extractSlug(String url) {
+        String[] parts = url.replaceAll("/+$", "").split("/");
+        return parts[parts.length - 1];
+    }
+
+    public static String normalizeSlug(String slug) {
+        return slug.toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-|-$)", "");
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+
+    public static String generateUuidHex(String url) {
+        String slug = normalizeSlug(extractSlug(url));
+        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
+        long msb = uuid.getMostSignificantBits();
+        long lsb = uuid.getLeastSignificantBits();
+        return Long.toHexString(msb) + Long.toHexString(lsb);
+    }
+
+    public interface MangaListCallBack {
         void onSuccess(List<MangaItemModel> results);
         void onError(String error);
     }

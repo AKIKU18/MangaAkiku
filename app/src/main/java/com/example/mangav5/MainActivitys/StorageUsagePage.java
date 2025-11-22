@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class StorateUsagePage extends AppCompatActivity {
+public class StorageUsagePage extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private StorageUsageAdapter adapter;
@@ -58,13 +58,13 @@ public class StorateUsagePage extends AppCompatActivity {
 
     private void goToHomePage() {
         button_home.setOnClickListener(v -> {
-            startActivity(new Intent(StorateUsagePage.this, HomePage.class));
+            startActivity(new Intent(StorageUsagePage.this, HomePage.class));
         });
     }
 
     private void setupDeleteAllButton() {
         button_clear_all.setOnClickListener(v -> Executors.newSingleThreadExecutor().execute(() -> {
-            db = AppDatabase.getInstance(StorateUsagePage.this);
+            db = AppDatabase.getInstance(StorageUsagePage.this);
             db.mangaItemDao().deleteAllManga();
             db.chapterDao().deleteChapters();
             db.bookmarkDao().deleteAllBookmarks();

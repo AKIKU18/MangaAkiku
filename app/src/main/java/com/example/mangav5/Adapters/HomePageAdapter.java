@@ -116,36 +116,43 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
 
 
     private void SwitchLastChapterFeed(MangaItemModel manga, MangaViewHolder holder) {
-        // Set a placeholder while loading
-        holder.lastChapter.setText("Loading...");
-        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(), manga.getMangaId(), manga.getMangaUrl()); // create final copy
-        // Fetch last chapter dynamically from the correct source
-        ServiceController.fetchChapterListController(
-                manga.getSource(),
-                mangaIdOrUrlFinal,
-                0,
-                1,
-                "desc",
-                new ServiceController.ChapterListCallback() {
-                    @Override
-                    public void onSuccess(List<ChapterModel> chapters) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            if (chapters != null && !chapters.isEmpty()) {
-                                holder.lastChapter.setText(chapters.get(0).getTitle());
-                            } else {
-                                holder.lastChapter.setText("No chapters");
-                            }
-                        });
-                    }
 
-                    @Override
-                    public void onError(String message) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            holder.lastChapter.setText("Error loading");
-                        });
+        // Set a placeholder while loading
+        holder.lastChapter.setText(manga.getLastChapter() != null ? manga.getLastChapter() : "Loading...");
+
+        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(), manga.getMangaId(), manga.getMangaUrl()); // create final copy
+
+        if (manga.getLastChapter() != null && !manga.getLastChapter().isEmpty()) {
+            holder.lastChapter.setText(manga.getLastChapter());
+        } else {
+            // Fetch last chapter dynamically from the correct source
+            ServiceController.fetchChapterListController(context,
+                    manga.getSource(),
+                    mangaIdOrUrlFinal,
+                    0,
+                    1,
+                    "desc",
+                    new ServiceController.ChapterListCallback() {
+                        @Override
+                        public void onSuccess(List<ChapterModel> chapters) {
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                if (chapters != null && !chapters.isEmpty()) {
+                                    holder.lastChapter.setText(chapters.get(0).getTitle());
+                                } else {
+                                    holder.lastChapter.setText("No chapters");
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                holder.lastChapter.setText("Error loading");
+                            });
+                        }
                     }
-                }
-        );
+            );
+        }
     }
 
 
@@ -168,7 +175,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         });
 
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(manga.getSource(), manga.getMangaId(), manga.getMangaUrl()); // create final copy
-        ServiceController.fetchChapterListController(manga.getSource(), mangaIdOrUrlFinal, 0, 1, "desc", new ServiceController.ChapterListCallback() {
+        ServiceController.fetchChapterListController(context,manga.getSource(), mangaIdOrUrlFinal, 0, 1, "desc", new ServiceController.ChapterListCallback() {
             @Override
             public void onSuccess(List<ChapterModel> chapters) {
                 new Handler(Looper.getMainLooper()).post(() -> {

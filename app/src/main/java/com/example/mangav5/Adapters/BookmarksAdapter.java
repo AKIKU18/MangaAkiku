@@ -161,7 +161,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             );
         });
 
-        ServiceController.fetchChapterListController(
+        ServiceController.fetchChapterListController(context,
                 mangaItem.getSource(),
                 mangaIdOrUrlFinal,
                 0,
@@ -198,7 +198,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                 mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
         );
 
-        ServiceController.fetchChapterListController(
+        ServiceController.fetchChapterListController(context,
                 mangaItem.getSource(),
                 mangaIdOrUrlFinal,
                 0,

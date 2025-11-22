@@ -359,6 +359,29 @@
                 android:textSize="14sp" />
         </FrameLayout>
 
+        <!-- ManhuaFast Drawer Button -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="10dp">
+
+            <View
+                android:id="@+id/drawer_manhuaFast_glow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/glow_around_button"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/source_manhuaFast"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ManhuaFast"
+                android:textColor="?android:attr/textColorPrimary"
+                android:background="@drawable/bg_gradient"
+                android:textSize="14sp" />
+        </FrameLayout>
+
 
     </LinearLayout>
 

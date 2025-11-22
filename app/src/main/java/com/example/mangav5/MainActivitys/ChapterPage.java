@@ -162,6 +162,7 @@ public class ChapterPage extends AppCompatActivity {
             @Override
             public void onSuccess(List<String> pages) {
                 runOnUiThread(() -> {
+                    if (isDestroyed() || isFinishing()) return;
                     chapters.clear();
                     if (pages != null && !pages.isEmpty()) {
                         for (String url : pages) {
@@ -184,7 +185,6 @@ public class ChapterPage extends AppCompatActivity {
 
 
                     chapterPageAdapter.notifyDataSetChanged();
-
                     InsertChapterIntoHistory(chapterUrlOrId);
                 });
             }
@@ -192,6 +192,7 @@ public class ChapterPage extends AppCompatActivity {
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
+                    if (isDestroyed() || isFinishing()) return;
                     Toast.makeText(ChapterPage.this, "Failed to load pages", Toast.LENGTH_SHORT).show();
                     overlayRefreshContainer.setVisibility(View.VISIBLE); // show overlay on error
                     Log.e("ChapterPage", "Error fetching pages: " + message);
@@ -205,23 +206,25 @@ public class ChapterPage extends AppCompatActivity {
         ServiceController.fetchMangaDetails(source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
-                executor.execute(() -> {
-                    HistoryEntity historyItem = new HistoryEntity(
-                            manga.getMangaId(),
-                            getCurrentChapterId(),
-                            getCurrentChapterTitle(),
-                            manga.getCoverImageUrl(),
-                            manga.getDescription(),
-                            System.currentTimeMillis(),
-                            manga.getTitle(),
-                            manga.getMangaUrl(),
-                            chapterUrlOrId,
-                            manga.getSource(),
-                            recycleViewPage.getScrollY()
-                    );
-                    db.historyDao().insertHistoryItem(historyItem);
-                    Log.d("ChapterPage", "Added to history: " + getCurrentChapterTitle());
-                });
+                int scrollY = recycleViewPage.getScrollY();
+                if (!executor.isShutdown() && !executor.isTerminated()) {
+                    executor.execute(() -> {
+                        HistoryEntity historyItem = new HistoryEntity(
+                                manga.getMangaId(),
+                                getCurrentChapterId(),
+                                getCurrentChapterTitle(),
+                                manga.getCoverImageUrl(),
+                                manga.getDescription(),
+                                System.currentTimeMillis(),
+                                manga.getTitle(),
+                                manga.getMangaUrl(),
+                                chapterUrlOrId,
+                                manga.getSource(),
+                                scrollY
+                        );
+                        db.historyDao().insertHistoryItem(historyItem);
+                    });
+                }
             }
 
             @Override
@@ -252,34 +255,38 @@ public class ChapterPage extends AppCompatActivity {
     private void NextChapter() {
         btnNext.setOnClickListener(v -> {
             final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
-            executor.execute(() -> {
-                ChapterItemEntity next = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, currentChapterId);
-                runOnUiThread(() -> {
-                    if (next != null) {
-                        loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl());
-                        Toast.makeText(this, "Next: " + next.getTitle(), Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(this, "This is the latest chapter", Toast.LENGTH_SHORT).show();
-                    }
+            if (!executor.isShutdown() && !executor.isTerminated()) {
+                executor.execute(() -> {
+                    ChapterItemEntity next = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, currentChapterId);
+                    runOnUiThread(() -> {
+                        if (next != null) {
+                            loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl());
+                            Toast.makeText(this, "Next: " + next.getTitle(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "This is the latest chapter", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 });
-            });
+            }
         });
     }
 
     private void PrevChapter() {
         btnPrevious.setOnClickListener(v -> {
             final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
-            executor.execute(() -> {
-                ChapterItemEntity prev = db.chapterDao().getPrevChapter(mangaIdOrUrlFinal, currentChapterId);
-                runOnUiThread(() -> {
-                    if (prev != null) {
-                        loadChapter(prev.getChapterId(), prev.getTitle(), prev.getChapterUrl());
-                        Toast.makeText(this, "Previous: " + prev.getTitle(), Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(this, "This is the first chapter", Toast.LENGTH_SHORT).show();
-                    }
+            if (!executor.isShutdown() && !executor.isTerminated()) {
+                executor.execute(() -> {
+                    ChapterItemEntity prev = db.chapterDao().getPrevChapter(mangaIdOrUrlFinal, currentChapterId);
+                    runOnUiThread(() -> {
+                        if (prev != null) {
+                            loadChapter(prev.getChapterId(), prev.getTitle(), prev.getChapterUrl());
+                            Toast.makeText(this, "Previous: " + prev.getTitle(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "This is the first chapter", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 });
-            });
+            }
         });
     }
 
@@ -292,9 +299,10 @@ public class ChapterPage extends AppCompatActivity {
         setCurrentChapterUrl(chapterUrl);
         tvChapterNumber.setText(chapterTitle);
 
-        // Clear old pages
-        chapters.clear();
-        chapterPageAdapter.notifyDataSetChanged();
+        runOnUiThread(() -> {
+            chapters.clear();
+            chapterPageAdapter.notifyDataSetChanged();
+        });
 
         // Fetch new pages
         String chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, chapterId, chapterUrl);
@@ -302,15 +310,17 @@ public class ChapterPage extends AppCompatActivity {
     }
 
     private void SetMangaTitle(String mangaId) {
-        executor.execute(() -> {
-            MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
-            if (manga != null) {
-                runOnUiThread(() -> {
-                    tvMangaTitle.setText(manga.getTitle());
-                    tvMangaTitle.setOnClickListener(v -> GoToMangaItem(mangaId));
-                });
-            }
-        });
+        if (!executor.isShutdown() && !executor.isTerminated()) {
+            executor.execute(() -> {
+                MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
+                if (manga != null) {
+                    runOnUiThread(() -> {
+                        tvMangaTitle.setText(manga.getTitle());
+                        tvMangaTitle.setOnClickListener(v -> GoToMangaItem(mangaId));
+                    });
+                }
+            });
+        }
     }
 
     private void GoToMangaItem(String mangaId) {
@@ -329,27 +339,28 @@ public class ChapterPage extends AppCompatActivity {
         String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
         int LIMIT = 100;
 
-        ServiceController.fetchChapterListController(source, mangaIdOrUrlFinal, offset, LIMIT, "desc",
+        ServiceController.fetchChapterListController(this,source, mangaIdOrUrlFinal, offset, LIMIT, "desc",
                 new ServiceController.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapterList) {
                         if (chapterList.isEmpty()) return;
-
-                        executor.execute(() -> {
-                            List<ChapterItemEntity> entities = new ArrayList<>();
-                            for (ChapterModel c : chapterList) {
-                                entities.add(new ChapterItemEntity(
-                                        c.getChapterId(),
-                                        mangaIdOrUrlFinal,
-                                        c.getTitle(),
-                                        c.getNumber(),
-                                        c.getChapterUrl(),
-                                        c.getSource()
-                                ));
-                            }
-                            db.chapterDao().insertChapters(entities);
-                            Log.d("ChapterPage", "Inserted " + entities.size() + " chapters");
-                        });
+                        if (!executor.isShutdown() && !executor.isTerminated()) {
+                            executor.execute(() -> {
+                                List<ChapterItemEntity> entities = new ArrayList<>();
+                                for (ChapterModel c : chapterList) {
+                                    entities.add(new ChapterItemEntity(
+                                            c.getChapterId(),
+                                            mangaIdOrUrlFinal,
+                                            c.getTitle(),
+                                            c.getNumber(),
+                                            c.getChapterUrl(),
+                                            c.getSource()
+                                    ));
+                                }
+                                db.chapterDao().insertChapters(entities);
+                                Log.d("ChapterPage", "Inserted " + entities.size() + " chapters");
+                            });
+                        }
 
                         if (chapterList.size() == LIMIT) updateLoadChapterList(offset + LIMIT);
                     }
@@ -373,7 +384,6 @@ public class ChapterPage extends AppCompatActivity {
             }
         });
     }
-
 
 
     private void setupRecyclerScroll() {
@@ -439,9 +449,36 @@ public class ChapterPage extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        executor.shutdown();
+        try {
+            if (executor != null && !executor.isShutdown()) {
+                executor.shutdownNow();
+            }
+        } catch (Exception ignored) {}
+
+        super.onDestroy(); // TREBUIE să fie ultimul și să fie apelat întotdeauna
     }
+
+    /**
+     * Executes a task on the executor service safely.
+     *
+     * This method ensures that the Runnable task is only submitted if:
+     * 1. The activity is not destroyed (`!isDestroyed()`) – prevents tasks from running after the activity is gone.
+     * 2. The activity is not finishing (`!isFinishing()`) – avoids running tasks during activity teardown.
+     * 3. The executor is still running (`!executor.isShutdown()` and `!executor.isTerminated()`) – prevents
+     *    RejectedExecutionException that happens when tasks are submitted to a shutdown executor.
+     *
+     * Usage:
+     * safeExecute(() -> {
+     *     // your background task here
+     * });
+     */
+    private void safeExecute(Runnable task) {
+        if (!isDestroyed() && !isFinishing() && !executor.isShutdown() && !executor.isTerminated()) {
+            executor.execute(task);
+        }
+    }
+
+
 
     private void setCurrentChapterUrl(String url) {
         this.currentChapterUrl = url;
