@@ -1,9 +1,11 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,6 +22,7 @@ import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.Entity.SettingsItemEntity;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceMaster.GitHubUpdateManager;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -48,6 +51,7 @@ public class SettingsPage extends AppCompatActivity {
 
         ThemeSpinner();
         SetUpButtons();
+        UpateApp();
     }
 
     private void SetUpButtons(){
@@ -204,6 +208,39 @@ public class SettingsPage extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
+
+    private void UpateApp() {
+        Button checkUpdateButton = findViewById(R.id.button_check_update);
+        checkUpdateButton.setOnClickListener(v -> {
+            // Check install permission first
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (!getPackageManager().canRequestPackageInstalls()) {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                            .setData(Uri.parse("package:" + getPackageName()));
+                    startActivityForResult(intent, 1234);
+                    return;
+                }
+            }
+
+            // Permission granted or not required, check for update
+            GitHubUpdateManager updater = new GitHubUpdateManager(this, "AKIKU18", "MangaAkiku");
+            updater.checkForUpdate();
+        });
+    }
+
+
+    // Optional: handle result if user grants permission
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1234) {
+            // User returned from install permission settings
+            GitHubUpdateManager updater = new GitHubUpdateManager(this, "AKIKU18", "MangaAkiku");
+            updater.checkForUpdate();
+        }
+    }
+
+
 
 
     private String formatSizeFromBytes(double bytes) {

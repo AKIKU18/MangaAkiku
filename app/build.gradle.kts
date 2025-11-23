@@ -10,8 +10,8 @@ android {
         applicationId = "com.example.mangav5"
         minSdk = 35
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,5 +64,8 @@ dependencies {
     implementation ("androidx.cardview:cardview:1.0.0")
     implementation ("com.github.Dimezis:BlurView:version-3.1.0")
     implementation ("org.jsoup:jsoup:1.17.2")
+    implementation ("com.github.javiersantos:AppUpdater:2.7")
+
+
 
 }

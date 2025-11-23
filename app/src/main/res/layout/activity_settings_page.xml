@@ -185,6 +185,41 @@
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- CHECK FOR UPDATES BUTTON -->
+            <FrameLayout
+                android:id="@+id/item_check_update"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="28dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <View
+                        android:id="@+id/updateBlurBackground"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/glass_bg" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <Button
+                    android:id="@+id/button_check_update"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:gravity="center"
+                    android:text="Check for Updates"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="16sp"
+                    android:foreground="?attr/selectableItemBackground" />
+            </FrameLayout>
+
+
 
 
             <!-- ========== ABOUT ========== -->
