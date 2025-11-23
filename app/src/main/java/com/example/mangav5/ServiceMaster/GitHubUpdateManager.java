@@ -62,7 +62,7 @@ public class GitHubUpdateManager {
                 Log.d(TAG, "Latest version: " + latestVersion);
 
                 PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
-                String currentVersion = "v" + pInfo.versionName;
+                String currentVersion = pInfo.versionName;
                 Log.d(TAG, "Current version: " + currentVersion);
 
                 boolean updateAvailable = !currentVersion.equals(latestVersion);
