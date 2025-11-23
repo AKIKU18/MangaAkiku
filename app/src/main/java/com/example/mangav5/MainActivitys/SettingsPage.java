@@ -1,6 +1,8 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -226,6 +228,18 @@ public class SettingsPage extends AppCompatActivity {
             GitHubUpdateManager updater = new GitHubUpdateManager(this, "AKIKU18", "MangaAkiku");
             updater.checkForUpdate();
         });
+
+        TextView textAppVersion = findViewById(R.id.text_app_version);
+
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String version = pInfo.versionName; // e.g., "1.0.4"
+            textAppVersion.setText("Version " + version);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            textAppVersion.setText("Version unknown");
+        }
+
     }
 
 
