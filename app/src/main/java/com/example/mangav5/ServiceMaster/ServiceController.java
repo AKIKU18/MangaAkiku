@@ -10,6 +10,9 @@ import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansSearchService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsChaptersService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsSearchService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaFast.ManhuaFastChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaFast.ManhuaFastFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaFast.ManhuaFastSearchService;
@@ -161,7 +164,7 @@ public class ServiceController {
                 });
                 break;
             case "ManhuaFast":
-                ManhuaFastFeedService.getMangaFeedManhuaFast(offsetOrPage, new ManhuausFeedService.MangaListCallback() {
+                ManhuaFastFeedService.getMangaFeedManhuaFast(offsetOrPage, new ManhuaFastFeedService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> mangas) {
                         callback.onSuccess(mangas);
@@ -174,7 +177,20 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "FlameComics":
+                FlameComicsFeedService.getMangaFeedFlameComics(new FlameComicsFeedService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> mangas) {
+                        callback.onSuccess(mangas);
+                    }
 
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchMangaListController:FlameComics] Error fetching manga list: " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[fetchMangaListController] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed: FetchMangaList " + serviceFeed);
@@ -275,7 +291,19 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "FlameComics":
+                FlameComicsFeedService.getMangaDetailsFlameComics(mangaUrlOrId, new FlameComicsFeedService.MangaCallback() {
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
 
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[fetchMangaDetails:FlameComics] Error fetching manga URL " + mangaUrlOrId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[fetchMangaDetails] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed: fetchMangaDetail " + serviceFeed);
@@ -300,6 +328,8 @@ public class ServiceController {
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[mangaGetDescription:MangaDex] Error fetching description for manga ID " + mangaId + ": " + errorMessage);
+                        Log.e(TAG, "[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + errorMessage);
+
                         callback.onError(errorMessage);
                     }
                 });
@@ -315,6 +345,7 @@ public class ServiceController {
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[mangaGetDescription:AsuraScans] Error fetching description for manga URL " + mangaUrl + ": " + errorMessage);
+                        Log.e(TAG, "[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + errorMessage);
                         callback.onError(errorMessage);
                     }
                 });
@@ -330,6 +361,8 @@ public class ServiceController {
                     @Override
                     public void onError(String message) {
                         Log.e(TAG, "[mangaGetDescription:Manhuaus] Error fetching description for manga URL " + mangaUrl + ": " + message);
+                        Log.e(TAG, "[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + message);
+
                         callback.onError(message);
                     }
                 });
@@ -348,7 +381,7 @@ public class ServiceController {
                         callback.onError(errorMessage);
                     }
                 });
-
+                break;
             case "DemonicScans":
                 DemonicScansFeedService.getMangaDetailsDemonicScans(mangaUrl, new DemonicScansFeedService.MangaCallback() {
                     @Override
@@ -380,7 +413,21 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "FlameComics":
+                FlameComicsFeedService.getMangaDetailsFlameComics(mangaUrl, new FlameComicsFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga.getDescription());
+                    }
 
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[mangaGetDescription:FlameComics] Error fetching description for manga URL " + mangaUrl + ": " + errorMessage);
+                        Log.e(TAG, "[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[mangaGetDescription] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed:MangaGetDescription " + serviceFeed);
@@ -401,6 +448,8 @@ public class ServiceController {
             case "DemonicScans":
                 return mangaUrl;
             case "ManhuaFast":
+                return mangaUrl;
+            case "FlameComics":
                 return mangaUrl;
             default:
                 Log.e(TAG, "[getMangaIdOrMangaUrl] Unknown source:getMangaIdOrUrl " + source);
@@ -423,13 +472,15 @@ public class ServiceController {
                 return chapterUrl;
             case "ManhuaFast":
                 return chapterUrl;
+            case "FlameComics":
+                return chapterUrl;
             default:
                 Log.e(TAG, "[getChapterIdOrChapterUrl] Unknown source:getChapterIdOrUrl " + source);
                 return "";
         }
     }
 
-    public static void fetchChapterListController(Context context,String serviceFeed, String mangaUrlOrId, int offset, int limit, String descAsc, ChapterListCallback callback) {
+    public static void fetchChapterListController(Context context, String serviceFeed, String mangaUrlOrId, int offset, int limit, String descAsc, ChapterListCallback callback) {
         if (callback == null) {
             Log.e(TAG, "[fetchChapterListController] Callback is null for serviceFeed: " + serviceFeed);
             return;
@@ -523,6 +574,21 @@ public class ServiceController {
                     @Override
                     public void onError(String message) {
                         Log.e(TAG, "[fetchChapterListController:ManhuaFast] Error fetching chapters for manga URL " + mangaUrlOrId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
+            case "FlameComics":
+                FlameComicsChaptersService.getChaptersFlameComics(mangaUrlOrId, new FlameComicsChaptersService.ChapterListCallback() {
+                    @Override
+                    public void onSuccess(List<ChapterModel> chapters) {
+                        if ("asc".equalsIgnoreCase(descAsc)) Collections.reverse(chapters);
+                        callback.onSuccess(chapters);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchChapterListController:FlameComics] Error fetching chapters for manga URL " + mangaUrlOrId + ": " + message);
                         callback.onError(message);
                     }
                 });
@@ -623,6 +689,20 @@ public class ServiceController {
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[getMangaItem:ManhuaFast] Error for manga URL " + mangaUrlId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
+            case "FlameComics":
+                FlameComicsFeedService.getMangaDetailsFlameComics(mangaUrlId, new FlameComicsFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[getMangaItem:FlameComics] Error for manga URL " + mangaUrlId + ": " + errorMessage);
                         callback.onError(errorMessage);
                     }
                 });
@@ -732,6 +812,20 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "FlameComics":
+                FlameComicsChaptersService.getChapterFlameComics(chapterUrlId, new FlameComicsChaptersService.ChapterCallback() {
+                    @Override
+                    public void onSuccess(List<String> chapter) {
+                        callback.onSuccess(chapter);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[getChapterPages:FlameComics] Error fetching pages for chapter " + chapterUrlId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[getChapterPages] Unknown source:getChapterPages " + source);
@@ -741,7 +835,7 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast");
+        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics");
         List<MangaItemModel> allResults = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger completed = new AtomicInteger(0);
         int totalSources = sources.size();
@@ -886,6 +980,19 @@ public class ServiceController {
                     @Override
                     public void onError(String error) {
                         Log.e(TAG, "[fetchSearchMangas:ManhuaFast] Error searching query '" + query + "': " + error);
+                    }
+                });
+                break;
+            case "FlameComics":
+                FlameComicsSearchService.search(query, new FlameComicsSearchService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "[fetchSearchMangas:FlameComics] Error searching query '" + query + "': " + error);
                     }
                 });
                 break;

@@ -29,7 +29,7 @@ public class FlameComicsFeedService {
     /**
      * Fetch homepage feed from FlameComics
      */
-    public static void getMangaFeedFlameComics(ManhuaPlusFeedService.MangaListCallback callback) {
+    public static void getMangaFeedFlameComics(FlameComicsFeedService.MangaListCallback callback) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
         String websiteManga = "https://flamecomics.xyz/latest";

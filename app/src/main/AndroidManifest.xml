@@ -38,8 +38,8 @@
         <!-- 👇 YOUR LAUNCHER ACTIVITY (HomePage) -->
         <activity
             android:name=".MainActivitys.HomePage"
-            android:exported="true">
-
+            android:exported="true"
+            android:configChanges="uiMode">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

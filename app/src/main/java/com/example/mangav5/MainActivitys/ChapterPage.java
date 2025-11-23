@@ -167,7 +167,7 @@ public class ChapterPage extends AppCompatActivity {
                     if (pages != null && !pages.isEmpty()) {
                         for (String url : pages) {
                             if (url != null && !url.trim().isEmpty() &&
-                                    (url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".webp"))) {
+                                    (url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".webp")) || url.contains(".jpg?")) {
                                 chapters.add(url);
                             }
                         }

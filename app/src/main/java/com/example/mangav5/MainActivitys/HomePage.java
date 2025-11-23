@@ -1,10 +1,13 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
@@ -26,16 +29,22 @@ import android.widget.Toast;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Entity.SettingsItemEntity;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsSearchService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausSearchService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 /**
  * The main screen of the application. It displays a feed of manga,
@@ -60,6 +69,7 @@ public class HomePage extends AppCompatActivity {
     private Button button_manhuaPlus; // Button in the drawer to select ManhuaPlus as the source.
     private Button button_demonicScans; // Button in the drawer to select DemonicScans as the source.
     private Button button_manhuaFast;   // Button in the drawer to select ManhuaFast as the source.
+    private Button button_flameComics;  // Button in the drawer to select FlameComics as the source.
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private TextView loadingText;             // Text view for displaying loading state.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
@@ -81,6 +91,7 @@ public class HomePage extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        GetTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
@@ -109,17 +120,27 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
-        FlameComicsFeedService.getMangaDetailsFlameComics("https://flamecomics.xyz/series/140", new FlameComicsFeedService.MangaCallback() {
-            @Override
-            public void onSuccess(MangaItemModel manga) {
+    }
 
-            }
+    private void GetTheme(){
+        AppDatabase db = AppDatabase.getInstance(this);
+        Executors.newSingleThreadExecutor().execute(() ->
+                SetTheme(db.settingsDao().getSetting("theme").getValue())
+        );
+    }
 
-            @Override
-            public void onError(String errorMessage) {
-
-            }
-        });
+    private void SetTheme(String selectedTheme){
+        Log.e("Theme", selectedTheme);
+        switch (selectedTheme) {
+            case "Light":
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case "Dark":
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+            default:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        }
     }
 
     /**
@@ -139,6 +160,7 @@ public class HomePage extends AppCompatActivity {
         button_manhuaPlus = findViewById(R.id.source_manhuaPlus);
         button_demonicScans = findViewById(R.id.source_demonicScans);
         button_manhuaFast = findViewById(R.id.source_manhuaFast);
+        button_flameComics = findViewById(R.id.source_flameComics);
         loadingText = findViewById(R.id.loading_text);
 
     }
@@ -174,7 +196,8 @@ public class HomePage extends AppCompatActivity {
                 button_manhuaus, "Manhuaus",
                 button_manhuaPlus, "ManhuaPlus",
                 button_demonicScans,"DemonicScans",
-                button_manhuaFast,"ManhuaFast"
+                button_manhuaFast,"ManhuaFast",
+                button_flameComics,"FlameComics"
         );
 
         // Set up all listeners in one loop
@@ -223,7 +246,8 @@ public class HomePage extends AppCompatActivity {
                 "Manhuaus", R.id.drawer_manhuaus_glow,
                 "ManhuaPlus", R.id.drawer_manhuaPlus_glow,
                 "DemonicScans", R.id.drawer_demonicScans_glow,
-                "ManhuaFast", R.id.drawer_manhuaFast_glow
+                "ManhuaFast", R.id.drawer_manhuaFast_glow,
+                "FlameComics", R.id.drawer_flameComics_glow
         );
 
         // Hide all glows first

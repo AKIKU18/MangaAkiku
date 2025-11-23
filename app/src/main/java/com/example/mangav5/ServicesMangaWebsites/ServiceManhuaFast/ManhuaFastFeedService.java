@@ -27,7 +27,7 @@ public class ManhuaFastFeedService {
     /**
      * Fetch the homepage and parse visible items only (no AJAX).
      */
-    public static void getMangaFeedManhuaFast(int offsetPage,ManhuausFeedService.MangaListCallback callback) {
+    public static void getMangaFeedManhuaFast(int offsetPage,ManhuaFastFeedService.MangaListCallback callback) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
