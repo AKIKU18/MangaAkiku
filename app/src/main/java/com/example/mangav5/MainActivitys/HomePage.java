@@ -21,6 +21,7 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -55,10 +56,14 @@ public class HomePage extends AppCompatActivity {
 
     private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
     public static String serviceFeed = "AsuraScans"; // The current selected data source. Defaults to AsuraScans.
+    ImageButton buttonNotifications;
+    FrameLayout notificationDropdown;
+    RecyclerView recyclerNotifications;
     // UI Components
     private RecyclerView searchResultView; // RecyclerView for displaying search results.
     private RecyclerView mangaListView;      // RecyclerView for the main manga feed.
     private HomePageAdapter searchResultAdapter; // Adapter for the search results RecyclerView.
+    private HomePageAdapter notificationResultAdapter; // Adapter for the notifications RecyclerView.
     private HomePageAdapter homeListAdapter;     // Adapter for the main feed RecyclerView.
     private SearchView searchView;           // Input field for searching manga.
     private Button bookmarkPageButton;       // Button to navigate to the Bookmarks page.
@@ -122,14 +127,14 @@ public class HomePage extends AppCompatActivity {
         showInitialSourceGlow(); // Visually indicate the default source.
     }
 
-    private void GetTheme(){
+    private void GetTheme() {
         AppDatabase db = AppDatabase.getInstance(this);
         Executors.newSingleThreadExecutor().execute(() ->
                 SetTheme(db.settingsDao().getSetting("theme").getValue())
         );
     }
 
-    private void SetTheme(String selectedTheme){
+    private void SetTheme(String selectedTheme) {
         Log.e("Theme", selectedTheme);
         switch (selectedTheme) {
             case "Light":
@@ -162,7 +167,9 @@ public class HomePage extends AppCompatActivity {
         button_manhuaFast = findViewById(R.id.source_manhuaFast);
         button_flameComics = findViewById(R.id.source_flameComics);
         loadingText = findViewById(R.id.loading_text);
-
+        buttonNotifications = findViewById(R.id.button_notifications);
+        notificationDropdown = findViewById(R.id.notification_dropdown);
+        recyclerNotifications = findViewById(R.id.recycler_notifications);
     }
 
     /**
@@ -170,13 +177,21 @@ public class HomePage extends AppCompatActivity {
      */
     private void setupRecyclerViews() {
         searchResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
+        notificationResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
         homeListAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
 
         searchResultView.setAdapter(searchResultAdapter);
         mangaListView.setAdapter(homeListAdapter);
+        recyclerNotifications.setAdapter(notificationResultAdapter);
 
         searchResultView.setLayoutManager(new LinearLayoutManager(this));
         mangaListView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerNotifications.setLayoutManager(new LinearLayoutManager(this));
+
+
+        searchView.setQueryHint("Search...");
+        searchView.setIconifiedByDefault(false);
+        // Setup RecyclerView (Adapter + LayoutManager)
     }
 
     /**
@@ -195,9 +210,9 @@ public class HomePage extends AppCompatActivity {
                 button_asurascans, "AsuraScans",
                 button_manhuaus, "Manhuaus",
                 button_manhuaPlus, "ManhuaPlus",
-                button_demonicScans,"DemonicScans",
-                button_manhuaFast,"ManhuaFast",
-                button_flameComics,"FlameComics"
+                button_demonicScans, "DemonicScans",
+                button_manhuaFast, "ManhuaFast",
+                button_flameComics, "FlameComics"
         );
 
         // Set up all listeners in one loop
@@ -339,6 +354,7 @@ public class HomePage extends AppCompatActivity {
                     recycler_bg_blur.setVisibility(View.VISIBLE);
                     Animation slideDown = AnimationUtils.loadAnimation(HomePage.this, R.anim.slide_down);
                     searchResultView.startAnimation(slideDown);
+                    searchView.clearFocus();
                 }
                 searchMangaList.clear();   // Clear **once** here
                 searchResultAdapter.notifyDataSetChanged();
@@ -350,8 +366,9 @@ public class HomePage extends AppCompatActivity {
             public boolean onQueryTextChange(String newText) {
                 if (newText.trim().isEmpty()) {
                     searchMangaList.clear();
+                    searchView.setQueryHint("Search...");
                     searchResultAdapter.notifyDataSetChanged();
-                    runOnUiThread(() ->{
+                    runOnUiThread(() -> {
                         loadingText.setVisibility(View.GONE);
                         loadingText.setText("Loading...");
                     });
@@ -360,6 +377,8 @@ public class HomePage extends AppCompatActivity {
 
                     if (recycler_bg_blur != null)
                         recycler_bg_blur.setVisibility(View.GONE);
+                }else{
+                    searchView.setQueryHint("");
                 }
                 return true;
             }
@@ -380,12 +399,12 @@ public class HomePage extends AppCompatActivity {
         if (query == null || query.trim().isEmpty()) {
             searchMangaList.clear();
             searchResultAdapter.notifyDataSetChanged();
-            runOnUiThread(() ->{
+            runOnUiThread(() -> {
                 loadingText.setVisibility(View.GONE);
             });
             return;
         }
-        runOnUiThread(() ->{
+        runOnUiThread(() -> {
             loadingText.setVisibility(View.VISIBLE);
         });
         // Call the central service controller to perform the search.
@@ -438,9 +457,9 @@ public class HomePage extends AppCompatActivity {
                         loadFeed(asuraScansOffset, LIMIT);
                     } else if (serviceFeed.equals("ManhuaPlus")) {
                         loadFeed(manhuaPlusOffset, LIMIT);
-                    }else if (serviceFeed.equals("DemonicScans")){
+                    } else if (serviceFeed.equals("DemonicScans")) {
                         loadFeed(demonicScansOffset, LIMIT);
-                    }else if (serviceFeed.equals("ManhuaFast")){
+                    } else if (serviceFeed.equals("ManhuaFast")) {
                         loadFeed(manhuaFastOffset, LIMIT);
                     }
                     // Add other sources here if they support pagination.
@@ -486,9 +505,9 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.asuraScansOffset += 1;
                     } else if (serviceFeed.equals("ManhuaPlus")) {
                         HomePage.this.manhuaPlusOffset += 1;
-                    }else if (serviceFeed.equals("DemonicScans")){
+                    } else if (serviceFeed.equals("DemonicScans")) {
                         HomePage.this.demonicScansOffset += 1;
-                    }else if (serviceFeed.equals("ManhuaFast")){
+                    } else if (serviceFeed.equals("ManhuaFast")) {
                         HomePage.this.manhuaFastOffset += 1;
                     }
                 });

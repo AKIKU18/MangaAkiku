@@ -21,22 +21,28 @@
         tools:targetApi="31">
         <activity
             android:name=".MainActivitys.StorageUsagePage"
-            android:exported="false" />
+            android:exported="false"
+            android:stateNotNeeded="true"/>
         <activity
             android:name=".MainActivitys.HistoryPage"
-            android:exported="false" />
+            android:exported="false"
+            android:stateNotNeeded="true"/>
         <activity
             android:name=".MainActivitys.BookmarksPage"
-            android:exported="false" />
+            android:exported="false"
+            android:stateNotNeeded="true"/>
         <activity
             android:name=".MainActivitys.MangaPage"
-            android:exported="false" />
+            android:exported="false"
+            android:stateNotNeeded="true"/>
         <activity
             android:name=".MainActivitys.ChapterPage"
-            android:exported="false" />
+            android:exported="false"
+            android:stateNotNeeded="true"/>
         <activity
             android:name=".MainActivitys.SettingsPage"
-            android:exported="false" />
+            android:exported="false"
+            android:stateNotNeeded="true"/>
 
 
         <!-- 👇 YOUR LAUNCHER ACTIVITY (HomePage) -->

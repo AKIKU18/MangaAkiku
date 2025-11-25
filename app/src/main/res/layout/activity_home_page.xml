@@ -57,6 +57,42 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
 
+        <!-- Notification Bell Button -->
+        <ImageButton
+            android:id="@+id/button_notifications"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Notifications"
+            android:padding="8dp"
+            android:src="@drawable/ic_bell_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_settings_button"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"/>
+
+        <!-- Notification Dropdown Frame -->
+        <FrameLayout
+            android:id="@+id/notification_dropdown"
+            android:layout_width="250dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            android:background="@drawable/bg_gradient"
+            android:elevation="8dp"
+            app:layout_constraintTop_toBottomOf="@id/button_notifications"
+            app:layout_constraintEnd_toEndOf="@id/button_notifications"
+            android:layout_marginTop="8dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_notifications"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:padding="8dp" />
+
+        </FrameLayout>
+
+
         <!-- Settings Button -->
         <ImageButton
             android:id="@+id/button_settings_button"
@@ -232,7 +268,8 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"
-        android:background="@drawable/bg_drawer_gradient"
+        android:background="@drawable/bg_gradient_search"
+        android:alpha="1"
         android:padding="16dp"
         android:fitsSystemWindows="true">
 

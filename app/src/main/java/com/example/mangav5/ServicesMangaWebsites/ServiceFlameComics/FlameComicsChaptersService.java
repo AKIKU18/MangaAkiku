@@ -57,7 +57,6 @@ public class FlameComicsChaptersService {
                     // Construiește URL-ul JSON
                     String jsonUrl = "https://flamecomics.xyz/_next/data/VZEdwcuZVY5GW40mJJ_Nk/series/" + mangaCode + ".json?id=" + mangaCode;
 
-                    Log.d("FlameComics", "JSON URL: " + jsonUrl);
 
                     Document doc = Jsoup.connect(jsonUrl)
                             .ignoreContentType(true)
@@ -90,7 +89,6 @@ public class FlameComicsChaptersService {
                             title = "Chapter " + number;
                         }
 
-                        Log.e("title", title);
                         // Creează ChapterModel și adaugă în listă
                         ChapterModel chapter = new ChapterModel(
                                 chapterId,

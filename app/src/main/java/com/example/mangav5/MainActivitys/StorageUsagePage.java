@@ -62,19 +62,30 @@ public class StorageUsagePage extends AppCompatActivity {
         });
     }
 
+
+
     private void setupDeleteAllButton() {
-        button_clear_all.setOnClickListener(v -> Executors.newSingleThreadExecutor().execute(() -> {
-            db = AppDatabase.getInstance(StorageUsagePage.this);
-            db.mangaItemDao().deleteAllManga();
-            db.chapterDao().deleteChapters();
-            db.bookmarkDao().deleteAllBookmarks();
-            db.historyDao().deleteAllHistory();
-            mangaList.clear();
-            new Handler(Looper.getMainLooper()).post(() -> {
-                text_total_size.setText("0.000 KB");
-                adapter.notifyDataSetChanged();
-            });
-        }));
+        button_clear_all.setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(StorageUsagePage.this)
+                    .setTitle("Clear All Data")
+                    .setMessage("Are you sure you want to delete all manga, chapters, bookmarks, and history? This action cannot be undone.")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        // Delete in background
+                        Executors.newSingleThreadExecutor().execute(() -> {
+                            db = AppDatabase.getInstance(StorageUsagePage.this);
+                            db.mangaItemDao().deleteAllManga();
+                            db.chapterDao().deleteChapters();
+                            db.bookmarkDao().deleteAllBookmarks();
+                            db.historyDao().deleteAllHistory();
+
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                text_total_size.setText("0.00 KB");
+                            });
+                        });
+                    })
+                    .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                    .show();
+        });
     }
 
     private void loadDataFromDB() {

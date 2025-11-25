@@ -64,6 +64,7 @@ public class FlameComicsSearchService {
 
                     int seriesId = series.optInt("series_id", 0);
                     String mangaUrl = "https://flamecomics.xyz/series/" + seriesId;
+                    if (seriesId <= 0) continue; // skip invalid series
                     Document imageCoverDoc = Jsoup.connect(mangaUrl)
                             .ignoreContentType(true)
                             .userAgent("Mozilla/5.0")
