@@ -93,7 +93,8 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         }
 
         // FIXED — stable binding using tags
-        GetLastChapterTitle(mangaItemModel, holder.lastChapter, holder.viewedChapter);
+        GetLastChapterTitle(mangaItemModel, holder.lastChapter, holder.viewedChapter, holder.showNotificationBookmark);
+
 
         // Bookmark toggle
         TooggleBookmark(holder, manga, bookmarkDao, position);
@@ -137,6 +138,14 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                 );
             }
         });
+    }
+
+    private void ShowNotificationForNewUpdates(String viewdChapter, String latestChapter, TextView showNotificationBookmar) {
+        if (!viewdChapter.equals(latestChapter)) {
+            showNotificationBookmar.setVisibility(View.VISIBLE);
+        } else {
+            showNotificationBookmar.setVisibility(View.GONE);
+        }
     }
 
     private void GetLastChapter(MangaItemModel mangaItem) {
@@ -188,7 +197,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     }
 
     // 🔥 FIXED METHOD — uses tag-binding protection
-    private void GetLastChapterTitle(MangaItemModel mangaItem, TextView currentItemView, TextView viewedChapterView) {
+    private void GetLastChapterTitle(MangaItemModel mangaItem, TextView currentItemView, TextView viewedChapterView, TextView showNotificationBookmark) {
 
         // Tag views with mangaId — ESSENTIAL FIX
         currentItemView.setTag(mangaItem.getMangaId());
@@ -198,76 +207,98 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                 mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
         );
 
-        ServiceController.fetchChapterListController(context,
-                mangaItem.getSource(),
-                mangaIdOrUrlFinal,
-                0,
-                1,
-                "desc",
-                new ServiceController.ChapterListCallback() {
+        AppDatabase db = AppDatabase.getInstance(context);
+        Executors.newSingleThreadExecutor().execute(() -> {
 
-                    @Override
-                    public void onSuccess(List<ChapterModel> chapters) {
+            HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
+            String viewedChapterTitle = (history != null && history.chapterTitle != null)
+                    ? history.chapterTitle : "-";
 
-                        AppDatabase db = AppDatabase.getInstance(context);
+            String latestChapterSave = mangaItem.getLastChapter();
 
-                        Executors.newSingleThreadExecutor().execute(() -> {
+            if (viewedChapterTitle != null && latestChapterSave != null) {
+                viewedChapterView.setText("Viewed: " + viewedChapterTitle);
+                currentItemView.setText("Current: " + latestChapterSave);
+                ShowNotificationForNewUpdates(viewedChapterTitle, latestChapterSave, showNotificationBookmark);
+            } else {
+                ServiceController.fetchChapterListController(context,
+                        mangaItem.getSource(),
+                        mangaIdOrUrlFinal,
+                        0,
+                        1,
+                        "desc",
+                        new ServiceController.ChapterListCallback() {
 
-                            HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
-                            String viewedChapterTitle = (history != null && history.chapterTitle != null)
-                                    ? history.chapterTitle : "-";
+                            @Override
+                            public void onSuccess(List<ChapterModel> chapters) {
 
-                            // Update Viewed only if ViewHolder is still the same
-                            viewedChapterView.post(() -> {
-                                if (mangaItem.getMangaId().equals(viewedChapterView.getTag())) {
-                                    viewedChapterView.setText("Viewed: " + viewedChapterTitle);
-                                }
-                            });
+                                AppDatabase db = AppDatabase.getInstance(context);
 
-                            // No chapters returned → fallback to viewed
-                            if (chapters == null || chapters.isEmpty()) {
-                                currentItemView.post(() -> {
-                                    if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
-                                        currentItemView.setText("Current: " + viewedChapterTitle);
-                                    }
-                                });
-                            } else {
-                                ChapterModel latest = chapters.get(0);
-                                String latestTitle = latest.getTitle() != null ? latest.getTitle() : "-";
+                                Executors.newSingleThreadExecutor().execute(() -> {
 
-                                currentItemView.post(() -> {
-                                    if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
-                                        currentItemView.setText("Current: " + latestTitle);
+                                    HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
+                                    String viewedChapterTitle = (history != null && history.chapterTitle != null)
+                                            ? history.chapterTitle : "-";
+
+
+                                    // Update Viewed only if ViewHolder is still the same
+                                    viewedChapterView.post(() -> {
+                                        if (mangaItem.getMangaId().equals(viewedChapterView.getTag())) {
+                                            viewedChapterView.setText("Viewed: " + viewedChapterTitle);
+                                        }
+                                    });
+
+                                    // No chapters returned → fallback to viewed
+                                    if (chapters == null || chapters.isEmpty()) {
+                                        currentItemView.post(() -> {
+                                            if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
+                                                currentItemView.setText("Current: " + viewedChapterTitle);
+                                                ShowNotificationForNewUpdates(viewedChapterTitle, viewedChapterTitle, showNotificationBookmark);
+                                            }
+                                        });
+                                    } else {
+                                        ChapterModel latest = chapters.get(0);
+                                        String latestTitle = latest.getTitle() != null ? latest.getTitle() : "-";
+
+                                        currentItemView.post(() -> {
+                                            if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
+                                                currentItemView.setText("Current: " + latestTitle);
+                                                mangaItem.setLastChapter(latestTitle);
+                                                ShowNotificationForNewUpdates(viewedChapterTitle, latestTitle, showNotificationBookmark);
+                                            }
+                                        });
                                     }
                                 });
                             }
+
+                            @Override
+                            public void onError(String message) {
+
+                                AppDatabase db = AppDatabase.getInstance(context);
+
+                                Executors.newSingleThreadExecutor().execute(() -> {
+                                    HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
+                                    String viewedChapterTitle = (history != null && history.chapterTitle != null)
+                                            ? history.chapterTitle : "-";
+
+                                    currentItemView.post(() -> {
+                                        if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
+                                            currentItemView.setText("Current: " + viewedChapterTitle);
+                                            ShowNotificationForNewUpdates(viewedChapterTitle, viewedChapterTitle, showNotificationBookmark);
+
+                                        }
+                                    });
+
+                                    viewedChapterView.post(() -> {
+                                        if (mangaItem.getMangaId().equals(viewedChapterView.getTag())) {
+                                            viewedChapterView.setText("Viewed: " + viewedChapterTitle);
+                                        }
+                                    });
+                                });
+                            }
                         });
-                    }
-
-                    @Override
-                    public void onError(String message) {
-
-                        AppDatabase db = AppDatabase.getInstance(context);
-
-                        Executors.newSingleThreadExecutor().execute(() -> {
-                            HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
-                            String viewedChapterTitle = (history != null && history.chapterTitle != null)
-                                    ? history.chapterTitle : "-";
-
-                            currentItemView.post(() -> {
-                                if (mangaItem.getMangaId().equals(currentItemView.getTag())) {
-                                    currentItemView.setText("Current: " + viewedChapterTitle);
-                                }
-                            });
-
-                            viewedChapterView.post(() -> {
-                                if (mangaItem.getMangaId().equals(viewedChapterView.getTag())) {
-                                    viewedChapterView.setText("Viewed: " + viewedChapterTitle);
-                                }
-                            });
-                        });
-                    }
-                });
+            }
+        });
     }
 
     public void GoToMangaItem(MangaItemModel manga) {
@@ -313,7 +344,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
     public static class BookmarkMangaViewHolder extends RecyclerView.ViewHolder {
         ImageView cover, bookmarkStar;
-        TextView title, lastChapter, viewedChapter, mangaSource;
+        TextView title, lastChapter, viewedChapter, mangaSource, showNotificationBookmark;
         CardView mangaBlurCard;
 
         public BookmarkMangaViewHolder(@NonNull View itemView) {
@@ -325,6 +356,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             viewedChapter = itemView.findViewById(R.id.viewedChapter);
             mangaBlurCard = itemView.findViewById(R.id.mangaBlurCard);
             mangaSource = itemView.findViewById(R.id.mangaSource);
+            showNotificationBookmark = itemView.findViewById(R.id.showNotificationBookmark);
         }
     }
 }

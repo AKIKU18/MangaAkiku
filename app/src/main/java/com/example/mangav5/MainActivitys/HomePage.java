@@ -35,12 +35,16 @@ import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsSearchService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausSearchService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesChaptersService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesSearchService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +79,7 @@ public class HomePage extends AppCompatActivity {
     private Button button_demonicScans; // Button in the drawer to select DemonicScans as the source.
     private Button button_manhuaFast;   // Button in the drawer to select ManhuaFast as the source.
     private Button button_flameComics;  // Button in the drawer to select FlameComics as the source.
+    private Button button_rizzfables;   // Button in the drawer to select Rizzfables as the source.
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private TextView loadingText;             // Text view for displaying loading state.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
@@ -125,12 +130,24 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
+
+        RizzfablesFeedService.getMangaDetailsRizzfables("https://rizzfables.com/series/r2311170-top-tier-providence", new RizzfablesFeedService.MangaCallback() {
+            @Override
+            public void onSuccess(MangaItemModel manga) {
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+
+            }
+        });
     }
 
     private void GetTheme() {
         AppDatabase db = AppDatabase.getInstance(this);
         Executors.newSingleThreadExecutor().execute(() ->
                 SetTheme(db.settingsDao().getSetting("theme").getValue())
+
         );
     }
 
@@ -170,6 +187,7 @@ public class HomePage extends AppCompatActivity {
         buttonNotifications = findViewById(R.id.button_notifications);
         notificationDropdown = findViewById(R.id.notification_dropdown);
         recyclerNotifications = findViewById(R.id.recycler_notifications);
+        button_rizzfables = findViewById(R.id.source_rizzfables);
     }
 
     /**
@@ -212,7 +230,8 @@ public class HomePage extends AppCompatActivity {
                 button_manhuaPlus, "ManhuaPlus",
                 button_demonicScans, "DemonicScans",
                 button_manhuaFast, "ManhuaFast",
-                button_flameComics, "FlameComics"
+                button_flameComics, "FlameComics",
+                button_rizzfables,"Rizzfables"
         );
 
         // Set up all listeners in one loop
@@ -262,7 +281,8 @@ public class HomePage extends AppCompatActivity {
                 "ManhuaPlus", R.id.drawer_manhuaPlus_glow,
                 "DemonicScans", R.id.drawer_demonicScans_glow,
                 "ManhuaFast", R.id.drawer_manhuaFast_glow,
-                "FlameComics", R.id.drawer_flameComics_glow
+                "FlameComics", R.id.drawer_flameComics_glow,
+                "Rizzfables", R.id.drawer_rizzfables_glow
         );
 
         // Hide all glows first

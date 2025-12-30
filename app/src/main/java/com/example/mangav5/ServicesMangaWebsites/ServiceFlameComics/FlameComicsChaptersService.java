@@ -120,7 +120,7 @@ public class FlameComicsChaptersService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
         //https://flamecomics.xyz/_next/data/VZEdwcuZVY5GW40mJJ_Nk/series/150/b5aad0ebf452dbdf.json?id=150&token=b5aad0ebf452dbdf API chapter images links
-        executor.execute(() -> {
+            executor.execute(() -> {
             int attempts = 0;
             while (attempts < MAX_RETRIES) {
                 try {
@@ -141,7 +141,7 @@ public class FlameComicsChaptersService {
                     return; // success, exit loop
 
                 } catch (IOException e) {
-                    attempts++;
+                      attempts++;
                     if (attempts >= MAX_RETRIES) {
                         final String msg = e.getMessage() != null ? e.getMessage() : "Unknown error";
                         mainHandler.post(() -> callback.onError(msg));

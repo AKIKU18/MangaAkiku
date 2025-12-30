@@ -32,6 +32,19 @@
 
             <!-- Manga Source -->
             <TextView
+                android:id="@+id/showNotificationBookmark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="New Chapter!!!"
+                android:textColor="#FF5722"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:textAlignment="textEnd"
+                android:textStyle="italic" />
+
+            <TextView
                 android:id="@+id/mangaSource"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
