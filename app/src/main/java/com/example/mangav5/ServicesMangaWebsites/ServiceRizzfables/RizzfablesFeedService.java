@@ -103,8 +103,6 @@ public class RizzfablesFeedService {
                 String lastChapter = doc.selectFirst("#chapterlist > ul > li > div.chbox > div.eph-num > a").attr("href");
                 String description = extractDescription(doc.html());
 
-                Log.e("description", description);
-
                 MangaItemModel manga = new MangaItemModel(
                         mangaId,
                         title,

@@ -1,12 +1,10 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,21 +28,13 @@ import android.widget.Toast;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
-import com.example.mangav5.Entity.SettingsItemEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsChaptersService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsFeedService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsSearchService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusFeedService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausSearchService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesChaptersService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesFeedService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesSearchService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoChaptersService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoSearchService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +70,7 @@ public class HomePage extends AppCompatActivity {
     private Button button_manhuaFast;   // Button in the drawer to select ManhuaFast as the source.
     private Button button_flameComics;  // Button in the drawer to select FlameComics as the source.
     private Button button_rizzfables;   // Button in the drawer to select Rizzfables as the source.
+    private Button button_mgeko;        // Button in the drawer to select Mgeko as the source.
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private TextView loadingText;             // Text view for displaying loading state.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
@@ -93,6 +84,7 @@ public class HomePage extends AppCompatActivity {
     private int manhuaPlusOffset = 0;              // Current page number for ManhuaPlus pagination.
     private int demonicScansOffset = 0;            // Current page number for DemonicScans pagination.
     private int manhuaFastOffset = 0;              // Current page number for ManhuaFast pagination.
+    private int mgekoOffset = 0;                   // Current page number for Mgeko pagination.
     // Activity Result Launchers
     private ActivityResultLauncher<Intent> bookmarkLauncher; // Handles results from the Bookmarks page.
     private ActivityResultLauncher<Intent> mangaPageLauncher;  // Handles results from the MangaPage.
@@ -130,17 +122,6 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
-
-        RizzfablesFeedService.getMangaDetailsRizzfables("https://rizzfables.com/series/r2311170-top-tier-providence", new RizzfablesFeedService.MangaCallback() {
-            @Override
-            public void onSuccess(MangaItemModel manga) {
-            }
-
-            @Override
-            public void onError(String errorMessage) {
-
-            }
-        });
     }
 
     private void GetTheme() {
@@ -188,6 +169,7 @@ public class HomePage extends AppCompatActivity {
         notificationDropdown = findViewById(R.id.notification_dropdown);
         recyclerNotifications = findViewById(R.id.recycler_notifications);
         button_rizzfables = findViewById(R.id.source_rizzfables);
+        button_mgeko = findViewById(R.id.source_mgeko);
     }
 
     /**
@@ -231,7 +213,8 @@ public class HomePage extends AppCompatActivity {
                 button_demonicScans, "DemonicScans",
                 button_manhuaFast, "ManhuaFast",
                 button_flameComics, "FlameComics",
-                button_rizzfables,"Rizzfables"
+                button_rizzfables,"Rizzfables",
+                button_mgeko, "Mgeko"
         );
 
         // Set up all listeners in one loop
@@ -260,6 +243,7 @@ public class HomePage extends AppCompatActivity {
         manhuaPlusOffset = 1;
         demonicScansOffset = 1;
         manhuaFastOffset = 1;
+        mgekoOffset = 1;
 
         homeListAdapter.notifyDataSetChanged();
         mangaListView.scrollToPosition(0);
@@ -282,7 +266,8 @@ public class HomePage extends AppCompatActivity {
                 "DemonicScans", R.id.drawer_demonicScans_glow,
                 "ManhuaFast", R.id.drawer_manhuaFast_glow,
                 "FlameComics", R.id.drawer_flameComics_glow,
-                "Rizzfables", R.id.drawer_rizzfables_glow
+                "Rizzfables", R.id.drawer_rizzfables_glow,
+                "Mgeko", R.id.drawer_mgeko_glow
         );
 
         // Hide all glows first
@@ -481,6 +466,8 @@ public class HomePage extends AppCompatActivity {
                         loadFeed(demonicScansOffset, LIMIT);
                     } else if (serviceFeed.equals("ManhuaFast")) {
                         loadFeed(manhuaFastOffset, LIMIT);
+                    } else if (serviceFeed.equals("Mgeko")) {
+                        loadFeed(mgekoOffset, LIMIT);
                     }
                     // Add other sources here if they support pagination.
                 }
@@ -529,6 +516,8 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.demonicScansOffset += 1;
                     } else if (serviceFeed.equals("ManhuaFast")) {
                         HomePage.this.manhuaFastOffset += 1;
+                    } else if (serviceFeed.equals("Mgeko")){
+                        HomePage.this.mgekoOffset += 1;
                     }
                 });
             }
