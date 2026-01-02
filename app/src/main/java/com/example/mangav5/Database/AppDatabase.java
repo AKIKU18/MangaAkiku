@@ -21,7 +21,7 @@ import com.example.mangav5.Entity.SettingsItemEntity;
 
 @Database(
         entities = {BookmarkEntity.class, ChapterItemEntity.class, MangaItemEntity.class, HistoryEntity.class, SettingsItemEntity.class},
-        version = 4, // ⬅️ incremented from 3 → 4
+        version = 5, // ⬅️ incremented from 4 → 5
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -72,6 +72,17 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    private static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // Add new column 'lastChapter' with default empty string to avoid null issues
+            database.execSQL("ALTER TABLE bookmarks ADD COLUMN lastChapter TEXT DEFAULT ''");
+        }
+    };
+
+
+
+
 
 
 
@@ -84,6 +95,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     .addMigrations(MIGRATION_1_2)
                     .addMigrations(MIGRATION_2_3)
                     .addMigrations(MIGRATION_3_4)
+                    .addMigrations(MIGRATION_4_5)
                     // Optionally keep fallback for dev
                     // .fallbackToDestructiveMigration()
                     .build();

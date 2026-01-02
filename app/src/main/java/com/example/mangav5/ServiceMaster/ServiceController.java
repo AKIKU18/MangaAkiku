@@ -591,7 +591,8 @@ public class ServiceController {
                 MangaDexChaptersService.fetchAllChapters(mangaUrlOrId, descAsc, offset, limit, new MangaDexChaptersService.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapters) {
-                        callback.onSuccess(chapters);
+                        Handler main = new Handler(Looper.getMainLooper());
+                        main.post(() -> callback.onSuccess(chapters));
                     }
 
                     @Override
@@ -884,7 +885,8 @@ public class ServiceController {
                 new AsuraScansChapterPagesService().GetChapterPages(context, chapterUrlId, new AsuraScansChapterPagesService.PagesCallback() {
                     @Override
                     public void onSuccess(List<String> pages) {
-                        callback.onSuccess(pages);
+                        Handler main = new Handler(Looper.getMainLooper());
+                        main.post(() -> callback.onSuccess(pages));
                     }
 
                     @Override
@@ -1244,6 +1246,12 @@ public class ServiceController {
 
     public interface DescriptionCallback {
         void onSuccess(String description);
+
+        void onError(String errorMessage);
+    }
+
+    public interface LastChapterTitleCallback{
+        void onSucces(String lastChapterTitle);
 
         void onError(String errorMessage);
     }

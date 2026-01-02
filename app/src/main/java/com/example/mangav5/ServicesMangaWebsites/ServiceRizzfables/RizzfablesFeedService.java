@@ -98,10 +98,36 @@ public class RizzfablesFeedService {
 
                 String mangaId = generateUuidHex(mangaUrl);
                 String title = doc.selectFirst("h1.entry-title").text().trim();
-                String desc =  doc.selectFirst("#description-container").text();
                 String imageUrl = doc.selectFirst("#post-69001 > div.main-info > div.info-left.desktop > div > div.thumb > img").attr("src");
-                String lastChapter = doc.selectFirst("#chapterlist > ul > li > div.chbox > div.eph-num > a").attr("href");
-                String description = extractDescription(doc.html());
+                Elements scripts = doc.select("script");
+                String description = "";
+
+                for (Element script : scripts) {
+                    String data = script.html();
+
+                    if (data.contains("var description")) {
+
+                        description = data
+                                .split("var description =")[1]
+                                .split(";", 2)[0]
+                                .trim();
+
+                        // remove surrounding quotes
+                        if (description.startsWith("\"") && description.endsWith("\"")) {
+                            description = description.substring(1, description.length() - 1);
+                        }
+
+                        // unescape JS
+                        description = description
+                                .replace("\\r", "")
+                                .replace("\\n", "\n")
+                                .replace("\\\"", "\"")
+                                .replace("\\\\", "\\");
+
+                        break; // VERY important
+                    }
+                }
+                Log.e("description", description);
 
                 MangaItemModel manga = new MangaItemModel(
                         mangaId,
@@ -110,7 +136,7 @@ public class RizzfablesFeedService {
                         imageUrl,
                         false,
                         mangaUrl,
-                        lastChapter,
+                        "",
                         "Rizzfables"
                 );
 

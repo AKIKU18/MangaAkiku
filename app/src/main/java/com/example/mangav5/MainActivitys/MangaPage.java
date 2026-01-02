@@ -135,7 +135,7 @@ public class MangaPage extends AppCompatActivity {
     }
 
     private void ToggleBookmarkMangaPage(MangaItemModel manga, BookmarkDao bookmarkDao) {
-        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl(),manga.getSource());
+        BookmarkEntity bookmark = new BookmarkEntity(manga.getMangaId(), manga.getTitle(), manga.getCoverImageUrl(), manga.getDescription(), manga.getMangaUrl(),manga.getSource(),manga.getLastChapter());
         if (bookmarkDao.isBookmarked(manga.getMangaId())) {
             bookmarkDao.delete(bookmark);
             manga.setIsBookmarked(false);

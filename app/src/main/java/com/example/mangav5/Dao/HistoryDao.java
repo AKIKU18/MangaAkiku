@@ -38,4 +38,8 @@ public interface HistoryDao {
 
     @Query("UPDATE history SET scrollPosition = :position WHERE chapterId = :chapterId")
     void updateScrollPosition(String chapterId, int position);
+
+    //Get history by title
+    @Query("SELECT * FROM history WHERE mangaTitle = :mangaTitle ORDER BY timestamp DESC LIMIT 1")
+    HistoryEntity getHistoryByTitle(String mangaTitle);
 }

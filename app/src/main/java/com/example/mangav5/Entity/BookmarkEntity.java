@@ -15,14 +15,16 @@ public class BookmarkEntity {
     public String description;
     public String mangaUrl;
     public String source;
+    public String lastChapter;
 
-    public BookmarkEntity(String mangaId, String title, String coverUrl, String description, String mangaUrl,String source) {
+    public BookmarkEntity(String mangaId, String title, String coverUrl, String description, String mangaUrl,String source,String lastChapter) {
         this.mangaId = mangaId;
         this.title = title;
         this.coverUrl = coverUrl;
         this.description = description;
         this.mangaUrl = mangaUrl;
         this.source = source;
+        this.lastChapter = lastChapter;
     }
 
     public String getMangaId() {
@@ -71,6 +73,14 @@ public class BookmarkEntity {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public String getLastChapter() {
+        return lastChapter;
+    }
+
+    public void setLastChapter(String lastChapter) {
+        this.lastChapter = lastChapter;
     }
 
 }

@@ -160,7 +160,7 @@ public class MgekoFeedService {
                         cover,
                         false,
                         mangaUrl,
-                        String.join(", ", genres),
+                        "",
                         "Mgeko"
                 );
 

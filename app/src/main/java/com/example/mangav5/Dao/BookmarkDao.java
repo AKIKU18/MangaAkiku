@@ -25,4 +25,6 @@ public interface BookmarkDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM bookmarks WHERE mangaId = :id)")
     boolean isBookmarked(String id);
+
+
 }

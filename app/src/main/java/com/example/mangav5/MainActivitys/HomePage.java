@@ -35,6 +35,7 @@ import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoSearchService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesFeedService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ import java.util.concurrent.Executors;
 public class HomePage extends AppCompatActivity {
 
     private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
-    public static String serviceFeed = "AsuraScans"; // The current selected data source. Defaults to AsuraScans.
+    public static String serviceFeed = "Mgeko"; // The current selected data source. Defaults to AsuraScans.
     ImageButton buttonNotifications;
     FrameLayout notificationDropdown;
     RecyclerView recyclerNotifications;

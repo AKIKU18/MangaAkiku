@@ -45,4 +45,10 @@ public interface MangaItemDao {
     //Get all manga
     @Query("SELECT * FROM mangaItem")
     List<MangaItemEntity> getAllManga();
+
+    //Get lastChapter
+    @Query("SELECT lastChapter FROM mangaItem WHERE mangaId = :id")
+    String getLastChapter(String id);
+
+
 }
