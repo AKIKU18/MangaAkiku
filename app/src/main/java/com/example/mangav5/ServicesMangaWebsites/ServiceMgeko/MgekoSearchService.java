@@ -60,7 +60,7 @@ public class MgekoSearchService {
                                 .replace("/", "")
                                 .trim();
 
-                        // ✅ Cover
+                        // Cover
                         Element img = item.selectFirst(".novel-cover img");
 
                         String cover = "";
