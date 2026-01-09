@@ -61,10 +61,22 @@ public class MgekoSearchService {
                                 .trim();
 
                         // ✅ Cover
-                        Element img = item.selectFirst("img");
-                        String cover = img != null
-                                ? "https://www.mgeko.cc" + img.attr("src").trim()
-                                : "";
+                        Element img = item.selectFirst(".novel-cover img");
+
+                        String cover = "";
+                        if (img != null) {
+                            if (img.hasAttr("data-src")) {
+                                cover = img.attr("data-src").trim();
+                            } else if (img.hasAttr("data-original")) {
+                                cover = img.attr("data-original").trim();
+                            } else {
+                                cover = img.attr("src").trim(); // fallback
+                            }
+
+                            if (!cover.startsWith("http")) {
+                                cover = "https://www.mgeko.cc" + cover;
+                            }
+                        }
 
                         // ✅ DESCRIPTION (FULL, NOT TRUNCATED)
                         Element descEl = item.selectFirst("div.summary");
