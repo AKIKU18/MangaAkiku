@@ -120,27 +120,42 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
         AppDatabase db = AppDatabase.getInstance(context);
         Executors.newSingleThreadExecutor().execute(() -> {
-            var historyItem = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
 
+            // 1. First, try to get the history item with the stored Manga ID.
+            HistoryEntity historyItem = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
+
+            if (historyItem == null) {
+                try {
+                    historyItem = db.historyDao().getHistoryByTitle(mangaItem.getTitle());
+                } catch (Exception e) {
+                    Log.e("BookmarksAdapter", "Error in GetViewdChapter fallback: " + e.getMessage());
+                }
+            }
+
+
+            // Now, 'historyItem' will be populated correctly if a match was found by either ID or title.
             if (historyItem != null) {
                 String viewedChapterTitle = historyItem.chapterTitle;
                 String viewedChapterId = historyItem.chapterId;
+                String viewedChapterUrl = historyItem.chapterUrl; // Get the URL from history
 
                 intent.putExtra("chapterId", viewedChapterId);
                 intent.putExtra("chapterTitle", viewedChapterTitle);
                 intent.putExtra("mangaId", mangaItem.getMangaId());
                 intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
-                intent.putExtra("chapterUrl", historyItem.chapterUrl);
+                intent.putExtra("chapterUrl", viewedChapterUrl); // Pass the correct URL
                 intent.putExtra("source", mangaItem.getSource());
 
                 context.startActivity(intent);
             } else {
+                // This will only be reached if NO history exists for this manga at all.
                 new Handler(Looper.getMainLooper()).post(() ->
                         Toast.makeText(context, "You haven’t read any chapters yet.", Toast.LENGTH_SHORT).show()
                 );
             }
         });
     }
+
 
     private void ShowNotificationForNewChapter(String viewedChapter, String latestChapter, TextView showNotificationBookmark) {
         if (latestChapter != null) {

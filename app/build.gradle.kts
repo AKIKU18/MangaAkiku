@@ -78,7 +78,7 @@ dependencies {
     implementation ("com.github.Dimezis:BlurView:version-3.1.0")
     implementation ("org.jsoup:jsoup:1.17.2")
     implementation ("com.github.javiersantos:AppUpdater:2.7")
-
+    implementation("com.github.bumptech.glide:okhttp3-integration:4.16.0")
 
 
 }

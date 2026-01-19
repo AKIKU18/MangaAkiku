@@ -260,7 +260,7 @@ public class ChapterPage extends AppCompatActivity {
                     ChapterItemEntity next = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, currentChapterId);
                     runOnUiThread(() -> {
                         if (next != null) {
-                            loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl());
+                            loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl(),next.getMangaId(), next.getSource(), mangaUrl);
                             Toast.makeText(this, "Next: " + next.getTitle(), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "This is the latest chapter", Toast.LENGTH_SHORT).show();
@@ -279,7 +279,7 @@ public class ChapterPage extends AppCompatActivity {
                     ChapterItemEntity prev = db.chapterDao().getPrevChapter(mangaIdOrUrlFinal, currentChapterId);
                     runOnUiThread(() -> {
                         if (prev != null) {
-                            loadChapter(prev.getChapterId(), prev.getTitle(), prev.getChapterUrl());
+                            loadChapter(prev.getChapterId(), prev.getTitle(), prev.getChapterUrl(),prev.getMangaId(), prev.getSource(), mangaUrl);
                             Toast.makeText(this, "Previous: " + prev.getTitle(), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "This is the first chapter", Toast.LENGTH_SHORT).show();
@@ -290,7 +290,7 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
-    private void loadChapter(String chapterId, String chapterTitle, String chapterUrl) {
+    private void loadChapter(String chapterId, String chapterTitle, String chapterUrl,String _mangaId,String _source,String _mangaUrl) {
         // Hide UI immediately
         hideUI();
 
@@ -300,6 +300,9 @@ public class ChapterPage extends AppCompatActivity {
         tvChapterNumber.setText(chapterTitle);
 
         runOnUiThread(() -> {
+            mangaId = _mangaId;
+            source = _source;
+            mangaUrl = _mangaUrl;
             chapters.clear();
             chapterPageAdapter.notifyDataSetChanged();
         });
