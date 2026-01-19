@@ -51,7 +51,6 @@ public class HomePage extends AppCompatActivity {
 
     private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
     public static String serviceFeed = "Mgeko"; // The current selected data source. Defaults to AsuraScans.
-    ImageButton buttonNotifications;
     FrameLayout notificationDropdown;
     RecyclerView recyclerNotifications;
     // UI Components
@@ -60,7 +59,9 @@ public class HomePage extends AppCompatActivity {
     private HomePageAdapter searchResultAdapter; // Adapter for the search results RecyclerView.
     private HomePageAdapter notificationResultAdapter; // Adapter for the notifications RecyclerView.
     private HomePageAdapter homeListAdapter;     // Adapter for the main feed RecyclerView.
+    private FrameLayout notification_dropdown; // FrameLayout for the notification dropdown.
     private SearchView searchView;           // Input field for searching manga.
+    private ImageButton button_notifications; // Button to show the Notifications page.
     private Button bookmarkPageButton;       // Button to navigate to the Bookmarks page.
     private Button historyPageButton;        // Button to navigate to the History page.
     private Button button_mangadex;          // Button in the drawer to select MangaDex as the source.
@@ -123,6 +124,26 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
+        ShowNotifications();
+    }
+
+    private void ShowNotifications(){
+
+        button_notifications.setOnClickListener(v ->
+        {
+            if (recyclerNotifications.getAdapter() != null &&
+                    recyclerNotifications.getAdapter().getItemCount() > 0) {
+                    if(notification_dropdown.getVisibility() != View.VISIBLE){
+                        notification_dropdown.setVisibility(View.VISIBLE);
+                    }else{
+                        notification_dropdown.setVisibility(View.GONE);
+                    }
+            } else {
+                Toast.makeText(this, "No notifications to show *(-_-)*", Toast.LENGTH_SHORT).show();
+            }
+
+        });
+
     }
 
     private void GetTheme() {
@@ -166,7 +187,8 @@ public class HomePage extends AppCompatActivity {
         button_manhuaFast = findViewById(R.id.source_manhuaFast);
         button_flameComics = findViewById(R.id.source_flameComics);
         loadingText = findViewById(R.id.loading_text);
-        buttonNotifications = findViewById(R.id.button_notifications);
+        button_notifications = findViewById(R.id.button_notifications);
+        notification_dropdown = findViewById(R.id.notification_dropdown);
         notificationDropdown = findViewById(R.id.notification_dropdown);
         recyclerNotifications = findViewById(R.id.recycler_notifications);
         button_rizzfables = findViewById(R.id.source_rizzfables);
