@@ -33,27 +33,12 @@ public class DemonicScansFeedService {
             try {
                 Document doc = Jsoup.connect(websiteManga)
                         .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
-                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-                        .header("Accept-Language", "en-US,en;q=0.9")
-                        .header("Accept-Encoding", "gzip, deflate, br, zstd")
-                        .header("Cache-Control", "max-age=0")
-                        .header("Referer", "https://demonicscans.org/")
-                        .header("Sec-Fetch-Dest", "document")
-                        .header("Sec-Fetch-Mode", "navigate")
-                        .header("Sec-Fetch-Site", "same-origin")
-                        .header("Sec-Fetch-User", "?1")
-                        .header("Upgrade-Insecure-Requests", "1")
-                        .header("sec-ch-ua", "\"Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Opera\";v=\"124\"")
-                        .header("sec-ch-ua-mobile", "?0")
-                        .header("sec-ch-ua-platform", "\"Windows\"")
-                        .cookie("cf_clearance", "CAMcc50dGwhPJlCQMp7eemEumBqKX5v6Kc110d8y0sw-1764098118-1.2.1.1-YQL0bswN.h0GgBmlvzzrioQ_PHja4hbRG4OkF8ntooyTTrULRlalhhHgBhsCRuWhgP9jVcORy2cn0SoNjzrCWilkkfBzHEDXu1rXOQKC7r42G3SF4AnbgpCrP5oNyM5Juzyi9IErBJbjinrGNNlNItJRmbHO_XiSxfHN7ZqU1.jS8Au.wY4CGokzWRHfs4RpJScLJijRsaj.HCi1SO7LU4Z8Z2bXSacFdE1oq31hcMM")
-                        .cookie("_ga", "GA1.1.1334789206.1763192923")
-                        .cookie("subdemon", "1")
                         .get();
 
 
                 // Each manga block in homepage
                 Elements items = doc.select("div.updates-element.border-box");
+                Log.e("items",doc.toString());
                 for (Element item : items) {
                     try {
                         // Title and URL
@@ -108,12 +93,7 @@ public class DemonicScansFeedService {
         executor.execute(() -> {
             try {
                 Document doc = Jsoup.connect(mangaUrl)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
-                        .referrer("https://demonicscans.org/")
-                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-                        .header("Accept-Language", "en-US,en;q=0.5")
-                        .header("Connection", "keep-alive")
-                        .timeout(60_000)
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
                         .get();
 
                 // Manga Details

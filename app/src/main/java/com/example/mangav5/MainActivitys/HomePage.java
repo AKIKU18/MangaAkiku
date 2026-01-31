@@ -37,6 +37,9 @@ import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoSearchService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesFeedService;
 
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +53,7 @@ import java.util.concurrent.Executors;
 public class HomePage extends AppCompatActivity {
 
     private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
-    public static String serviceFeed = "Mgeko"; // The current selected data source. Defaults to AsuraScans.
+    public static String serviceFeed = "DemonicScans"; // The current selected data source. Defaults to AsuraScans.
     FrameLayout notificationDropdown;
     RecyclerView recyclerNotifications;
     // UI Components
@@ -125,6 +128,7 @@ public class HomePage extends AppCompatActivity {
         setupSourceSelectionDrawer();
         showInitialSourceGlow(); // Visually indicate the default source.
         ShowNotifications();
+        checkSourcesAndDisableButtons(); // if you add more buttons,check them here.
     }
 
     private void ShowNotifications(){
@@ -573,6 +577,49 @@ public class HomePage extends AppCompatActivity {
         super.onResume();
         refreshBookmarks(); // refresh whenever activity comes to foreground
     }
+
+    private boolean isSourceAccessible(String url) {
+        try {
+            // Use HEAD or GET; GET is safer if HEAD is blocked
+            Jsoup.connect(url)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
+                    .timeout(5000)
+                    .get();
+            return true; // accessible
+        } catch (HttpStatusException e) {
+            return e.getStatusCode() != 403; // false if forbidden
+        } catch (Exception e) {
+            return false; // network error, consider inaccessible
+        }
+    }
+
+    private void checkSourcesAndDisableButtons() {
+        Map<Button, String> sourceButtons = Map.of(
+                button_mangadex, "https://mangadex.org/",
+                button_asurascans, "https://asurascans.com/",
+                button_manhuaus, "https://manhuaus.com/",
+                button_manhuaPlus, "https://manhuaplus.org/",
+                button_demonicScans, "https://demonicscans.org/",
+                button_manhuaFast, "https://manhuafast.com/",
+                button_flameComics, "https://flamecomics.xyz/",
+                button_rizzfables,"https://rizzfables.com/",
+                button_mgeko, "https://mgeko.cc/"
+        );
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            for (Map.Entry<Button, String> entry : sourceButtons.entrySet()) {
+                boolean accessible = isSourceAccessible(entry.getValue());
+                runOnUiThread(() -> {
+                    if (!accessible) {
+                        entry.getKey().setEnabled(false);
+                        entry.getKey().setAlpha(0.4f); // visually show disabled
+                    }
+                });
+            }
+        });
+    }
+
 
 
 }

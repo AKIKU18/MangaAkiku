@@ -60,7 +60,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     // OkHttp for network requests
-    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // (Optional) Gson for JSON parsing if you want
     implementation ("com.google.code.gson:gson:2.9.0")
@@ -79,6 +79,5 @@ dependencies {
     implementation ("org.jsoup:jsoup:1.17.2")
     implementation ("com.github.javiersantos:AppUpdater:2.7")
     implementation("com.github.bumptech.glide:okhttp3-integration:4.16.0")
-
-
+    implementation("com.squareup.okhttp3:okhttp-urlconnection:4.12.0")
 }

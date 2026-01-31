@@ -28,8 +28,7 @@ public class DemonicScansSearchService {
                 Log.d(TAG, "🔍 Searching: " + searchUrl);
 
                 Document doc = Jsoup.connect(searchUrl)
-                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
-                        .timeout(15000)
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
                         .get();
 
                 List<MangaItemModel> results = new ArrayList<>();
