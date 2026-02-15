@@ -229,7 +229,9 @@ public class HomePage extends AppCompatActivity {
         ImageButton menuButton = findViewById(R.id.button_menu);
 
         // Open the drawer when the menu button is clicked.
-        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+        menuButton.setOnClickListener(v -> checkSourcesAndDisableButtons() );
+
+        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START) );
 
         // Map your buttons to their sources
         Map<Button, String> sourceButtons = Map.of(
@@ -584,7 +586,7 @@ public class HomePage extends AppCompatActivity {
             Jsoup.connect(url)
                     .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                             "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
-                    .timeout(5000)
+                    .timeout(10000)
                     .get();
             return true; // accessible
         } catch (HttpStatusException e) {
@@ -597,8 +599,8 @@ public class HomePage extends AppCompatActivity {
     private void checkSourcesAndDisableButtons() {
         Map<Button, String> sourceButtons = Map.of(
                 button_mangadex, "https://mangadex.org/",
-                button_asurascans, "https://asurascans.com/",
-                button_manhuaus, "https://manhuaus.com/",
+                button_asurascans, "https://asuracomic.net",
+                button_manhuaus, "https://manhuaus.com",
                 button_manhuaPlus, "https://manhuaplus.org/",
                 button_demonicScans, "https://demonicscans.org/",
                 button_manhuaFast, "https://manhuafast.com/",

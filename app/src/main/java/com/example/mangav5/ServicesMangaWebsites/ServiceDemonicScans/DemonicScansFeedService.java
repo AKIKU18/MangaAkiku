@@ -38,7 +38,6 @@ public class DemonicScansFeedService {
 
                 // Each manga block in homepage
                 Elements items = doc.select("div.updates-element.border-box");
-                Log.e("items",doc.toString());
                 for (Element item : items) {
                     try {
                         // Title and URL

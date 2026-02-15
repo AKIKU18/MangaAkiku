@@ -70,10 +70,7 @@ public class ChapterPage extends AppCompatActivity {
         setupRecyclerScroll();
         getIntentData();
 
-        setCurrentChapterId(chapterId);
-        setCurrentChapterUrl(chapterUrl);
-        setCurrentChapterTitle(chapterTitle);
-        tvChapterNumber.setText(chapterTitle);
+        setData();
 
         String chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, chapterId, chapterUrl);
         GetChapterPages(chapterUrlOrIdFinal);
@@ -87,6 +84,26 @@ public class ChapterPage extends AppCompatActivity {
         FullScreenMode();
         OverlayRefreshedButton();
         setupRecyclerScrollListener();
+    }
+
+    private void setData(){
+        setCurrentChapterId(chapterId);
+        setCurrentChapterUrl(chapterUrl);
+        setCurrentChapterTitle(chapterTitle);
+        tvChapterNumber.setText(chapterTitle);
+
+        executor.execute(() -> {
+            HistoryEntity getChapterHistory = db.historyDao().getHistoryById(mangaId);
+            if(getChapterHistory != null){
+                setCurrentChapterId(getChapterHistory.chapterId);
+                setCurrentChapterUrl(getChapterHistory.chapterUrl);
+                setCurrentChapterTitle(getChapterHistory.chapterTitle);
+                tvChapterNumber.setText(getChapterHistory.chapterTitle);
+            }else{
+                Log.e("ChapterPage", "No chapter history found");
+            }
+
+        });
     }
 
     private void getIntentData() {

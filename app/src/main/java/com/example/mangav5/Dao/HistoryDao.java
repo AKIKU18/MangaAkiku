@@ -42,4 +42,6 @@ public interface HistoryDao {
     //Get history by title
     @Query("SELECT * FROM history WHERE mangaTitle = :mangaTitle ORDER BY timestamp DESC LIMIT 1")
     HistoryEntity getHistoryByTitle(String mangaTitle);
+    @Query("SELECT * FROM history WHERE mangaId = :mangaId ORDER BY timestamp DESC LIMIT 1")
+    HistoryEntity getHistoryById(String mangaId);
 }
