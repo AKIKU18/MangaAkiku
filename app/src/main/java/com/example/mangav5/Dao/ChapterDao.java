@@ -6,7 +6,6 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import com.example.mangav5.Entity.ChapterItemEntity;
-import com.example.mangav5.Models.ChapterModel;
 
 import java.util.List;
 
@@ -16,7 +15,9 @@ public interface ChapterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertChapters(List<ChapterItemEntity> chapters);
     @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId ORDER BY CAST(number AS REAL) DESC")
-    List<ChapterItemEntity> getChaptersByMangaId(String mangaId);
+    List<ChapterItemEntity> getChaptersByMangaIdDesc(String mangaId);
+    @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId ORDER BY CAST(number AS REAL) ASC")
+    List<ChapterItemEntity> getChaptersByMangaIdAsc(String mangaId);
 
     @Query("SELECT * FROM chapterItem WHERE chapterId = :chapterId")
     ChapterItemEntity getChapterById(String chapterId);

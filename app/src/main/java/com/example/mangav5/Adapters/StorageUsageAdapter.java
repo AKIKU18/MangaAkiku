@@ -83,7 +83,7 @@ public class StorageUsageAdapter extends RecyclerView.Adapter<StorageUsageAdapte
             totalBytes += manga.getSource() != null ? manga.getSource().getBytes(StandardCharsets.UTF_8).length : 0;
 
             // Chapters
-            List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaId(manga.getMangaId());
+            List<ChapterItemEntity> chapters = db.chapterDao().getChaptersByMangaIdDesc(manga.getMangaId());
             for (ChapterItemEntity chapter : chapters) {
                 totalBytes += chapter.getChapterId() != null ? chapter.getChapterId().getBytes(StandardCharsets.UTF_8).length : 0;
                 totalBytes += chapter.getNumber() != null ? chapter.getNumber().getBytes(StandardCharsets.UTF_8).length : 0;

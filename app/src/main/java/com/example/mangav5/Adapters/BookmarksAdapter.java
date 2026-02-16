@@ -24,6 +24,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.MainActivitys.BookmarksPage;
 import com.example.mangav5.MainActivitys.ChapterPage;
@@ -35,7 +36,6 @@ import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServiceMaster.BookmarkService;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 
 public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.BookmarkMangaViewHolder> {
@@ -107,7 +107,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         });
 
         holder.lastChapter.setOnClickListener(v -> {
-            GetLastChapter(mangaItemModel);
+            GoToLastChapter(mangaItemModel);
         });
 
         holder.viewedChapter.setOnClickListener(v -> {
@@ -170,7 +170,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     }
 
 
-    private void GetLastChapter(MangaItemModel mangaItem) {
+    private void GoToLastChapter(MangaItemModel mangaItem) {
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(
                 mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
         );
@@ -190,33 +190,20 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                             mangaItem.getSource()
                     )
             );
+
+            List<ChapterItemEntity> chapterItemEntity = db.chapterDao().getChaptersByMangaIdAsc(mangaIdOrUrlFinal);
+            Intent intent = new Intent(context, ChapterPage.class);
+            intent.putExtra("chapterId", chapterItemEntity.getLast().getChapterId());
+            intent.putExtra("chapterTitle", chapterItemEntity.getLast().getTitle());
+            intent.putExtra("mangaId", mangaItem.getMangaId());
+            intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
+            intent.putExtra("chapterUrl", chapterItemEntity.getLast().getChapterUrl());
+            intent.putExtra("source", mangaItem.getSource());
+            intent.putExtra("chapterNumber", chapterItemEntity.getLast().chapterId);
+            context.startActivity(intent);
         });
 
-        ServiceController.fetchChapterListController(context,
-                mangaItem.getSource(),
-                mangaIdOrUrlFinal,
-                0,
-                1,
-                "desc",
-                new ServiceController.ChapterListCallback() {
-                    @Override
-                    public void onSuccess(List<ChapterModel> fetchedChapters) {
-                        Intent intent = new Intent(context, ChapterPage.class);
-                        intent.putExtra("chapterId", fetchedChapters.get(0).getChapterId());
-                        intent.putExtra("chapterTitle", fetchedChapters.get(0).getTitle());
-                        intent.putExtra("mangaId", mangaItem.getMangaId());
-                        intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
-                        intent.putExtra("chapterUrl", fetchedChapters.get(0).getChapterUrl());
-                        intent.putExtra("source", mangaItem.getSource());
-                        intent.putExtra("chapterNumber", fetchedChapters.get(0).getNumber());
-                        context.startActivity(intent);
-                    }
 
-                    @Override
-                    public void onError(String message) {
-                        Toast.makeText(context, "Error: " + message, Toast.LENGTH_SHORT).show();
-                    }
-                });
     }
 
     // 🔥 FIXED METHOD — uses tag-binding protection
@@ -259,14 +246,14 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                 }
             }
 
-            if(history != null){
-                Log.e("history", history.getChapterTitle() + "");
-            }
             String viewedTitle = (history != null && history.chapterTitle != null) ? history.chapterTitle : "-";
 
             // Update "Viewed" Text
             updateViewedUI(viewedChapterView, mangaId, viewedTitle);
 
+
+
+//TO DO: MAKE A NEW METHOD WHERE YOU CHECK FOR THE LAST CHAPTER ONE IN A WHILE AND NOT EVERYTIME IT ENTERS THE BOOKMARK PAGE
             // --- B. GET LATEST CHAPTER (Network) ---
             ServiceController.fetchChapterListController(context,
                     mangaItem.getSource(),

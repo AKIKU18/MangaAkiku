@@ -205,7 +205,7 @@ public class MangaPage extends AppCompatActivity {
 
                     Log.d("MangaPage", "manga.getSource(): " + manga.getSource());
                     db.mangaItemDao().insertManga(mangaEntity);
-                    List<ChapterItemEntity> savedChapters = db.chapterDao().getChaptersByMangaId(mangaIdOrUrlFinal);
+                    List<ChapterItemEntity> savedChapters = db.chapterDao().getChaptersByMangaIdDesc(mangaIdOrUrlFinal);
                     runOnUiThread(() -> {
                         for (ChapterItemEntity c : savedChapters) {
                             if (chapterList.stream().noneMatch(ch -> ch.getChapterId().equals(c.getChapterId()))) {
