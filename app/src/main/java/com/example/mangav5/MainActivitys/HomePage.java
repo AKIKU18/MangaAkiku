@@ -31,6 +31,7 @@ import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ServiceMaster.DataTimedLoader;
 import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoFeedService;

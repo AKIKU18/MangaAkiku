@@ -22,27 +22,26 @@
         <activity
             android:name=".MainActivitys.StorageUsagePage"
             android:exported="false"
-            android:stateNotNeeded="true"/>
+            android:stateNotNeeded="false"/>
         <activity
             android:name=".MainActivitys.HistoryPage"
             android:exported="false"
-            android:stateNotNeeded="true"/>
+            android:stateNotNeeded="false"/>
         <activity
             android:name=".MainActivitys.BookmarksPage"
             android:exported="false"
-            android:stateNotNeeded="true"/>
+            android:stateNotNeeded="false"/>
         <activity
             android:name=".MainActivitys.MangaPage"
             android:exported="false"
-            android:stateNotNeeded="true"/>
+            android:stateNotNeeded="false"/>
         <activity
             android:name=".MainActivitys.ChapterPage"
             android:exported="false"
-            android:stateNotNeeded="true"/>
+            android:stateNotNeeded="false"/>
         <activity
             android:name=".MainActivitys.SettingsPage"
-            android:exported="false"
-            android:stateNotNeeded="true"/>
+            android:exported="false"/>
 
 
         <!-- 👇 YOUR LAUNCHER ACTIVITY (HomePage) -->
