@@ -208,6 +208,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                         intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
                         intent.putExtra("chapterUrl", fetchedChapters.get(0).getChapterUrl());
                         intent.putExtra("source", mangaItem.getSource());
+                        intent.putExtra("chapterNumber", fetchedChapters.get(0).getNumber());
                         context.startActivity(intent);
                     }
 

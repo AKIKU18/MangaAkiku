@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChapterPage extends AppCompatActivity {
 
@@ -53,7 +55,7 @@ public class ChapterPage extends AppCompatActivity {
     private TextView overlayRefreshText;
     private String currentChapterId, currentChapterUrl, currentChapterTitle;
     private boolean bookmarkChanged = false;
-    private String mangaId, source, mangaUrl, chapterId, chapterUrl, chapterTitle;
+    private String mangaId, source, mangaUrl, chapterId, chapterUrl, chapterTitle,chapterNumber;
     private boolean uiVisible = true;
     private int scrollPosition;
 
@@ -70,7 +72,7 @@ public class ChapterPage extends AppCompatActivity {
         setupRecyclerScroll();
         getIntentData();
 
-        setData();
+        setData(chapterId, chapterUrl, chapterTitle);
 
         String chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, chapterId, chapterUrl);
         GetChapterPages(chapterUrlOrIdFinal);
@@ -86,25 +88,25 @@ public class ChapterPage extends AppCompatActivity {
         setupRecyclerScrollListener();
     }
 
-    private void setData(){
+    private int GetChapterNumber(String chapterTitle){
+        Pattern pattern = Pattern.compile("\\d+");
+        Matcher matcher = pattern.matcher(chapterTitle);
+
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group());
+        }
+
+        return 0; // fallback dacă nu găsește număr
+    }
+
+
+    private void setData(String chapterId, String chapterUrl, String chapterTitle){
         setCurrentChapterId(chapterId);
         setCurrentChapterUrl(chapterUrl);
         setCurrentChapterTitle(chapterTitle);
         tvChapterNumber.setText(chapterTitle);
-
-        executor.execute(() -> {
-            HistoryEntity getChapterHistory = db.historyDao().getHistoryById(mangaId);
-            if(getChapterHistory != null){
-                setCurrentChapterId(getChapterHistory.chapterId);
-                setCurrentChapterUrl(getChapterHistory.chapterUrl);
-                setCurrentChapterTitle(getChapterHistory.chapterTitle);
-                tvChapterNumber.setText(getChapterHistory.chapterTitle);
-            }else{
-                Log.e("ChapterPage", "No chapter history found");
-            }
-
-        });
     }
+
 
     private void getIntentData() {
         Intent intent = getIntent();
@@ -121,6 +123,8 @@ public class ChapterPage extends AppCompatActivity {
         chapterId = intent.getStringExtra("chapterId");
         chapterTitle = intent.getStringExtra("chapterTitle");
         chapterUrl = intent.getStringExtra("chapterUrl");
+        chapterNumber = intent.getStringExtra("chapterNumber");
+
 
         if (chapterId == null || chapterUrl == null) {
             Toast.makeText(this, "Chapter data incomplete", Toast.LENGTH_SHORT).show();
@@ -278,6 +282,9 @@ public class ChapterPage extends AppCompatActivity {
                     runOnUiThread(() -> {
                         if (next != null) {
                             loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl(),next.getMangaId(), next.getSource(), mangaUrl);
+                            chapterId = next.chapterId;
+                            chapterUrl = next.chapterUrl;
+                            chapterTitle = next.title;
                             Toast.makeText(this, "Next: " + next.getTitle(), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "This is the latest chapter", Toast.LENGTH_SHORT).show();
@@ -297,6 +304,9 @@ public class ChapterPage extends AppCompatActivity {
                     runOnUiThread(() -> {
                         if (prev != null) {
                             loadChapter(prev.getChapterId(), prev.getTitle(), prev.getChapterUrl(),prev.getMangaId(), prev.getSource(), mangaUrl);
+                            chapterId = prev.chapterId;
+                            chapterUrl = prev.chapterUrl;
+                            chapterTitle = prev.title;
                             Toast.makeText(this, "Previous: " + prev.getTitle(), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "This is the first chapter", Toast.LENGTH_SHORT).show();
