@@ -515,7 +515,7 @@ public class HomePage extends AppCompatActivity {
     private void loadFeed(int pageOrOffset, int limit) {
         if (isLoading) return; // Prevent concurrent loads.
         isLoading = true;
-
+        Log.e("HomePage loadFeed", serviceFeed);
         ServiceController.fetchMangaListController(serviceFeed, pageOrOffset, limit, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> mangas) {

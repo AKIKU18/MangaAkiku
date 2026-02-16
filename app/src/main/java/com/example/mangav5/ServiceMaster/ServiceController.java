@@ -10,6 +10,7 @@ import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansSearchService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.demonicScansTest;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsSearchService;
@@ -89,6 +90,8 @@ public class ServiceController {
 
 
     private static final String TAG = "ServiceController";
+
+
 
     public static void fetchMangaListController(String serviceFeed, int offsetOrPage, int limit, MangaListCallback callback) {
         if (callback == null) {
@@ -212,7 +215,7 @@ public class ServiceController {
                 });
                 break;
             case "Mgeko":
-                MgekoFeedService.getMangaFeedMgeko(offsetOrPage,new MgekoFeedService.MangaListCallback() {
+                MgekoFeedService.getMangaFeedMgeko(offsetOrPage, new MgekoFeedService.MangaListCallback() {
                     @Override
                     public void onSuccess(List<MangaItemModel> mangas) {
                         callback.onSuccess(mangas);
@@ -1023,7 +1026,7 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics","Rizzfables","Mgeko");
+        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko");
         List<MangaItemModel> allResults = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger completed = new AtomicInteger(0);
         int totalSources = sources.size();
@@ -1250,7 +1253,7 @@ public class ServiceController {
         void onError(String errorMessage);
     }
 
-    public interface LastChapterTitleCallback{
+    public interface LastChapterTitleCallback {
         void onSucces(String lastChapterTitle);
 
         void onError(String errorMessage);
