@@ -112,6 +112,7 @@ public class HomePage extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         GetTheme();
+        GetSource();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
@@ -176,8 +177,17 @@ public class HomePage extends AppCompatActivity {
 
     }
 
+    private void GetSource(){
+        AppDatabase db = AppDatabase.getInstance(this);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            if(db.sourceDao().getSource() != null){
+                serviceFeed = db.sourceDao().getSource().mainSource;
+            }
+        });
+
+    }
+
     private void SetTheme(String selectedTheme) {
-        Log.e("Theme", selectedTheme);
         switch (selectedTheme) {
             case "Light":
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
@@ -310,8 +320,6 @@ public class HomePage extends AppCompatActivity {
                     db.sourceDao().addSource(source);
                 });
 
-
-                Log.e("HomePage", "Setting " + sourceToSetAsMain + " as main source.");
                 Toast.makeText(this, sourceToSetAsMain + " set as main source.", Toast.LENGTH_SHORT).show();
             });
         }
@@ -604,7 +612,6 @@ public class HomePage extends AppCompatActivity {
     private void loadFeed(int pageOrOffset, int limit) {
         if (isLoading) return; // Prevent concurrent loads.
         isLoading = true;
-        Log.e("HomePage loadFeed", serviceFeed);
         ServiceController.fetchMangaListController(serviceFeed, pageOrOffset, limit, new ServiceController.MangaListCallback() {
             @Override
             public void onSuccess(List<MangaItemModel> mangas) {
