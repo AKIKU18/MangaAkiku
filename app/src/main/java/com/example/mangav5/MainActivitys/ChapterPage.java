@@ -281,10 +281,11 @@ public class ChapterPage extends AppCompatActivity {
                     ChapterItemEntity next = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, currentChapterId);
                     runOnUiThread(() -> {
                         if (next != null) {
-                            loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl(),next.getMangaId(), next.getSource(), mangaUrl);
                             chapterId = next.chapterId;
                             chapterUrl = next.chapterUrl;
                             chapterTitle = next.title;
+                            loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl(),next.getMangaId(), next.getSource(), mangaUrl);
+
                             Toast.makeText(this, "Next: " + next.getTitle(), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "This is the latest chapter", Toast.LENGTH_SHORT).show();
@@ -325,6 +326,15 @@ public class ChapterPage extends AppCompatActivity {
         setCurrentChapterTitle(chapterTitle);
         setCurrentChapterUrl(chapterUrl);
         tvChapterNumber.setText(chapterTitle);
+
+        Intent intent = new Intent(this, ChapterPage.class);
+        intent.putExtra("chapterId", getCurrentChapterId());
+        intent.putExtra("chapterTitle", getCurrentChapterTitle());
+        intent.putExtra("mangaId", mangaId);
+        intent.putExtra("mangaUrl", mangaUrl);
+        intent.putExtra("chapterUrl", chapterUrl);
+        intent.putExtra("source", source);
+        this.startActivity(intent);
 
         runOnUiThread(() -> {
             mangaId = _mangaId;

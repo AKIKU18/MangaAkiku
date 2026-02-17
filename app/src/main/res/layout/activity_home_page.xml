@@ -262,6 +262,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- LEFT DRAWER MENU -->
+    <!-- LEFT DRAWER MENU -->
     <LinearLayout
         android:id="@+id/navigation_drawer"
         android:layout_width="260dp"
@@ -295,15 +296,33 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone"/>
 
-            <Button
-                android:id="@+id/source_mangadex"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="MangaDex"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp"/>
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_mangadex"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="MangaDex"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp"/>
+
+                <ImageButton
+                    android:id="@+id/set_main_mangadex"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
+
         </FrameLayout>
+
 
         <!-- AsuraScans Drawer Button -->
         <FrameLayout
@@ -318,20 +337,38 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone"/>
 
-            <Button
-                android:id="@+id/source_asurascans"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/bg_gradient"
-                android:text="AsuraScans"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_asurascans"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_gradient"
+                    android:text="AsuraScans"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/set_main_asurascans"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
+
         </FrameLayout>
 
         <!-- Manhuaus Drawer Button -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="40dp">
+            android:layout_height="40dp"
+            android:layout_marginBottom="10dp">
 
             <View
                 android:id="@+id/drawer_manhuaus_glow"
@@ -340,21 +377,37 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone"/>
 
-            <Button
-                android:id="@+id/source_manhuaus"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="Manhuaus"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp"/>
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_manhuaus"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:text="Manhuaus"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp"/>
+
+                <ImageButton
+                    android:id="@+id/set_main_manhuaus"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
         </FrameLayout>
 
         <!-- ManhuaPlus Drawer Button -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginTop="10dp">
+            android:layout_marginBottom="10dp">
 
             <View
                 android:id="@+id/drawer_manhuaPlus_glow"
@@ -363,21 +416,38 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone" />
 
-            <Button
-                android:id="@+id/source_manhuaPlus"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="ManhuaPlus"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_manhuaPlus"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:text="ManhuaPlus"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/set_main_manhuaPlus"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
         </FrameLayout>
 
         <!-- DemonicScans Drawer Button -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginTop="10dp">
+            android:layout_marginBottom="10dp">
+
 
             <View
                 android:id="@+id/drawer_demonicScans_glow"
@@ -386,21 +456,37 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone" />
 
-            <Button
-                android:id="@+id/source_demonicScans"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="DemonicScans"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_demonicScans"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:text="DemonicScans"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/set_main_demonicScans"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
         </FrameLayout>
 
         <!-- ManhuaFast Drawer Button -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginTop="10dp">
+            android:layout_marginBottom="10dp">
 
             <View
                 android:id="@+id/drawer_manhuaFast_glow"
@@ -409,21 +495,37 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone" />
 
-            <Button
-                android:id="@+id/source_manhuaFast"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="ManhuaFast"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_manhuaFast"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:text="ManhuaFast"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/set_main_manhuaFast"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
         </FrameLayout>
 
         <!-- FlameComics Drawer Button -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginTop="10dp">
+            android:layout_marginBottom="10dp">
 
             <View
                 android:id="@+id/drawer_flameComics_glow"
@@ -432,21 +534,37 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone" />
 
-            <Button
-                android:id="@+id/source_flameComics"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="FlameComics"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_flameComics"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:text="FlameComics"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/set_main_flameComics"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
         </FrameLayout>
 
         <!-- Rizzfables Drawer Button -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginTop="10dp">
+            android:layout_marginBottom="10dp">
 
             <View
                 android:id="@+id/drawer_rizzfables_glow"
@@ -455,14 +573,30 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone" />
 
-            <Button
-                android:id="@+id/source_rizzfables"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="Rizzfables"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_rizzfables"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:text="Rizzfables"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/set_main_rizzfables"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
         </FrameLayout>
 
         <!-- Mgeko Drawer Button -->
@@ -478,17 +612,34 @@
                 android:background="@drawable/glow_around_button"
                 android:visibility="gone" />
 
-            <Button
-                android:id="@+id/source_mgeko"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="Mgeko"
-                android:textColor="?android:attr/textColorPrimary"
-                android:background="@drawable/bg_gradient"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/source_mgeko"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Mgeko"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:background="@drawable/bg_gradient"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/set_main_mgeko"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sharingan_dark"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Set as main source"
+                    android:padding="8dp"/>
+            </LinearLayout>
         </FrameLayout>
 
 
     </LinearLayout>
+
 
 </androidx.drawerlayout.widget.DrawerLayout>

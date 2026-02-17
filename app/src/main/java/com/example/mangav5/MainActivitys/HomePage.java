@@ -1,6 +1,7 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Entity.SourceEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
@@ -77,6 +79,16 @@ public class HomePage extends AppCompatActivity {
     private Button button_flameComics;  // Button in the drawer to select FlameComics as the source.
     private Button button_rizzfables;   // Button in the drawer to select Rizzfables as the source.
     private Button button_mgeko;        // Button in the drawer to select Mgeko as the source.
+    private ImageButton set_main_mangadex;      // Button in the drawer to select MangaDex as the source.
+    private ImageButton set_main_asurascans;    // Button in the drawer to select AsuraScans as the source.
+    private ImageButton set_main_manhuaus;      // Button in the drawer to select Manhuaus as the source.
+    private ImageButton set_main_manhuaPlus;    // Button in the drawer to select ManhuaPlus as the source.
+    private ImageButton set_main_demonicScans;  // Button in the drawer to select DemonicScans as the source.
+    private ImageButton set_main_manhuaFast;    // Button in the drawer to select ManhuaFast as the source.
+    private ImageButton set_main_flameComics;   // Button in the drawer to select FlameComics as the source.
+    private ImageButton set_main_rizzfables;    // Button in the drawer to select Rizzfables as the source.
+    private ImageButton set_main_mgeko;         // Button in the drawer to select Mgeko as the source.
+
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private TextView loadingText;             // Text view for displaying loading state.
     private ImageView recycler_bg_blur;      // Background view for blur effect behind search results.
@@ -130,19 +142,21 @@ public class HomePage extends AppCompatActivity {
         showInitialSourceGlow(); // Visually indicate the default source.
         ShowNotifications();
         checkSourcesAndDisableButtons(); // if you add more buttons,check them here.
+        setMainUpdateSourceIcon(serviceFeed); // Update the icon for the main source button.
+
     }
 
-    private void ShowNotifications(){
+    private void ShowNotifications() {
 
         button_notifications.setOnClickListener(v ->
         {
             if (recyclerNotifications.getAdapter() != null &&
                     recyclerNotifications.getAdapter().getItemCount() > 0) {
-                    if(notification_dropdown.getVisibility() != View.VISIBLE){
-                        notification_dropdown.setVisibility(View.VISIBLE);
-                    }else{
-                        notification_dropdown.setVisibility(View.GONE);
-                    }
+                if (notification_dropdown.getVisibility() != View.VISIBLE) {
+                    notification_dropdown.setVisibility(View.VISIBLE);
+                } else {
+                    notification_dropdown.setVisibility(View.GONE);
+                }
             } else {
                 Toast.makeText(this, "No notifications to show *(-_-)*", Toast.LENGTH_SHORT).show();
             }
@@ -153,10 +167,13 @@ public class HomePage extends AppCompatActivity {
 
     private void GetTheme() {
         AppDatabase db = AppDatabase.getInstance(this);
-        Executors.newSingleThreadExecutor().execute(() ->
-                SetTheme(db.settingsDao().getSetting("theme").getValue())
+        Executors.newSingleThreadExecutor().execute(() -> {
+            SetTheme(db.settingsDao().getSetting("theme").getValue());
+            if(db.sourceDao().getSource() != null){
+                serviceFeed = db.sourceDao().getSource().mainSource;
+            }
+        });
 
-        );
     }
 
     private void SetTheme(String selectedTheme) {
@@ -198,6 +215,18 @@ public class HomePage extends AppCompatActivity {
         recyclerNotifications = findViewById(R.id.recycler_notifications);
         button_rizzfables = findViewById(R.id.source_rizzfables);
         button_mgeko = findViewById(R.id.source_mgeko);
+
+        set_main_mangadex = findViewById(R.id.set_main_mangadex);
+        set_main_asurascans = findViewById(R.id.set_main_asurascans);
+        set_main_manhuaus = findViewById(R.id.set_main_manhuaus);
+        set_main_manhuaPlus = findViewById(R.id.set_main_manhuaPlus);
+        set_main_demonicScans = findViewById(R.id.set_main_demonicScans);
+        set_main_manhuaFast = findViewById(R.id.set_main_manhuaFast);
+        set_main_flameComics = findViewById(R.id.set_main_flameComics);
+        set_main_rizzfables = findViewById(R.id.set_main_rizzfables);
+        set_main_mgeko = findViewById(R.id.set_main_mgeko);
+
+
     }
 
     /**
@@ -205,7 +234,7 @@ public class HomePage extends AppCompatActivity {
      */
     private void setupRecyclerViews() {
         searchResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
-        notificationResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
+        notificationResultAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
         homeListAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
 
         searchResultView.setAdapter(searchResultAdapter);
@@ -230,9 +259,9 @@ public class HomePage extends AppCompatActivity {
         ImageButton menuButton = findViewById(R.id.button_menu);
 
         // Open the drawer when the menu button is clicked.
-        menuButton.setOnClickListener(v -> checkSourcesAndDisableButtons() );
+        menuButton.setOnClickListener(v -> checkSourcesAndDisableButtons());
 
-        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START) );
+        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
         // Map your buttons to their sources
         Map<Button, String> sourceButtons = Map.of(
@@ -243,7 +272,7 @@ public class HomePage extends AppCompatActivity {
                 button_demonicScans, "DemonicScans",
                 button_manhuaFast, "ManhuaFast",
                 button_flameComics, "FlameComics",
-                button_rizzfables,"Rizzfables",
+                button_rizzfables, "Rizzfables",
                 button_mgeko, "Mgeko"
         );
 
@@ -255,6 +284,38 @@ public class HomePage extends AppCompatActivity {
                 drawerLayout.closeDrawer(GravityCompat.START);
             });
         }
+
+        // --- Listeneri pentru butoanele de setare a sursei principale (default) ---
+        Map<ImageButton, String> mainSourceButtons = Map.of(
+                set_main_mangadex, "MangaDex",
+                set_main_asurascans, "AsuraScans",
+                set_main_manhuaus, "Manhuaus",
+                set_main_manhuaPlus, "ManhuaPlus",
+                set_main_demonicScans, "DemonicScans",
+                set_main_manhuaFast, "ManhuaFast",
+                set_main_flameComics, "FlameComics",
+                set_main_rizzfables, "Rizzfables",
+                set_main_mgeko, "Mgeko"
+        );
+
+        // Set up all listeners for the "set main" buttons
+        for (Map.Entry<ImageButton, String> entry : mainSourceButtons.entrySet()) {
+            entry.getKey().setOnClickListener(v -> {
+                String sourceToSetAsMain = entry.getValue();
+                setMainUpdateSourceIcon(entry.getValue());
+
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    AppDatabase db = AppDatabase.getInstance(HomePage.this);
+                    SourceEntity source = new SourceEntity(entry.getValue());
+                    db.sourceDao().addSource(source);
+                });
+
+
+                Log.e("HomePage", "Setting " + sourceToSetAsMain + " as main source.");
+                Toast.makeText(this, sourceToSetAsMain + " set as main source.", Toast.LENGTH_SHORT).show();
+            });
+        }
+
     }
 
     /**
@@ -322,6 +383,34 @@ public class HomePage extends AppCompatActivity {
             targetGlow.startAnimation(pulse);
         }
     }
+
+    private void setMainUpdateSourceIcon(String setMainButton) {
+
+        Map<String, ImageButton> setMainChangeIcon = Map.of(
+                "MangaDex", set_main_mangadex,
+                "AsuraScans", set_main_asurascans,
+                "Manhuaus", set_main_manhuaus,
+                "ManhuaPlus", set_main_manhuaPlus,
+                "DemonicScans", set_main_demonicScans,
+                "ManhuaFast", set_main_manhuaFast,
+                "FlameComics", set_main_flameComics,
+                "Rizzfables", set_main_rizzfables,
+                "Mgeko", set_main_mgeko
+        );
+
+        // Reset all icons to dark
+        for (ImageButton button : setMainChangeIcon.values()) {
+            button.setImageResource(R.drawable.ic_sharingan_dark);
+        }
+
+
+        // Set active source to light
+        ImageButton activeButton = setMainChangeIcon.get(setMainButton);
+        if (activeButton != null) {
+            activeButton.setImageResource(R.drawable.ic_sharingan_light);
+        }
+    }
+
 
     /**
      * Shows the glow animation for the default source on app start.
@@ -412,7 +501,7 @@ public class HomePage extends AppCompatActivity {
 
                     if (recycler_bg_blur != null)
                         recycler_bg_blur.setVisibility(View.GONE);
-                }else{
+                } else {
                     searchView.setQueryHint("");
                 }
                 return true;
@@ -546,7 +635,7 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.demonicScansOffset += 1;
                     } else if (serviceFeed.equals("ManhuaFast")) {
                         HomePage.this.manhuaFastOffset += 1;
-                    } else if (serviceFeed.equals("Mgeko")){
+                    } else if (serviceFeed.equals("Mgeko")) {
                         HomePage.this.mgekoOffset += 1;
                     }
                 });
@@ -606,7 +695,7 @@ public class HomePage extends AppCompatActivity {
                 button_demonicScans, "https://demonicscans.org/",
                 button_manhuaFast, "https://manhuafast.com/",
                 button_flameComics, "https://flamecomics.xyz/",
-                button_rizzfables,"https://rizzfables.com/",
+                button_rizzfables, "https://rizzfables.com/",
                 button_mgeko, "https://mgeko.cc/"
         );
 
@@ -622,7 +711,6 @@ public class HomePage extends AppCompatActivity {
             }
         });
     }
-
 
 
 }
