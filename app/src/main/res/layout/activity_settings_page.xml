@@ -185,6 +185,118 @@
                 </LinearLayout>
             </FrameLayout>
 
+
+
+
+            <!-- ========== Update Locally All Manga Data  ========== -->
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Local Total Data"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <!-- ========== SOURCE SELECTOR ========== -->
+
+
+            <!-- ========== SOURCE SELECTOR + SYNC BUTTON ========== -->
+            <FrameLayout
+                android:id="@+id/item_select_source"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="28dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <View
+                        android:id="@+id/sourceBlurBackground"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/glass_bg" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical|start"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Select Source"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp" />
+
+                    <Spinner
+                        android:id="@+id/spinner_source"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dropdown"
+                        android:background="@android:color/transparent"
+                        android:layout_marginEnd="8dp"/>
+
+                    <Button
+                        android:id="@+id/button_sync_source"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sync"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:background="@android:color/transparent"
+                        android:foreground="?attr/selectableItemBackground" />
+                </LinearLayout>
+            </FrameLayout>
+
+
+            <TextView
+                android:id="@+id/text_total_manga_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="Manga --> 0"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/text_total_manga_updated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="Manga updated --> 0"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/text_total_manga_added"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="New manga added --> 0"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp" />
+
+            <!-- ========== ABOUT ========== -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="About"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
             <!-- CHECK FOR UPDATES BUTTON -->
             <FrameLayout
                 android:id="@+id/item_check_update"
@@ -213,24 +325,12 @@
                     android:layout_height="match_parent"
                     android:background="@android:color/transparent"
                     android:gravity="center"
-                    android:text="Check for Updates"
+                    android:text="Software Update"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textSize="16sp"
                     android:foreground="?attr/selectableItemBackground" />
             </FrameLayout>
 
-
-
-
-            <!-- ========== ABOUT ========== -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="About"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
 
             <!-- APP VERSION -->
             <LinearLayout

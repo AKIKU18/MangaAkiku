@@ -33,7 +33,20 @@ public interface MangaItemDao {
     @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId ORDER BY number DESC")
     List<ChapterItemEntity> getChapterList(String mangaId);
 
-    //Get Chapter by id
+    //Get all manga by source
+    @Query("SELECT * FROM mangaItem WHERE source = :source")
+    List<MangaItemEntity> getMangaBySource(String source);
+
+
+    //Check if manga exist
+    @Query("SELECT COUNT(*) FROM mangaItem WHERE mangaId = :id")
+    boolean mangaExists(String id);
+
+    //Get the size of the library
+    @Query("SELECT COUNT(*) FROM mangaItem")
+    int getLibrarySize();
+
+    //Get manga by id
 
 
     @Query("SELECT * FROM mangaItem WHERE mangaId = :id")

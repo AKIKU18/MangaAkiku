@@ -10,7 +10,6 @@ import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansSearchService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.demonicScansTest;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceFlameComics.FlameComicsSearchService;

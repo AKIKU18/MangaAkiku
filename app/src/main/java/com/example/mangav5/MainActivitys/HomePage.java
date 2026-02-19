@@ -1,7 +1,6 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -29,16 +28,11 @@ import android.widget.Toast;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.Entity.SourceEntity;
-import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
-import com.example.mangav5.ServiceMaster.DataTimedLoader;
 import com.example.mangav5.ServiceMaster.ServiceController;
-import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoChaptersService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoFeedService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoSearchService;
-import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesFeedService;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -55,7 +49,7 @@ import java.util.concurrent.Executors;
  */
 public class HomePage extends AppCompatActivity {
 
-    private static final int LIMIT = 10;          // Number of items to fetch per page for MangaDex.
+    private static final int LIMIT = 20;          // Number of items to fetch per page for MangaDex.
     public static String serviceFeed = "DemonicScans"; // The current selected data source. Defaults to AsuraScans.
     FrameLayout notificationDropdown;
     RecyclerView recyclerNotifications;
@@ -136,7 +130,7 @@ public class HomePage extends AppCompatActivity {
 
         // Set up listeners and initial state.
         setupSearchView();
-        loadFeed(offset, LIMIT); // Load the initial data for the main feed.
+        loadFeedFromDb(offset, LIMIT); // Load the initial data for the main feed.
         setupPagination();
         setupNavigationButtons();
         setupSourceSelectionDrawer();
@@ -348,7 +342,7 @@ public class HomePage extends AppCompatActivity {
         mangaListView.scrollToPosition(0);
 
         // Load data from the new source.
-        loadFeed(offset, LIMIT);
+        loadFeedFromDb(offset, LIMIT);
         updateSourceGlow(); // Update the visual indicator for the selected source.
     }
 
@@ -581,26 +575,14 @@ public class HomePage extends AppCompatActivity {
                 int totalItemCount = layoutManager.getItemCount();
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
-                // Load more items when the user is near the end of the list.
+                // Load more items when near the end of the list
                 if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5 && totalItemCount > 0) {
-                    if (serviceFeed.equals("MangaDex")) {
-                        loadFeed(offset, LIMIT);
-                    } else if (serviceFeed.equals("AsuraScans")) {
-                        loadFeed(asuraScansOffset, LIMIT);
-                    } else if (serviceFeed.equals("ManhuaPlus")) {
-                        loadFeed(manhuaPlusOffset, LIMIT);
-                    } else if (serviceFeed.equals("DemonicScans")) {
-                        loadFeed(demonicScansOffset, LIMIT);
-                    } else if (serviceFeed.equals("ManhuaFast")) {
-                        loadFeed(manhuaFastOffset, LIMIT);
-                    } else if (serviceFeed.equals("Mgeko")) {
-                        loadFeed(mgekoOffset, LIMIT);
-                    }
-                    // Add other sources here if they support pagination.
+                    loadFeedFromDb(offset, LIMIT); // apelăm direct DB
                 }
             }
         });
     }
+
 
     /**
      * Fetches a list of manga from the currently selected service and appends it to the main list.
@@ -609,54 +591,59 @@ public class HomePage extends AppCompatActivity {
      * @param pageOrOffset The page number or offset for the API request.
      * @param limit        The number of items to load.
      */
-    private void loadFeed(int pageOrOffset, int limit) {
-        if (isLoading) return; // Prevent concurrent loads.
+    private void loadFeedFromDb(int pageOrOffset, int limit) {
+        if (isLoading) return;
         isLoading = true;
-        ServiceController.fetchMangaListController(serviceFeed, pageOrOffset, limit, new ServiceController.MangaListCallback() {
-            @Override
-            public void onSuccess(List<MangaItemModel> mangas) {
-                runOnUiThread(() -> {
-                    // For the first page, clear the list. For subsequent pages, append.
-                    if (pageOrOffset == 0 || pageOrOffset == 1) {
-                        mangaList.clear();
-                        mangaList.addAll(mangas);
+        AppDatabase db = AppDatabase.getInstance(this);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            // Calculează offset-ul pentru paginare
+            int start = pageOrOffset * limit;
 
-                        homeListAdapter.notifyDataSetChanged();
-                    } else {
-                        int startPosition = mangaList.size();
-                        mangaList.addAll(mangas);
-                        homeListAdapter.notifyItemRangeInserted(startPosition, mangas.size());
-                    }
+            // Ia toate manga din DB
+            List<MangaItemEntity> allManga = db.mangaItemDao().getMangaBySource(serviceFeed);
 
-                    isLoading = false;
-                    homeListAdapter.refreshBookmarkStates(); // Update bookmark icons for new items.
-
-                    // Increment the correct offset for the next page load.
-                    if (serviceFeed.equals("MangaDex")) {
-                        HomePage.this.offset += limit;
-                    } else if (serviceFeed.equals("AsuraScans")) {
-                        HomePage.this.asuraScansOffset += 1;
-                    } else if (serviceFeed.equals("ManhuaPlus")) {
-                        HomePage.this.manhuaPlusOffset += 1;
-                    } else if (serviceFeed.equals("DemonicScans")) {
-                        HomePage.this.demonicScansOffset += 1;
-                    } else if (serviceFeed.equals("ManhuaFast")) {
-                        HomePage.this.manhuaFastOffset += 1;
-                    } else if (serviceFeed.equals("Mgeko")) {
-                        HomePage.this.mgekoOffset += 1;
-                    }
-                });
+            // Limitează lista la pagina curentă
+            List<MangaItemEntity> pagedManga = new ArrayList<>();
+            for (int i = start; i < start + limit && i < allManga.size(); i++) {
+                pagedManga.add(allManga.get(i));
             }
 
-            @Override
-            public void onError(String message) {
-                runOnUiThread(() -> {
-                    Toast.makeText(HomePage.this, "Error loading feed: " + message, Toast.LENGTH_SHORT).show();
-                    isLoading = false;
-                });
+            // Transformă entity-urile în modelul folosit de RecyclerView
+            List<MangaItemModel> mangaModels = new ArrayList<>();
+            for (MangaItemEntity entity : pagedManga) {
+                MangaItemModel model = new MangaItemModel(
+                        entity.getMangaId(),
+                        entity.getTitle(),
+                        entity.getDescription(),
+                        entity.getCoverUrl(),
+                        true, // presupunem că toate sunt bookmarked dacă sunt în DB
+                        entity.getMangaUrl(),
+                        entity.getLastChapter(),
+                        entity.getSource()
+                );
+                mangaModels.add(model);
             }
+
+            runOnUiThread(() -> {
+                if (pageOrOffset == 0 || pageOrOffset == 1) {
+                    mangaList.clear();
+                    mangaList.addAll(mangaModels);
+                    homeListAdapter.notifyDataSetChanged();
+                } else {
+                    int startPosition = mangaList.size();
+                    mangaList.addAll(mangaModels);
+                    homeListAdapter.notifyItemRangeInserted(startPosition, mangaModels.size());
+                }
+
+                isLoading = false;
+                homeListAdapter.refreshBookmarkStates(); // Update bookmark icons
+
+                // Crește offset-ul pentru următoarea pagină
+                HomePage.this.offset += limit;
+            });
         });
     }
+
 
     @Override
     protected void onNewIntent(Intent intent) {

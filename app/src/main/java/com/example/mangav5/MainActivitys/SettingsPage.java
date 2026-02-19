@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -22,40 +24,59 @@ import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.ChapterItemEntity;
 import com.example.mangav5.Entity.MangaItemEntity;
 import com.example.mangav5.Entity.SettingsItemEntity;
+import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.GitHubUpdateManager;
+import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.ServiceMaster.SyncManager;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SettingsPage extends AppCompatActivity {
     AppDatabase db = AppDatabase.getInstance(this);
     TextView text_total_size;
+    TextView text_total_manga_size;
+    TextView text_total_manga_updated;
+    TextView text_total_manga_added;
     Button btn_home;
+    Button button_update_all_manga;
     FrameLayout item_storage_usage;
     FrameLayout item_clear_cache;
+    private String sourceSlection = "DemonicScans";
+    ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
+    Handler mainHandler = new Handler(Looper.getMainLooper());
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings_page);
         text_total_size = findViewById(R.id.text_storage_size);
+        text_total_manga_size = findViewById(R.id.text_total_manga_size);
+        text_total_manga_updated = findViewById(R.id.text_total_manga_updated);
+        text_total_manga_added = findViewById(R.id.text_total_manga_added);
         btn_home = findViewById(R.id.button_home);
+        button_update_all_manga = findViewById(R.id.button_sync_source);
         item_storage_usage = findViewById(R.id.item_storage_usage);
         item_clear_cache = findViewById(R.id.item_clear_cache);
-        calculateTotalSize();
 
+        calculateTotalSize();
+        SyncLibraryButton();
         // Remove the default title bar.
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
 
         ThemeSpinner();
+        SourceSpinner();
         SetUpButtons();
         UpateApp();
+        GetTheSizeOfLibrary();
     }
 
-    private void SetUpButtons(){
+    private void SetUpButtons() {
         btn_home.setOnClickListener(v -> startActivity(new Intent(SettingsPage.this, HomePage.class)));
         item_storage_usage.setOnClickListener(v -> startActivity(new Intent(SettingsPage.this, StorageUsagePage.class)));
         item_clear_cache.setOnClickListener(v ->
@@ -136,6 +157,91 @@ public class SettingsPage extends AppCompatActivity {
         });
     }
 
+    private void GetTheSizeOfLibrary(){
+        Executors.newSingleThreadExecutor().execute(() -> {
+            int librarySize = db.mangaItemDao().getLibrarySize(); // background thread
+
+            new Handler(Looper.getMainLooper()).post(() -> {
+                text_total_manga_size.setText("Manga --> " + librarySize); // UI thread
+            });
+        });
+    }
+    private void SyncLibraryButton() {
+        button_update_all_manga.setOnClickListener(v -> {
+
+            calculateTotalManga(1, new ServiceController.MangaListCallback() {
+
+                @Override
+                public void onSuccess(List<MangaItemModel> mangas) {
+
+                    dbExecutor.execute(() -> {
+
+                        for (MangaItemModel manga : mangas) {
+
+                            MangaItemEntity entity = new MangaItemEntity(
+                                    manga.getMangaId(),
+                                    manga.getTitle(),
+                                    manga.getCoverImageUrl(),
+                                    manga.getDescription(),
+                                    manga.getMangaUrl(),
+                                    manga.getLastChapter(),
+                                    manga.getSource()
+                            );
+
+                            if (!db.mangaItemDao().mangaExists(manga.getMangaId())) {
+                                db.mangaItemDao().insertManga(entity);
+                            }else{
+                                Log.e("SettingsPage", "Manga Id: " + manga.getMangaId() + "Manga Title:" + manga.getTitle() +  " already exists in the database");
+                                Log.e("SettingsPage", "Manga already exists in the database");
+                            }
+                        }
+
+                        int size = db.mangaItemDao().getLibrarySize();
+
+                        mainHandler.post(() -> {
+                            text_total_manga_size.setText("Manga --> " + size);
+                        });
+
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    mainHandler.post(() ->
+                            Toast.makeText(SettingsPage.this, message, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            });
+
+        });
+    }
+
+    private void calculateTotalManga(int page, ServiceController.MangaListCallback callback) {
+
+        ServiceController.fetchMangaListController(sourceSlection, page, 500, new ServiceController.MangaListCallback() {
+            @Override
+            public void onSuccess(List<MangaItemModel> mangas) {
+                if (mangas == null || mangas.isEmpty()) {
+                    Log.d("DemonicScansSync", "Finished syncing at page " + page);
+
+                    return; // stop aici, nu mai sunt pagini
+                }
+
+
+                callback.onSuccess(mangas);
+
+                // trecem la pagina următoare
+                calculateTotalManga(page + 1, callback);
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e("DemonicScansSync", "Error on page " + page + ": " + message);
+                callback.onError(message);
+            }
+        });
+    }
+
     private void ThemeSpinner() {
         Spinner spinnerTheme = findViewById(R.id.spinner_theme);
         String[] themes = {"System Default", "Light", "Dark"};
@@ -146,7 +252,7 @@ public class SettingsPage extends AppCompatActivity {
         spinnerTheme.setAdapter(adapter);
 
         // Load saved theme from DB
-        Executors.newSingleThreadExecutor().execute(() -> {
+        dbExecutor.execute(() -> {
             SettingsItemEntity saved = db.settingsDao().getSetting("theme");
             String currentTheme = (saved != null) ? saved.getValue() : "System Default";
 
@@ -206,7 +312,30 @@ public class SettingsPage extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
+    private void SourceSpinner() {
+        Spinner spinnerTheme = findViewById(R.id.spinner_source);
+        String[] sources = {"MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko"};
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, sources);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTheme.setAdapter(adapter);
+
+
+        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                sourceSlection = sources[position];
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
     }
 
@@ -252,8 +381,6 @@ public class SettingsPage extends AppCompatActivity {
             updater.checkForUpdate();
         }
     }
-
-
 
 
     private String formatSizeFromBytes(double bytes) {
