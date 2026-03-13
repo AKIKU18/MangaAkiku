@@ -482,10 +482,11 @@ public class ChapterPage extends AppCompatActivity {
                     offset = -firstVisibleItemView.getTop();
 
                 }
-                scrollPosition = firstVisibleItemPosition * (firstVisibleItemView != null ? firstVisibleItemView.getHeight() : 0) + offset;
             }
         });
     }
+
+
 
     @Override
     protected void onDestroy() {

@@ -127,7 +127,6 @@ public class RizzfablesFeedService {
                         break; // VERY important
                     }
                 }
-                Log.e("description", description);
 
                 MangaItemModel manga = new MangaItemModel(
                         mangaId,

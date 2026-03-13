@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Face circle -->
+    <path
+        android:fillColor="#FFE0E0E0"
+        android:pathData="M12,2a10,10 0,1 0,0.01 0z"/>
+
+    <!-- Left eye -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M9,9a1,1 0,1 0,0.01 0z"/>
+
+    <!-- Right eye -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M15,9a1,1 0,1 0,0.01 0z"/>
+
+    <!-- Sad mouth -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.5"
+        android:pathData="M8,16c1.5,-2 6.5,-2 8,0"
+        android:strokeLineCap="round"/>
+</vector>
