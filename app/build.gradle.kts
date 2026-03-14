@@ -18,7 +18,8 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            // Use your old Windows keystore
+            storeFile = file("/media/akiku/CA04F03404F0255B/Users/akiku/.android/debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
