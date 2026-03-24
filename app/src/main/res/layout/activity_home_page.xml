@@ -328,14 +328,15 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginBottom="10dp">
+            android:layout_marginBottom="10dp"
+            android:visibility="gone">
 
             <View
                 android:id="@+id/drawer_asurascans_glow"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/glow_around_button"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -345,8 +346,8 @@
                 <Button
                     android:id="@+id/source_asurascans"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
                     android:background="@drawable/bg_gradient"
                     android:text="AsuraScans"
                     android:textColor="?android:attr/textColorPrimary"
@@ -356,10 +357,10 @@
                     android:id="@+id/set_main_asurascans"
                     android:layout_width="40dp"
                     android:layout_height="match_parent"
-                    android:src="@drawable/ic_sharingan_dark"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Set as main source"
-                    android:padding="8dp"/>
+                    android:padding="8dp"
+                    android:src="@drawable/ic_sharingan_dark" />
             </LinearLayout>
 
         </FrameLayout>
@@ -368,14 +369,15 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginBottom="10dp">
+            android:layout_marginBottom="10dp"
+            android:visibility="gone">
 
             <View
                 android:id="@+id/drawer_manhuaus_glow"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/glow_around_button"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -385,21 +387,21 @@
                 <Button
                     android:id="@+id/source_manhuaus"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_gradient"
                     android:text="Manhuaus"
                     android:textColor="?android:attr/textColorPrimary"
-                    android:background="@drawable/bg_gradient"
-                    android:textSize="14sp"/>
+                    android:textSize="14sp" />
 
                 <ImageButton
                     android:id="@+id/set_main_manhuaus"
                     android:layout_width="40dp"
                     android:layout_height="match_parent"
-                    android:src="@drawable/ic_sharingan_dark"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Set as main source"
-                    android:padding="8dp"/>
+                    android:padding="8dp"
+                    android:src="@drawable/ic_sharingan_dark" />
             </LinearLayout>
         </FrameLayout>
 
@@ -486,7 +488,8 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginBottom="10dp">
+            android:layout_marginBottom="10dp"
+            android:visibility="gone">
 
             <View
                 android:id="@+id/drawer_manhuaFast_glow"
@@ -503,21 +506,21 @@
                 <Button
                     android:id="@+id/source_manhuaFast"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_gradient"
                     android:text="ManhuaFast"
                     android:textColor="?android:attr/textColorPrimary"
-                    android:background="@drawable/bg_gradient"
                     android:textSize="14sp" />
 
                 <ImageButton
                     android:id="@+id/set_main_manhuaFast"
                     android:layout_width="40dp"
                     android:layout_height="match_parent"
-                    android:src="@drawable/ic_sharingan_dark"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Set as main source"
-                    android:padding="8dp"/>
+                    android:padding="8dp"
+                    android:src="@drawable/ic_sharingan_dark" />
             </LinearLayout>
         </FrameLayout>
 

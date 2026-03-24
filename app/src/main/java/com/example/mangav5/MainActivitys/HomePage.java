@@ -35,10 +35,13 @@ import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.DataTimedLoader;
 import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoSearchService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceRizzfables.RizzfablesFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServicesAsuraScans.AsuraScansFeedService;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -144,7 +147,17 @@ public class HomePage extends AppCompatActivity {
         ShowNotifications();
         checkSourcesAndDisableButtons(); // if you add more buttons,check them here.
         setMainUpdateSourceIcon(serviceFeed); // Update the icon for the main source button.
+        ComixFeedService.getMangaFeedComix(1, new ComixFeedService.MangaListCallback() {
+            @Override
+            public void onSuccess(List<MangaItemModel> mangas) {
+                Log.e("HomePage", mangas.size() + "");
+            }
 
+            @Override
+            public void onError(String message) {
+
+            }
+        });
     }
 
     private void ShowNotifications() {

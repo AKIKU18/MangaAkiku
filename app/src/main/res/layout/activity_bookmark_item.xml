@@ -112,6 +112,12 @@
             android:clickable="true"
             android:focusable="true" />
 
+        <FrameLayout
+            android:id="@+id/bookmarkFrameLayout"
+            android:layout_width="1dp"
+            android:layout_height="1dp">
+
+        </FrameLayout>
     </LinearLayout>
 
     <androidx.cardview.widget.CardView

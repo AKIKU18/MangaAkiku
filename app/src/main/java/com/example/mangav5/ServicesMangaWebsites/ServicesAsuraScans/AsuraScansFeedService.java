@@ -46,15 +46,22 @@ public class AsuraScansFeedService {
                     String[] parts = mangaUrl.split("-");
                     String mangaId = parts[parts.length - 1];
 
-                    Element titleElement = doc.selectFirst("div.text-center.sm\\:text-left > span");
-                    Element coverElement = doc.selectFirst("div.relative.col-span-full.sm\\:col-span-3 img");
-                    Element description = doc.selectFirst("div.col-span-12.sm\\:col-span-9 > span");
+                    Element titleElement = doc.selectFirst("h1");
+
+                    Element coverElement = doc.selectFirst("img[alt]");
+
+                    Element container = doc.selectFirst("div.max-w-\\[1285px\\]");
+                    Log.e("ContainerDesc",container.toString());
+
+
+                    String title = titleElement != null ? titleElement.text().trim() : "No title";
+                    String coverUrl = coverElement != null ? coverElement.absUrl("src") : "";
 
                     MangaItemModel manga = new MangaItemModel(
                             mangaId,
-                            titleElement != null ? titleElement.text() : "No title",
-                            description != null ? description.text() : "",
-                            coverElement != null ? coverElement.attr("src") : "",
+                            title,
+                            "description",
+                            coverUrl,
                             false,
                             mangaUrl,
                             "",
@@ -62,8 +69,8 @@ public class AsuraScansFeedService {
                     );
 
                     mainHandler.post(() -> callback.onSuccess(manga));
-                    return; // success, exit loop
 
+                    return; // success, exit loop
                 } catch (IOException e) {
                     attempts++;
                     Log.e(TAG, "Attempt " + attempts + " failed for " + mangaUrl, e);
@@ -126,7 +133,6 @@ public class AsuraScansFeedService {
 
     public static void getAsuraScansMangaFeed(int pageNumber, MangaListCallback callback) {
         String mangaUrl = "https://asuracomic.net/page/" + pageNumber;
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -139,19 +145,30 @@ public class AsuraScansFeedService {
                         .timeout(15000)
                         .get();
 
-                Elements mangaEntries = doc.select("div.w-full.p-1.pt-1.pb-3");
-
+                Elements mangaEntries = doc.select("div.grid.grid-cols-12");
                 for (Element entry : mangaEntries) {
-                    Element titleLink = entry.selectFirst("span.text-\\[15px\\] a");
+
+                    // Main manga link (title)
+                    Element titleLink = entry.selectFirst("a[href^=/comics/]");
+
+                    // Cover image
                     Element img = entry.selectFirst("img");
-                    Element chapter = entry.selectFirst("div.flex.text-sm a[href]");
+
+                    // Latest chapter link
+                    Element chapter = entry.selectFirst("a[href*=/chapter/]");
 
                     if (titleLink != null) {
+
                         String href = "https://asuracomic.net" + titleLink.attr("href");
-                        String title = titleLink.text();
+                        String title = entry.selectFirst("img").attr("alt");
+
                         String coverUrl = img != null ? img.absUrl("src") : "";
+
+                        // Extract ID (last part after "-")
                         String[] parts = href.split("-");
                         String mangaId = parts[parts.length - 1];
+
+                        String chapterText = chapter != null ? chapter.text().trim() : "";
 
                         MangaItemModel manga = new MangaItemModel(
                                 mangaId,
@@ -160,7 +177,7 @@ public class AsuraScansFeedService {
                                 coverUrl,
                                 false,
                                 href,
-                                chapter != null ? chapter.text() : "",
+                                chapterText,
                                 "AsuraScans"
                         );
 

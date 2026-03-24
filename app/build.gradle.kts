@@ -19,7 +19,7 @@ android {
     signingConfigs {
         create("release") {
             // Use your old Windows keystore
-            storeFile = file("/media/akiku/CA04F03404F0255B/Users/akiku/.android/debug.keystore")
+            storeFile = file("/home/akiku/Desktop/DebugKey/debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
