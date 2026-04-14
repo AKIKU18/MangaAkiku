@@ -35,6 +35,8 @@ import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.DataTimedLoader;
 import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixChapterListService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixChapterPagesService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoChaptersService;
@@ -74,6 +76,7 @@ public class HomePage extends AppCompatActivity {
     private Button bookmarkPageButton;       // Button to navigate to the Bookmarks page.
     private Button historyPageButton;        // Button to navigate to the History page.
     private Button button_mangadex;          // Button in the drawer to select MangaDex as the source.
+    private Button button_comix;             // Button in the drawer to select Comix as the source.
     private Button button_asurascans;        // Button in the drawer to select AsuraScans as the source.
     private Button button_manhuaus;          // Button in the drawer to select Manhuaus as the source.
     private Button button_manhuaPlus; // Button in the drawer to select ManhuaPlus as the source.
@@ -91,6 +94,7 @@ public class HomePage extends AppCompatActivity {
     private ImageButton set_main_flameComics;   // Button in the drawer to select FlameComics as the source.
     private ImageButton set_main_rizzfables;    // Button in the drawer to select Rizzfables as the source.
     private ImageButton set_main_mgeko;         // Button in the drawer to select Mgeko as the source.
+    private ImageButton set_main_comix;         // Button in the drawer to select Comix as the source.
 
     private ImageButton settingsPageButton;  // Button to navigate to the Settings page.
     private TextView loadingText;             // Text view for displaying loading state.
@@ -106,6 +110,7 @@ public class HomePage extends AppCompatActivity {
     private int demonicScansOffset = 0;            // Current page number for DemonicScans pagination.
     private int manhuaFastOffset = 0;              // Current page number for ManhuaFast pagination.
     private int mgekoOffset = 0;                   // Current page number for Mgeko pagination.
+    private int comixOffset = 0;                   // Current page number for Comix pagination.
     // Activity Result Launchers
     private ActivityResultLauncher<Intent> bookmarkLauncher; // Handles results from the Bookmarks page.
     private ActivityResultLauncher<Intent> mangaPageLauncher;  // Handles results from the MangaPage.
@@ -147,17 +152,6 @@ public class HomePage extends AppCompatActivity {
         ShowNotifications();
         checkSourcesAndDisableButtons(); // if you add more buttons,check them here.
         setMainUpdateSourceIcon(serviceFeed); // Update the icon for the main source button.
-        ComixFeedService.getMangaFeedComix(1, new ComixFeedService.MangaListCallback() {
-            @Override
-            public void onSuccess(List<MangaItemModel> mangas) {
-                Log.e("HomePage", mangas.size() + "");
-            }
-
-            @Override
-            public void onError(String message) {
-
-            }
-        });
     }
 
     private void ShowNotifications() {
@@ -238,6 +232,8 @@ public class HomePage extends AppCompatActivity {
         recyclerNotifications = findViewById(R.id.recycler_notifications);
         button_rizzfables = findViewById(R.id.source_rizzfables);
         button_mgeko = findViewById(R.id.source_mgeko);
+        button_comix = findViewById(R.id.source_comix);
+
 
         set_main_mangadex = findViewById(R.id.set_main_mangadex);
         set_main_asurascans = findViewById(R.id.set_main_asurascans);
@@ -248,6 +244,7 @@ public class HomePage extends AppCompatActivity {
         set_main_flameComics = findViewById(R.id.set_main_flameComics);
         set_main_rizzfables = findViewById(R.id.set_main_rizzfables);
         set_main_mgeko = findViewById(R.id.set_main_mgeko);
+        set_main_comix = findViewById(R.id.set_main_comix);
 
 
     }
@@ -296,7 +293,8 @@ public class HomePage extends AppCompatActivity {
                 button_manhuaFast, "ManhuaFast",
                 button_flameComics, "FlameComics",
                 button_rizzfables, "Rizzfables",
-                button_mgeko, "Mgeko"
+                button_mgeko, "Mgeko",
+                button_comix, "Comix"
         );
 
         // Set up all listeners in one loop
@@ -318,7 +316,8 @@ public class HomePage extends AppCompatActivity {
                 set_main_manhuaFast, "ManhuaFast",
                 set_main_flameComics, "FlameComics",
                 set_main_rizzfables, "Rizzfables",
-                set_main_mgeko, "Mgeko"
+                set_main_mgeko, "Mgeko",
+                set_main_comix, "Comix"
         );
 
         // Set up all listeners for the "set main" buttons
@@ -356,6 +355,8 @@ public class HomePage extends AppCompatActivity {
         demonicScansOffset = 1;
         manhuaFastOffset = 1;
         mgekoOffset = 1;
+        comixOffset = 1;
+
 
         homeListAdapter.notifyDataSetChanged();
         mangaListView.scrollToPosition(0);
@@ -379,7 +380,8 @@ public class HomePage extends AppCompatActivity {
                 "ManhuaFast", R.id.drawer_manhuaFast_glow,
                 "FlameComics", R.id.drawer_flameComics_glow,
                 "Rizzfables", R.id.drawer_rizzfables_glow,
-                "Mgeko", R.id.drawer_mgeko_glow
+                "Mgeko", R.id.drawer_mgeko_glow,
+                "Comix", R.id.drawer_comix_glow
         );
 
         // Hide all glows first
@@ -416,7 +418,8 @@ public class HomePage extends AppCompatActivity {
                 "ManhuaFast", set_main_manhuaFast,
                 "FlameComics", set_main_flameComics,
                 "Rizzfables", set_main_rizzfables,
-                "Mgeko", set_main_mgeko
+                "Mgeko", set_main_mgeko,
+                "Comix", set_main_comix
         );
 
         // Reset all icons to dark
@@ -608,6 +611,8 @@ public class HomePage extends AppCompatActivity {
                         loadFeed(manhuaFastOffset, LIMIT);
                     } else if (serviceFeed.equals("Mgeko")) {
                         loadFeed(mgekoOffset, LIMIT);
+                    }else if (serviceFeed.equals("Comix")) {
+                        loadFeed(comixOffset, LIMIT);
                     }
                     // Add other sources here if they support pagination.
                 }
@@ -657,6 +662,8 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.manhuaFastOffset += 1;
                     } else if (serviceFeed.equals("Mgeko")) {
                         HomePage.this.mgekoOffset += 1;
+                    }else if (serviceFeed.equals("Comix")) {
+                        HomePage.this.comixOffset += 1;
                     }
                 });
             }
@@ -716,7 +723,8 @@ public class HomePage extends AppCompatActivity {
                 button_manhuaFast, "https://manhuafast.com/",
                 button_flameComics, "https://flamecomics.xyz/",
                 button_rizzfables, "https://rizzfables.com/",
-                button_mgeko, "https://mgeko.cc/"
+                button_mgeko, "https://mgeko.cc/",
+                button_comix, "https://comix.to/"
         );
 
         Executors.newSingleThreadExecutor().execute(() -> {

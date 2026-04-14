@@ -44,7 +44,7 @@ public class MangaPage extends AppCompatActivity {
     Button button_homeMangaPage;
 
     private Boolean isLoading = false;
-    private final int LIMIT = 100;
+    private final int LIMIT = 20;
     private MangaItemModel mangaItem;
     private String getMangaId;
     private String getMangaSource;
@@ -106,7 +106,7 @@ public class MangaPage extends AppCompatActivity {
 
         final String mangaUrlorId = ServiceController.getMangaIdOrMangaUrl(getMangaSource, getMangaId, getIntent().getStringExtra("mangaUrl"));
         Log.e("MangaPageCheckBookmark", "mangaUrlorId: " + mangaUrlorId + " mangaUrl: " + getIntent().getStringExtra("mangaUrl"));
-        ServiceController.getMangaItem(getMangaSource, mangaUrlorId, new ServiceController.MangaCallback() {
+        ServiceController.getMangaItem(this,getMangaSource, mangaUrlorId, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 runOnUiThread(() -> {
@@ -192,7 +192,7 @@ public class MangaPage extends AppCompatActivity {
         Log.e("MangaPage", "mangaUrl: " + ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl));
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
 
-        ServiceController.fetchMangaDetails(source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
+        ServiceController.fetchMangaDetails(this,source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 if (manga == null) return;

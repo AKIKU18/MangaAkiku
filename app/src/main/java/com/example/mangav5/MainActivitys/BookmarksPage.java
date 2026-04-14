@@ -59,9 +59,7 @@ public class BookmarksPage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Hides the default action bar for a custom UI.
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
-        }
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
 
         // Set the layout for this activity.
         setContentView(R.layout.activity_bookmarks_page);

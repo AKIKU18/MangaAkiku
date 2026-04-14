@@ -2,10 +2,12 @@ package com.example.mangav5.ServicesMangaWebsites.ServiceComix;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
@@ -21,7 +23,9 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,13 +44,8 @@ public class ComixFeedService {
             .build();
     public static void getMangaFeedComix(int page, MangaListCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
-
-        HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("comix.to")
-                .addPathSegment("api")
-                .addPathSegment("v2")
-                .addPathSegment("manga")
+        HttpUrl url = HttpUrl.parse("https://comix.to/api/v2/manga/")
+                .newBuilder()
                 .addQueryParameter("order[views_30d]", "desc")
                 .addQueryParameter("genres_mode", "and")
                 .addQueryParameter("limit", "28")
@@ -55,7 +54,7 @@ public class ComixFeedService {
 
         Request request = new Request.Builder()
                 .url(url)
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
+                .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 OPR/128.0.0.0")
                 .header("Accept", "application/json, text/plain, */*")
                 .header("Referer", "https://comix.to/")
                 .header("Origin", "https://comix.to")
@@ -124,46 +123,41 @@ public class ComixFeedService {
         });
     }
 
-    public static void getMangaDetailsComix(String mangaUrl, ComixFeedService.MangaCallback callback) {
+    public static void getMangaDetailsComix(Context context, String mangaUrl, MangaCallback callback) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
-        Log.e("test","test");
+
         executor.execute(() -> {
             try {
-                Log.e("test","test2");
-
-                Document doc = Jsoup.connect("https://comix.to/title/5n07-olgami")
-                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
-                        .timeout(60_000)
+                Document doc = Jsoup.connect(mangaUrl)
+                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                        .header("Accept-Language", "en-GB,en;q=0.9")
+                        .timeout(60000)
                         .get();
 
-                Log.e("test","test3");
+                String mangaId = generateUuidHex(mangaUrl);
 
-                Element elements = doc.selectFirst("#wrapper > main > div");
+                Element titleElement = doc.selectFirst("h1.title");
+                String title = titleElement != null ? titleElement.text().trim() : "";
 
-                Log.e("test", elements.toString());
-                // Manga ID from bookmark button
-                Element bookmarkEl = doc.selectFirst(".add-bookmark .wp-manga-action-button");
-                String mangaId = bookmarkEl != null ? bookmarkEl.attr("data-post").trim() : "";
-                // Title
-                Element titleElement = doc.selectFirst(".summary_image a img"); // the image alt can be used
-                String title = titleElement != null ? titleElement.attr("alt").trim() : "No title";
+                Element descriptionElement = doc.selectFirst("div.description div.content");
+                String descText = descriptionElement != null ? descriptionElement.text().trim() : "";
 
-                // Description (optional, use summary if exists)
-                Element description = doc.selectFirst("div.summary__content.show-more"); // empty fallback
-                String descText = description != null ? description.text().trim() : "";
-
-                // Cover image
-                Element coverElement = doc.selectFirst(".summary_image img");
                 String cover = "";
+                Element coverElement = doc.selectFirst("section.comic-info .poster img");
                 if (coverElement != null) {
-                    if (coverElement.hasAttr("data-src") && !coverElement.attr("data-src").isEmpty())
-                        cover = coverElement.attr("data-src").trim();
-                    else if (coverElement.hasAttr("src")) cover = coverElement.attr("src").trim();
+                    cover = coverElement.absUrl("src");
+                    if (cover == null || cover.isEmpty()) {
+                        cover = coverElement.attr("src").trim();
+                    }
                 }
 
 
-                // Build MangaItemModel exactly like your constructor
+
+
+                Element lastChapterElement = doc.selectFirst(".chap-list");
+                String lastChapter = lastChapterElement != null ? lastChapterElement.text().trim() : "";
+
                 MangaItemModel manga = new MangaItemModel(
                         mangaId,
                         title,
@@ -171,16 +165,32 @@ public class ComixFeedService {
                         cover,
                         false,
                         mangaUrl,
-                        "",
-                        "Manhuaus"
+                        lastChapter,
+                        "Comix"
                 );
+
+                Log.e(TAG, "getMangaId: " + manga.getMangaId());
+                Log.e(TAG, "getMangaTitle: " + manga.getTitle());
+                Log.e(TAG, "getMangaDescription: " + manga.getDescription());
+                Log.e(TAG, "getMangaCoverImageUrl: " + manga.getCoverImageUrl());
+                Log.e(TAG, "getMangaUrl: " + manga.getMangaUrl());
+                Log.e(TAG, "getLastChapter: " + manga.getLastChapter());
+
+
+
 
                 mainHandler.post(() -> callback.onSuccess(manga));
 
             } catch (IOException e) {
-                mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "IO Error"));
+                mainHandler.post(() -> callback.onError(
+                        e.getMessage() != null ? e.getMessage() : "IO Error"
+                ));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Unknown Error"));
+                mainHandler.post(() -> callback.onError(
+                        e.getMessage() != null ? e.getMessage() : "Unknown Error"
+                ));
+            } finally {
+                executor.shutdown();
             }
         });
     }

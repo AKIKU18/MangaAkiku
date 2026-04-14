@@ -68,7 +68,7 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
             holder.description.setText(manga.getDescription());
         } else {
             holder.description.setText("Loading...");
-            ServiceController.mangaGetDescription(manga.getSource(), manga.getMangaId(), manga.getMangaUrl(), new ServiceController.DescriptionCallback() {
+            ServiceController.mangaGetDescription(context,manga.getSource(), manga.getMangaId(), manga.getMangaUrl(), new ServiceController.DescriptionCallback() {
                 @Override
                 public void onSuccess(String description) {
                     manga.setDescription(description); // cache it

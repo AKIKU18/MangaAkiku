@@ -224,7 +224,7 @@ public class ChapterPage extends AppCompatActivity {
 
     private void InsertChapterIntoHistory(String chapterUrlOrId) {
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
-        ServiceController.fetchMangaDetails(source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
+        ServiceController.fetchMangaDetails(this,source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 int scrollY = recycleViewPage.getScrollY();
@@ -458,6 +458,7 @@ public class ChapterPage extends AppCompatActivity {
         upperPartLayout.setVisibility(visibility);
         lowerPartLayout.setVisibility(visibility);
         btnToggleUI.setImageResource(visible ? R.drawable.ic_visibility_on : R.drawable.ic_visibility_off);
+        Log.e("testUI","TEST");
     }
 
     private void hideUI() {

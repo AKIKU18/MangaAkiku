@@ -7,6 +7,10 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixChapterListService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixChapterPagesService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixFeedService;
+import com.example.mangav5.ServicesMangaWebsites.ServiceComix.ComixSearchService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansSearchService;
@@ -232,10 +236,23 @@ public class ServiceController {
                 Log.e(TAG, "[fetchMangaListController] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed: FetchMangaList " + serviceFeed);
                 break;
+            case "Comix":
+                ComixFeedService.getMangaFeedComix(offsetOrPage, new ComixFeedService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> mangas) {
+                        callback.onSuccess(mangas);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchMangaListController:Comix] Error fetching manga list: " + message);
+                        callback.onError(message);
+                    }
+                });
         }
     }
 
-    public static void fetchMangaDetails(String serviceFeed, String mangaUrlOrId, MangaCallback callback) {
+    public static void fetchMangaDetails(Context context,String serviceFeed, String mangaUrlOrId, MangaCallback callback) {
         if (callback == null) {
             Log.e(TAG, "[fetchMangaDetails] Callback is null for serviceFeed: " + serviceFeed);
             return;
@@ -369,6 +386,20 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "Comix":
+                ComixFeedService.getMangaDetailsComix(context,mangaUrlOrId, new ComixFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[fetchMangaDetails:COmix] Error fetching manga URL " + mangaUrlOrId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[fetchMangaDetails] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed: fetchMangaDetail " + serviceFeed);
@@ -376,7 +407,7 @@ public class ServiceController {
         }
     }
 
-    public static void mangaGetDescription(String serviceFeed, String mangaId, String mangaUrl, DescriptionCallback callback) {
+    public static void mangaGetDescription(Context context,String serviceFeed, String mangaId, String mangaUrl, DescriptionCallback callback) {
         if (callback == null) {
             Log.e(TAG, "[mangaGetDescription] Callback is null for serviceFeed: " + serviceFeed);
             return;
@@ -523,6 +554,21 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "Comix":
+                ComixFeedService.getMangaDetailsComix(context, mangaUrl, new ComixFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga.getDescription());
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[mangaGetDescription:Comix] Error fetching description for manga URL " + mangaUrl + ": " + errorMessage);
+                        Log.e(TAG, "[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[mangaGetDescription] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed:MangaGetDescription " + serviceFeed);
@@ -550,6 +596,8 @@ public class ServiceController {
                 return mangaUrl;
             case "Mgeko":
                 return mangaUrl;
+            case "Comix":
+                return mangaUrl;
             default:
                 Log.e(TAG, "[getMangaIdOrMangaUrl] Unknown source:getMangaIdOrUrl " + source);
                 return "";
@@ -576,6 +624,8 @@ public class ServiceController {
             case "Rizzfables":
                 return chapterUrl;
             case "Mgeko":
+                return chapterUrl;
+                case "Comix":
                 return chapterUrl;
             default:
                 Log.e(TAG, "[getChapterIdOrChapterUrl] Unknown source:getChapterIdOrUrl " + source);
@@ -727,6 +777,23 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "Comix":
+                ComixChapterListService service = new ComixChapterListService();
+
+                service.getChapterList(context,mangaUrlOrId, offset,limit,new ComixChapterListService.ChapterListCallback() {
+                    @Override
+                    public void onSuccess(List<ChapterModel> chapters) {
+                        if ("asc".equalsIgnoreCase(descAsc)) Collections.reverse(chapters);
+                        callback.onSuccess(chapters);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchChapterListController:Comix] Error fetching chapters for manga URL " + mangaUrlOrId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[fetchChapterListController] Unknown service feed:getChapters " + serviceFeed);
                 callback.onError("Unknown service feed: " + serviceFeed);
@@ -734,7 +801,7 @@ public class ServiceController {
         }
     }
 
-    public static void getMangaItem(String source, String mangaUrlId, MangaCallback callback) {
+    public static void getMangaItem(Context context, String source, String mangaUrlId, MangaCallback callback) {
         if (callback == null) {
             Log.e(TAG, "[getMangaItem] Callback is null for source: " + source);
             return;
@@ -865,6 +932,20 @@ public class ServiceController {
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[getMangaItem:Mgeko] Error for manga URL " + mangaUrlId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
+            case "Comix":
+                ComixFeedService.getMangaDetailsComix(context,mangaUrlId, new ComixFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[getMangaItem:Comix] Error for manga URL " + mangaUrlId + ": " + errorMessage);
                         callback.onError(errorMessage);
                     }
                 });
@@ -1017,6 +1098,22 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "Comix":
+                ComixChapterPagesService service = new ComixChapterPagesService();
+
+                service.getChapterPages(context,chapterUrlId, new ComixChapterPagesService.PagesCallback() {
+                    @Override
+                    public void onSuccess(List<String> chapter) {
+                        callback.onSuccess(chapter);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[getChapterPages:Comix] Error fetching pages for chapter " + chapterUrlId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[getChapterPages] Unknown source:getChapterPages " + source);
@@ -1026,7 +1123,7 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko");
+        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko","Comix");
         List<MangaItemModel> allResults = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger completed = new AtomicInteger(0);
         int totalSources = sources.size();
@@ -1210,6 +1307,19 @@ public class ServiceController {
                     @Override
                     public void onError(String error) {
                         Log.e(TAG, "[fetchSearchMangas:Mgeko] Error searching query '" + query + "': " + error);
+                    }
+                });
+                break;
+            case "Comix":
+                ComixSearchService.search(query, new ComixSearchService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "[fetchSearchMangas:Comix] Error searching query '" + query + "': " + error);
                     }
                 });
                 break;

@@ -68,10 +68,10 @@ dependencies {
     implementation ("androidx.recyclerview:recyclerview:1.3.0")
     implementation ("com.squareup.picasso:picasso:2.8") // For image loading
     implementation("androidx.room:room-runtime:2.5.2")
+    implementation("androidx.room:room-ktx:2.5.2")
     annotationProcessor("androidx.room:room-compiler:2.5.2")
 // For Kotlin use kapt instead of annotationProcessor
     implementation("androidx.room:room-rxjava2:2.5.2")
-    implementation("androidx.room:room-ktx:2.5.2")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
