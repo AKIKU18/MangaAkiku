@@ -124,6 +124,7 @@ public class ServiceController {
                     @Override
                     public void onSuccess(List<MangaItemModel> mangas) {
                         callback.onSuccess(mangas);
+
                     }
 
                     @Override
@@ -780,7 +781,7 @@ public class ServiceController {
             case "Comix":
                 ComixChapterListService service = new ComixChapterListService();
 
-                service.getChapterList(context,mangaUrlOrId, offset,limit,new ComixChapterListService.ChapterListCallback() {
+                service.getChapterList(context,mangaUrlOrId, new ComixChapterListService.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapters) {
                         if ("asc".equalsIgnoreCase(descAsc)) Collections.reverse(chapters);
@@ -1123,7 +1124,7 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("MangaDex", "AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko","Comix");
+        List<String> sources = List.of("AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko","Comix");
         List<MangaItemModel> allResults = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger completed = new AtomicInteger(0);
         int totalSources = sources.size();

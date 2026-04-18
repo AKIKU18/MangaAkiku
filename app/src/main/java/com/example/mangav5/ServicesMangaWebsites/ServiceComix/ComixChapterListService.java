@@ -29,21 +29,21 @@ public class ComixChapterListService {
     private static final String TAG = "ComixChapterList";
     private static final String JS_BRIDGE_NAME = "AndroidBridge";
 
-    private static final int INITIAL_DELAY_MS = 1500;
-    private static final int PAGE_DELAY_MS = 1500;
-    private static final int MAX_PAGE_TURNS = 50;
+    private static final int INITIAL_DELAY_MS = 1800;
+    private static final int PAGE_DELAY_MS = 1400;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final Map<String, ChapterModel> chapterMap = new LinkedHashMap<>();
+
+    // dedup dupa chapter number + normalized title
+    private final Map<String, ChapterModel> chapterMapByKey = new LinkedHashMap<>();
 
     private boolean finished = false;
     private boolean started = false;
-    private int pageTurns = 0;
-    private int stableCountHits = 0;
-    private int lastChapterCount = 0;
 
-    private int requestedOffset = 0;
-    private int requestedLimit = 20;
+    private int totalPaginationPages = 1;
+    private int targetPage = 1;
+
+    private String lastPageSignature = "";
 
     public interface ChapterListCallback {
         void onSuccess(List<ChapterModel> chapters);
@@ -53,8 +53,6 @@ public class ComixChapterListService {
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     public void getChapterList(Context context,
                                String mangaUrl,
-                               int offset,
-                               int limit,
                                ChapterListCallback callback) {
 
         if (mangaUrl == null || mangaUrl.trim().isEmpty()) {
@@ -64,15 +62,12 @@ public class ComixChapterListService {
 
         String cleanUrl = mangaUrl.split("\\?")[0].trim();
 
-        chapterMap.clear();
+        chapterMapByKey.clear();
         finished = false;
         started = false;
-        pageTurns = 0;
-        stableCountHits = 0;
-        lastChapterCount = 0;
-
-        requestedOffset = Math.max(0, offset);
-        requestedLimit = Math.max(1, limit);
+        totalPaginationPages = 1;
+        targetPage = 1;
+        lastPageSignature = "";
 
         handler.post(() -> {
             WebView webView = new WebView(context);
@@ -105,7 +100,7 @@ public class ComixChapterListService {
                     if (finished || started) return;
                     started = true;
 
-                    handler.postDelayed(() -> scrapeCurrentPage(view), INITIAL_DELAY_MS);
+                    handler.postDelayed(() -> inspectPageCountFromSummary(view), INITIAL_DELAY_MS);
                 }
             });
 
@@ -113,91 +108,164 @@ public class ComixChapterListService {
         });
     }
 
-    private void scrapeCurrentPage(WebView view) {
+    private void inspectPageCountFromSummary(WebView view) {
         if (finished) return;
 
         String js =
                 "(function(){" +
-                        "  try {" +
-                        "    var out = [];" +
-                        "    var links = document.querySelectorAll('ul.chap-list li a.title');" +
+                        "try{" +
+                        "  var info = document.querySelector('div.mt-3.text-center.text-body-secondary.small');" +
+                        "  var rawText = info ? (info.innerText || info.textContent || '').trim() : '';" +
+                        "  var bolds = info ? info.querySelectorAll('b') : [];" +
+                        "  var start = 1;" +
+                        "  var end = 20;" +
+                        "  var totalItems = 0;" +
 
-                        "    links.forEach(function(a) {" +
-                        "      var href = a.getAttribute('href') || '';" +
-                        "      var title = (a.innerText || a.textContent || '').trim();" +
-                        "      var fullUrl = href;" +
-
-                        "      if (href && href.indexOf('//') === 0) {" +
-                        "        fullUrl = location.protocol + href;" +
-                        "      } else if (href && href.indexOf('/') === 0) {" +
-                        "        fullUrl = location.origin + href;" +
-                        "      }" +
-
-                        "      out.push({title:title,url:fullUrl});" +
-                        "    });" +
-
-                        "    var nextButton = null;" +
-                        "    var nextCandidates = document.querySelectorAll('ul.pagination a.page-link, nav.navigation a.page-link');" +
-                        "    nextCandidates.forEach(function(a) {" +
-                        "      var txt = (a.textContent || '').trim();" +
-                        "      var html = (a.innerHTML || '').toLowerCase();" +
-                        "      if (!nextButton && (txt === 'Next' || html.indexOf('angle-right') !== -1 || html.indexOf('arrow-right') !== -1)) {" +
-                        "        nextButton = a;" +
-                        "      }" +
-                        "    });" +
-
-                        "    var hasNext = false;" +
-                        "    if (nextButton) {" +
-                        "      var li = nextButton.closest('li');" +
-                        "      hasNext = !(li && li.classList.contains('disabled'));" +
-                        "    }" +
-
-                        "    if (window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".processPage) {" +
-                        "      window." + JS_BRIDGE_NAME + ".processPage(JSON.stringify({chapters:out,hasNext:hasNext}));" +
-                        "    }" +
-                        "  } catch (e) {" +
-                        "    if (window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onJsError) {" +
-                        "      window." + JS_BRIDGE_NAME + ".onJsError(String(e));" +
-                        "    }" +
+                        "  if (bolds.length >= 3) {" +
+                        "    var s = parseInt((bolds[0].textContent || '').trim(), 10);" +
+                        "    var e = parseInt((bolds[1].textContent || '').trim(), 10);" +
+                        "    var t = parseInt((bolds[2].textContent || '').trim(), 10);" +
+                        "    if (!isNaN(s)) start = s;" +
+                        "    if (!isNaN(e)) end = e;" +
+                        "    if (!isNaN(t)) totalItems = t;" +
                         "  }" +
+
+                        "  var perPage = 20;" +
+                        "  if (end >= start) {" +
+                        "    perPage = (end - start) + 1;" +
+                        "  }" +
+                        "  if (perPage <= 0) perPage = 20;" +
+
+                        "  var totalPages = 1;" +
+                        "  if (totalItems > 0 && perPage > 0) {" +
+                        "    totalPages = Math.ceil(totalItems / perPage);" +
+                        "  }" +
+
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onPageCountInfo){" +
+                        "    window." + JS_BRIDGE_NAME + ".onPageCountInfo(JSON.stringify({" +
+                        "      rawText: rawText," +
+                        "      start: start," +
+                        "      end: end," +
+                        "      perPage: perPage," +
+                        "      totalItems: totalItems," +
+                        "      totalPages: totalPages" +
+                        "    }));" +
+                        "  }" +
+                        "}catch(e){" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onJsError){" +
+                        "    window." + JS_BRIDGE_NAME + ".onJsError(String(e));" +
+                        "  }" +
+                        "}" +
                         "})();";
 
         view.evaluateJavascript(js, null);
     }
 
-    private void goNextPage(WebView view) {
+    private void scrapeCurrentPage(WebView view) {
         if (finished) return;
-
-        Log.d(TAG, "Going to next page");
 
         String js =
                 "(function(){" +
-                        "  try {" +
-                        "    var nextButton = null;" +
-                        "    var nextCandidates = document.querySelectorAll('ul.pagination a.page-link, nav.navigation a.page-link');" +
-                        "    nextCandidates.forEach(function(a) {" +
-                        "      var txt = (a.textContent || '').trim();" +
-                        "      var html = (a.innerHTML || '').toLowerCase();" +
-                        "      if (!nextButton && (txt === 'Next' || html.indexOf('angle-right') !== -1 || html.indexOf('arrow-right') !== -1)) {" +
-                        "        nextButton = a;" +
-                        "      }" +
-                        "    });" +
-
-                        "    if (nextButton) {" +
-                        "      nextButton.click();" +
-                        "      if (window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".pageChanged) {" +
-                        "        window." + JS_BRIDGE_NAME + ".pageChanged('next');" +
-                        "      }" +
-                        "    } else {" +
-                        "      if (window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".noNextPage) {" +
-                        "        window." + JS_BRIDGE_NAME + ".noNextPage();" +
-                        "      }" +
+                        "try{" +
+                        "  var out = [];" +
+                        "  var links = document.querySelectorAll('ul.chap-list li a.title');" +
+                        "  links.forEach(function(a){" +
+                        "    var href = a.getAttribute('href') || '';" +
+                        "    var title = (a.innerText || a.textContent || '').trim();" +
+                        "    var fullUrl = href;" +
+                        "    if(href && href.indexOf('//') === 0){" +
+                        "      fullUrl = location.protocol + href;" +
+                        "    } else if(href && href.indexOf('/') === 0){" +
+                        "      fullUrl = location.origin + href;" +
                         "    }" +
-                        "  } catch (e) {" +
-                        "    if (window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onJsError) {" +
-                        "      window." + JS_BRIDGE_NAME + ".onJsError(String(e));" +
-                        "    }" +
+                        "    out.push({title:title,url:fullUrl});" +
+                        "  });" +
+                        "  var sig = out.map(function(x){ return x.url; }).join('|');" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".processPage){" +
+                        "    window." + JS_BRIDGE_NAME + ".processPage(JSON.stringify({chapters:out,signature:sig}));" +
                         "  }" +
+                        "}catch(e){" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onJsError){" +
+                        "    window." + JS_BRIDGE_NAME + ".onJsError(String(e));" +
+                        "  }" +
+                        "}" +
+                        "})();";
+
+        view.evaluateJavascript(js, null);
+    }
+
+    private void goToPage(WebView view, int pageNumber) {
+        if (finished) return;
+
+        Log.d(TAG, "Going explicitly to page: " + pageNumber);
+
+        String js =
+                "(function(){" +
+                        "try{" +
+                        "  var clicked = false;" +
+                        "  var candidates = document.querySelectorAll('ul.pagination a.page-link, nav.navigation a.page-link');" +
+                        "  candidates.forEach(function(a){" +
+                        "    if(clicked) return;" +
+                        "    var txt = (a.textContent || '').trim();" +
+                        "    var n = parseInt(txt, 10);" +
+                        "    if(!isNaN(n) && n === " + pageNumber + "){" +
+                        "      clicked = true;" +
+                        "      a.click();" +
+                        "    }" +
+                        "  });" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".pageNavigationStarted){" +
+                        "    window." + JS_BRIDGE_NAME + ".pageNavigationStarted(String(clicked));" +
+                        "  }" +
+                        "}catch(e){" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onJsError){" +
+                        "    window." + JS_BRIDGE_NAME + ".onJsError(String(e));" +
+                        "  }" +
+                        "}" +
+                        "})();";
+
+        view.evaluateJavascript(js, null);
+    }
+
+    private void waitUntilPageChangedAndScrape(WebView view, int expectedPage, int retryCount) {
+        if (finished) return;
+
+        if (retryCount > 15) {
+            Log.d(TAG, "Wait retries exceeded for page " + expectedPage + ", scraping anyway");
+            scrapeCurrentPage(view);
+            return;
+        }
+
+        String js =
+                "(function(){" +
+                        "try{" +
+                        "  var links = document.querySelectorAll('ul.chap-list li a.title');" +
+                        "  var sig = Array.from(links).map(function(a){" +
+                        "    var href = a.getAttribute('href') || '';" +
+                        "    if(href && href.indexOf('//') === 0) return location.protocol + href;" +
+                        "    if(href && href.indexOf('/') === 0) return location.origin + href;" +
+                        "    return href;" +
+                        "  }).join('|');" +
+                        "  var activePage = 1;" +
+                        "  var active = document.querySelector(" +
+                        "    'ul.pagination li.active a.page-link, ul.pagination li.active span.page-link, " +
+                        "     nav.navigation li.active a.page-link, nav.navigation li.active span.page-link'" +
+                        "  );" +
+                        "  if(active){" +
+                        "    var n = parseInt((active.textContent || '').trim(), 10);" +
+                        "    if(!isNaN(n)) activePage = n;" +
+                        "  }" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onPageStateCheck){" +
+                        "    window." + JS_BRIDGE_NAME + ".onPageStateCheck(JSON.stringify({" +
+                        "      signature:sig," +
+                        "      activePage:activePage," +
+                        "      retryCount:" + retryCount +
+                        "    }));" +
+                        "  }" +
+                        "}catch(e){" +
+                        "  if(window." + JS_BRIDGE_NAME + " && window." + JS_BRIDGE_NAME + ".onJsError){" +
+                        "    window." + JS_BRIDGE_NAME + ".onJsError(String(e));" +
+                        "  }" +
+                        "}" +
                         "})();";
 
         view.evaluateJavascript(js, null);
@@ -220,10 +288,39 @@ public class ComixChapterListService {
         return "";
     }
 
+    private String normalizeChapterTitle(String title) {
+        if (title == null) return "";
+        return title.toLowerCase()
+                .replaceAll("\\s+", " ")
+                .replaceAll("[^a-z0-9\\s.-]", "")
+                .trim();
+    }
+
+    private String buildChapterKey(String title, String url) {
+        String normalizedTitle = normalizeChapterTitle(title);
+        String chapterNumber = extractChapterNumber(title, url);
+
+        if (chapterNumber == null) chapterNumber = "";
+        chapterNumber = chapterNumber.trim();
+
+        if (!chapterNumber.isEmpty()) {
+            return chapterNumber + "|" + normalizedTitle;
+        }
+
+        return normalizedTitle;
+    }
+
     public static String generateChapterId(String url, String title) {
         String siteName = url.replaceAll("https?://(www\\.)?", "").split("/")[0];
         String hash = String.valueOf((url + title).hashCode());
         return siteName + "-" + hash;
+    }
+
+    private void finishWithAll(ChapterListCallback callback) {
+        finished = true;
+        List<ChapterModel> all = new ArrayList<>(chapterMapByKey.values());
+        Log.d(TAG, "Finish with full list. Total unique chapters: " + all.size());
+        postSuccess(callback, all);
     }
 
     private void postError(ChapterListCallback callback, String message) {
@@ -232,22 +329,6 @@ public class ComixChapterListService {
 
     private void postSuccess(ChapterListCallback callback, List<ChapterModel> chapters) {
         handler.post(() -> callback.onSuccess(chapters));
-    }
-
-    private void finishWithSlice(ChapterListCallback callback) {
-        finished = true;
-
-        List<ChapterModel> all = new ArrayList<>(chapterMap.values());
-
-        if (requestedOffset >= all.size()) {
-            postSuccess(callback, new ArrayList<>());
-            return;
-        }
-
-        int end = Math.min(requestedOffset + requestedLimit, all.size());
-        List<ChapterModel> sliced = new ArrayList<>(all.subList(requestedOffset, end));
-
-        postSuccess(callback, sliced);
     }
 
     private class JsBridge {
@@ -260,6 +341,36 @@ public class ComixChapterListService {
         }
 
         @JavascriptInterface
+        public void onPageCountInfo(String json) {
+            handler.post(() -> {
+                if (finished) return;
+
+                try {
+                    JSONObject obj = new JSONObject(json);
+
+                    String rawText = obj.optString("rawText", "");
+                    int perPage = obj.optInt("perPage", 20);
+                    int totalItems = obj.optInt("totalItems", 0);
+                    totalPaginationPages = obj.optInt("totalPages", 1);
+
+                    if (perPage <= 0) perPage = 20;
+                    if (totalPaginationPages <= 0) totalPaginationPages = 1;
+
+                    Log.d(TAG, "Summary text: " + rawText);
+                    Log.d(TAG, "perPage=" + perPage + " totalItems=" + totalItems + " totalPages=" + totalPaginationPages);
+
+                    targetPage = 1;
+                    scrapeCurrentPage(webView);
+
+                } catch (Exception e) {
+                    finished = true;
+                    Log.e(TAG, "Failed to parse page count info", e);
+                    postError(callback, "Failed to parse page count info: " + e.getMessage());
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void processPage(String json) {
             handler.post(() -> {
                 if (finished) return;
@@ -268,72 +379,69 @@ public class ComixChapterListService {
                 try {
                     JSONObject root = new JSONObject(json);
                     JSONArray arr = root.optJSONArray("chapters");
-                    boolean hasNext = root.optBoolean("hasNext", false);
+                    String signature = root.optString("signature", "");
 
                     if (arr == null) {
-                        finishWithSlice(callback);
+                        finishWithAll(callback);
                         return;
                     }
 
+                    int addedThisPage = 0;
+                    int duplicatesThisPage = 0;
+
                     for (int i = 0; i < arr.length(); i++) {
                         JSONObject obj = arr.getJSONObject(i);
+                        Log.d(TAG, "obj: " + obj.toString());
 
                         String title = obj.optString("title", "").trim();
                         String url = obj.optString("url", "").trim();
 
                         if (title.isEmpty() || url.isEmpty()) continue;
 
+                        String key = buildChapterKey(title, url);
+                        if (key.isEmpty()) continue;
+
+                        if (chapterMapByKey.containsKey(key)) {
+                            duplicatesThisPage++;
+                            Log.d(TAG, "Duplicate skipped: " + key + " -> " + title);
+                            continue;
+                        }
+
                         String chapterNumber = extractChapterNumber(title, url);
-                        if (chapterNumber.isEmpty()) continue;
-
-                        if (chapterMap.containsKey(chapterNumber)) continue;
-
                         String chapterId = generateChapterId(url, title);
 
-                        ChapterModel chapter = new ChapterModel(chapterId, title, chapterNumber, url, "Comix");
+                        ChapterModel chapter = new ChapterModel(
+                                chapterId,
+                                title,
+                                chapterNumber,
+                                url,
+                                "Comix"
+                        );
                         chapter.setChapterId(chapterId);
                         chapter.setTitle(title);
                         chapter.setNumber(chapterNumber);
                         chapter.setChapterUrl(url);
                         chapter.setSource("Comix");
 
-                        chapterMap.put(chapterNumber, chapter);
+                        chapterMapByKey.put(key, chapter);
+                        addedThisPage++;
                     }
 
-                    Log.d(TAG, "Unique chapters so far: " + chapterMap.size());
+                    lastPageSignature = signature;
 
-                    // Stop as soon as we have enough for this page request.
-                    int neededCount = requestedOffset + requestedLimit;
-                    if (chapterMap.size() >= neededCount) {
-                        finishWithSlice(callback);
+                    Log.d(TAG, "Scraped page " + targetPage + "/" + totalPaginationPages);
+                    Log.d(TAG, "Added this page: " + addedThisPage);
+                    Log.d(TAG, "Duplicates this page: " + duplicatesThisPage);
+                    Log.d(TAG, "Unique chapters total: " + chapterMapByKey.size());
+
+                    if (targetPage >= totalPaginationPages) {
+                        Log.d(TAG, "All calculated pages visited, finishing");
+                        finishWithAll(callback);
                         return;
                     }
 
-                    if (!hasNext) {
-                        finishWithSlice(callback);
-                        return;
-                    }
-
-                    if (chapterMap.size() == lastChapterCount) {
-                        stableCountHits++;
-                    } else {
-                        stableCountHits = 0;
-                    }
-
-                    lastChapterCount = chapterMap.size();
-
-                    if (stableCountHits >= 2) {
-                        finishWithSlice(callback);
-                        return;
-                    }
-
-                    pageTurns++;
-                    if (pageTurns >= MAX_PAGE_TURNS) {
-                        finishWithSlice(callback);
-                        return;
-                    }
-
-                    handler.postDelayed(() -> goNextPage(webView), PAGE_DELAY_MS);
+                    targetPage++;
+                    handler.postDelayed(() -> goToPage(webView, targetPage), PAGE_DELAY_MS);
 
                 } catch (Exception e) {
                     finished = true;
@@ -344,19 +452,47 @@ public class ComixChapterListService {
         }
 
         @JavascriptInterface
-        public void pageChanged(String ignored) {
+        public void pageNavigationStarted(String clicked) {
             handler.postDelayed(() -> {
-                if (!finished) {
-                    scrapeCurrentPage(webView);
+                if (finished) return;
+
+                boolean didClick = "true".equalsIgnoreCase(clicked);
+                if (!didClick) {
+                    Log.d(TAG, "Could not click target page " + targetPage + ", finishing");
+                    finishWithAll(callback);
+                    return;
                 }
+
+                waitUntilPageChangedAndScrape(webView, targetPage, 0);
             }, PAGE_DELAY_MS);
         }
 
         @JavascriptInterface
-        public void noNextPage() {
+        public void onPageStateCheck(String json) {
             handler.post(() -> {
-                if (!finished) {
-                    finishWithSlice(callback);
+                if (finished) return;
+
+                try {
+                    JSONObject obj = new JSONObject(json);
+                    String signature = obj.optString("signature", "");
+                    int activePage = obj.optInt("activePage", 1);
+                    int retryCount = obj.optInt("retryCount", 0);
+
+                    Log.d(TAG, "Page state -> activePage=" + activePage + " targetPage=" + targetPage + " retry=" + retryCount);
+
+                    if (activePage == targetPage && signature != null && !signature.isEmpty() && !signature.equals(lastPageSignature)) {
+                        scrapeCurrentPage(webView);
+                        return;
+                    }
+
+                    handler.postDelayed(() ->
+                                    waitUntilPageChangedAndScrape(webView, targetPage, retryCount + 1),
+                            PAGE_DELAY_MS);
+
+                } catch (Exception e) {
+                    finished = true;
+                    Log.e(TAG, "Failed to parse page state", e);
+                    postError(callback, "Failed to parse page state: " + e.getMessage());
                 }
             });
         }

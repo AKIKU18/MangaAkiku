@@ -105,7 +105,7 @@ public class HomePage extends AppCompatActivity {
     private boolean isSearchListAnimated = false; // Flag to check if search results animation has run.
     private boolean isLoading = false;            // Flag to prevent multiple simultaneous data loads (pagination).
     private int offset = 1;                       // Current offset for MangaDex pagination.
-    private int asuraScansOffset = 0;             // Current page number for AsuraScans pagination.
+    private int asuraScansOffset = 1;             // Current page number for AsuraScans pagination.
     private int manhuaPlusOffset = 0;              // Current page number for ManhuaPlus pagination.
     private int demonicScansOffset = 0;            // Current page number for DemonicScans pagination.
     private int manhuaFastOffset = 0;              // Current page number for ManhuaFast pagination.

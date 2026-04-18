@@ -1,84 +1,126 @@
 package com.example.mangav5.ServicesMangaWebsites.ServicesAsuraScans;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class AsuraScansSearchService {
+
     private static final String TAG = "AsuraSearch";
+    private static final String BASE_API = "https://api.asurascans.com/api/series";
+    private static final String BASE_SITE = "https://asurascans.com";
 
     public static void search(String query, MangaListCallback callback) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
         new Thread(() -> {
             try {
-                String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
-                String searchUrl = "https://asuracomic.net/series?page=1&name=" + encodedQuery;
+                String encodedQuery = URLEncoder.encode(query == null ? "" : query.trim(), StandardCharsets.UTF_8.toString());
 
-                Log.d(TAG, "Searching URL: " + searchUrl);
+                String url = BASE_API
+                        + "?search=" + encodedQuery
+                        + "&sort=latest"
+                        + "&order=desc"
+                        + "&limit=20"
+                        + "&offset=0";
 
-                Document doc = Jsoup.connect(searchUrl)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                        .timeout(15000)
-                        .get();
+                Log.d(TAG, "Searching API URL: " + url);
+
+                OkHttpClient client = new OkHttpClient();
+
+                Request request = new Request.Builder()
+                        .url(url)
+                        .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                        .addHeader("Accept", "application/json")
+                        .build();
+
+                Response response = client.newCall(request).execute();
+
+                if (!response.isSuccessful()) {
+                    String msg = "HTTP " + response.code();
+                    Log.e(TAG, "Search failed: " + msg);
+                    mainHandler.post(() -> callback.onError(msg));
+                    return;
+                }
+
+                String body = response.body() != null ? response.body().string() : "";
+                Log.d(TAG, "Raw JSON: " + body);
+
+                JSONObject root = new JSONObject(body);
+                JSONArray data = root.optJSONArray("data");
 
                 List<MangaItemModel> results = new ArrayList<>();
-                String baseUrl = "https://asuracomic.net/";
 
-                Elements mangas = doc.select("div.grid.grid-cols-2.sm\\:grid-cols-2.md\\:grid-cols-5.gap-3.p-4 a");
+                if (data != null) {
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject item = data.getJSONObject(i);
 
-                String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
+                        String mangaId = String.valueOf(item.optInt("id", 0));
+                        String title = item.optString("title", "Unknown");
+                        String description = item.optString("description", "");
+                        String coverUrl = item.optString("cover", "");
 
-                for (Element manga : mangas) {
-                    String mangaUrl = baseUrl + manga.attr("href");
+                        String publicUrl = item.optString("public_url", "");
+                        String mangaUrl = publicUrl.startsWith("http")
+                                ? publicUrl
+                                : BASE_SITE + publicUrl;
 
-                    String href = manga.attr("href");
-                    String mangaId = href.substring(href.lastIndexOf("-") + 1);
+                        String lastChapter = "";
+                        JSONArray latestChapters = item.optJSONArray("latest_chapters");
+                        if (latestChapters != null && latestChapters.length() > 0) {
+                            JSONObject latest = latestChapters.getJSONObject(0);
 
-                    Element titleEl = manga.selectFirst("span.block.text-\\[13\\.3px\\].font-bold");
-                    String title = titleEl != null ? titleEl.text() : "Unknown";
+                            if (latest.has("number")) {
+                                lastChapter = "Chapter " + latest.optString("number", "");
+                            } else if (latest.has("slug")) {
+                                lastChapter = latest.optString("slug", "");
+                            }
+                        }
 
-                    // ✅ Only include manga whose title closely matches the query
-                    String normalizedTitle = title.toLowerCase(Locale.ROOT);
-                    if (!normalizedTitle.contains(normalizedQuery) &&
-                            !normalizedQuery.contains(normalizedTitle) &&
-                            !normalizedTitle.replaceAll("\\s+", "").contains(normalizedQuery.replaceAll("\\s+", ""))) {
-                        continue; // skip loosely related ones
+                        MangaItemModel manga = new MangaItemModel(
+                                mangaId,
+                                title,
+                                description,
+                                coverUrl,
+                                false,
+                                mangaUrl,
+                                lastChapter,
+                                "AsuraScans"
+                        );
+
+                        results.add(manga);
+
+                        Log.d(TAG, "Found manga -> id=" + mangaId
+                                + " | title=" + title
+                                + " | url=" + mangaUrl
+                                + " | cover=" + coverUrl
+                                + " | lastChapter=" + lastChapter);
                     }
-
-                    Element imgEl = manga.selectFirst("img");
-                    String coverImageUrl = imgEl != null ? imgEl.attr("src") : "";
-
-                    Element chapterEl = manga.selectFirst("span.text-\\[13px\\].text-\\[\\#999\\]");
-                    String lastChapter = chapterEl != null ? chapterEl.text() : "";
-
-                    boolean isBookmarked = false;
-                    String description = "";
-                    String source = "AsuraScans";
-
-                    results.add(new MangaItemModel(
-                            mangaId, title, description, coverImageUrl, isBookmarked, mangaUrl, lastChapter, source
-                    ));
                 }
 
                 if (results.isEmpty()) {
-                    callback.onError("No results found");
+                    mainHandler.post(() -> callback.onError("No results found"));
                 } else {
-                    callback.onSuccess(results);
+                    mainHandler.post(() -> callback.onSuccess(results));
                 }
 
             } catch (Exception e) {
-                Log.e(TAG, "Search failed: " + e.getMessage(), e);
-                callback.onError("Failed to fetch results: " + e.getMessage());
+                Log.e(TAG, "Search failed", e);
+                mainHandler.post(() -> callback.onError("Failed to fetch results: " + e.getMessage()));
             }
         }).start();
     }

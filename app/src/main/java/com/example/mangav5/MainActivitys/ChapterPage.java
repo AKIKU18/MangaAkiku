@@ -353,12 +353,19 @@ public class ChapterPage extends AppCompatActivity {
         if (!executor.isShutdown() && !executor.isTerminated()) {
             executor.execute(() -> {
                 MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
-                if (manga != null) {
-                    runOnUiThread(() -> {
-                        tvMangaTitle.setText(manga.getTitle());
-                        tvMangaTitle.setOnClickListener(v -> GoToMangaItem(mangaId));
-                    });
+
+                if (manga == null) {
+                    Log.e("MangaPage", "Manga not found in DB for mangaId: " + mangaId);
+                    return;
                 }
+
+                Log.e("MangaPage", "manga.getTitle(): " + manga.getTitle());
+
+                runOnUiThread(() -> {
+                    if (isDestroyed() || isFinishing()) return;
+                    tvMangaTitle.setText(manga.getTitle());
+                    tvMangaTitle.setOnClickListener(v -> GoToMangaItem(mangaId));
+                });
             });
         }
     }

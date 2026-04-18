@@ -56,7 +56,6 @@ public class ChapterPageAdapter extends RecyclerView.Adapter<ChapterPageAdapter.
     @Override
     public void onBindViewHolder(@NonNull ChapterPageViewer holder, int position) {
         String imageUrl = pages.get(position);
-
         Glide.with(context)
                 .asBitmap()
                 .load(imageUrl)

@@ -158,6 +158,19 @@ public class AsuraScansFeedService {
                     // Latest chapter link
                     Element chapter = entry.selectFirst("a[href*=/chapter/]");
 
+                    Elements grids = doc.select("div.grid.grid-cols-12");
+                    Log.d(TAG, "Total grid containers: " + grids.size());
+
+                    for (int i = 0; i < grids.size(); i++) {
+                        Element grid = grids.get(i);
+                        Elements links = grid.select("a[href^=/comics/]");
+                        Log.d(TAG, "GRID #" + i + " comics links count = " + links.size());
+
+                        for (int j = 0; j < Math.min(5, links.size()); j++) {
+                            Log.d(TAG, "GRID #" + i + " link " + j + " = " + links.get(j).text() + " -> " + links.get(j).attr("href"));
+                        }
+                    }
+
                     if (titleLink != null) {
 
                         String href = "https://asurascans.com" + titleLink.attr("href");
@@ -169,7 +182,8 @@ public class AsuraScansFeedService {
 
                         // Extract ID (last part after "-")
                         String[] parts = href.split("-");
-                        String mangaId = generateMangaId(mangaUrl, title);
+                        String lastPart = href.substring(href.lastIndexOf("-") + 1);
+                        String mangaId = lastPart;
 
                         // Extract chapter text (if available)
                         String chapterText = chapter != null ? chapter.text().trim() : "";
@@ -186,8 +200,20 @@ public class AsuraScansFeedService {
                         );
 
                         mangaList.add(manga);
+
+
                     }
                 }
+
+                for (MangaItemModel mangas : mangaList){
+                    Log.d(TAG, "onSuccess: " + "Page: " + pageNumber);
+                    Log.d(TAG, "onSuccess: " + mangas.getTitle());
+
+                }
+
+                Log.d(TAG, "Requested URL: " + mangaUrl);
+                Log.d(TAG, "Final URL: " + doc.location());
+                Log.d(TAG, "HTML hash: " + doc.outerHtml().hashCode());
 
                 mainHandler.post(() -> callback.onSuccess(mangaList));
 

@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +32,15 @@ public class ComixSearchService {
     public static void search(String query, MangaListCallback callback) {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
+                String trimmedQuery = query == null ? "" : query.trim();
+
+                if (trimmedQuery.isEmpty()) {
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            callback.onError("Search query is empty."));
+                    return;
+                }
+
+                String encodedQuery = URLEncoder.encode(trimmedQuery, StandardCharsets.UTF_8.toString());
 
                 String searchUrl = "https://comix.to/api/v2/manga" +
                         "?order[relevance]=desc" +
@@ -64,8 +73,6 @@ public class ComixSearchService {
                 List<MangaItemModel> results = new ArrayList<>();
 
                 JSONObject root = new JSONObject(body);
-
-                // Safer because APIs sometimes change shape
                 JSONArray itemsArray = null;
 
                 if (root.has("result")) {
@@ -94,6 +101,13 @@ public class ComixSearchService {
                         String title = item.optString("title", "");
                         String description = item.optString("synopsis", item.optString("description", ""));
                         String lastChapter = item.optString("latest_chapter", "");
+
+                        // FILTRU STRICT:
+                        // toate cuvintele din query trebuie sa existe in title
+                        if (!matchesSearchWords(trimmedQuery, title)) {
+                            Log.d(TAG, "Skipped (title mismatch): " + title);
+                            continue;
+                        }
 
                         String cover = "";
                         JSONObject poster = item.optJSONObject("poster");
@@ -134,7 +148,7 @@ public class ComixSearchService {
 
                 Handler mainHandler = new Handler(Looper.getMainLooper());
                 if (results.isEmpty()) {
-                    mainHandler.post(() -> callback.onError("No results found."));
+                    mainHandler.post(() -> callback.onError("No matching results found."));
                 } else {
                     mainHandler.post(() -> callback.onSuccess(results));
                 }
@@ -145,6 +159,34 @@ public class ComixSearchService {
                         callback.onError("Failed to fetch results: " + e.getMessage()));
             }
         });
+    }
+
+    private static boolean matchesSearchWords(String query, String title) {
+        String normalizedQuery = normalizeText(query);
+        String normalizedTitle = normalizeText(title);
+
+        String[] words = normalizedQuery.split("\\s+");
+        for (String word : words) {
+            if (word.isEmpty()) continue;
+
+            // ignora cuvinte foarte scurte daca vrei
+            if (word.length() < 2) continue;
+
+            if (!normalizedTitle.contains(word)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static String normalizeText(String text) {
+        if (text == null) return "";
+        return Normalizer.normalize(text, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .replaceAll("[^a-z0-9\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     public static String extractSlug(String url) {
