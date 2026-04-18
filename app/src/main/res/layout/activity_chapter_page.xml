@@ -89,13 +89,35 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone"
-            android:gravity="center">
+            android:gravity="center"
+            android:background="#88000000">
 
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_gravity="center"
+                android:gravity="center"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:padding="24dp">
+
+                <ProgressBar
+                    android:id="@+id/overlay_loading_progress"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:indeterminate="true"
+                    android:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/overlay_refresh_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Loading chapter..."
+                    android:textSize="14sp"
+                    android:layout_gravity="center"
+                    android:textColor="@android:color/white"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center" />
 
                 <Button
                     android:id="@+id/btn_overlay_refresh"
@@ -103,21 +125,13 @@
                     android:layout_height="wrap_content"
                     android:text="Reload Chapter"
                     android:textSize="16sp"
-                    android:padding="16dp"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="10dp"
                     android:layout_gravity="center"
+                    android:layout_marginTop="16dp"
                     android:background="@drawable/bg_gradient"
-                    android:textColor="@android:color/white"/>
-
-                <TextView
-                    android:id="@+id/overlay_refresh_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tap to reload the chapter"
-                    android:textSize="14sp"
-                    android:layout_gravity="center"
                     android:textColor="@android:color/white"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"/>
+                    android:visibility="gone" />
             </LinearLayout>
         </FrameLayout>
 

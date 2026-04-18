@@ -3,6 +3,8 @@ package com.example.mangav5.MainActivitys;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -12,6 +14,7 @@ import android.view.WindowInsetsController;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,9 +44,15 @@ import java.util.regex.Pattern;
 
 public class ChapterPage extends AppCompatActivity {
 
+    private static final String TAG = "ChapterPage";
+    private static final long IMAGE_LOADING_TIMEOUT_MS = 15000;
+
     private final List<String> chapters = new ArrayList<>();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
+
     AppDatabase db;
+
     private RecyclerView recycleViewPage;
     private ChapterPageAdapter chapterPageAdapter;
     private TextView tvChapterNumber, tvMangaTitle;
@@ -53,19 +62,28 @@ public class ChapterPage extends AppCompatActivity {
     private FrameLayout overlayRefreshContainer;
     private Button overlayRefreshButton;
     private TextView overlayRefreshText;
+    private ProgressBar overlayLoadingProgress;
+
     private String currentChapterId, currentChapterUrl, currentChapterTitle;
     private boolean bookmarkChanged = false;
-    private String mangaId, source, mangaUrl, chapterId, chapterUrl, chapterTitle,chapterNumber;
+    private String mangaId, source, mangaUrl, chapterId, chapterUrl, chapterTitle, chapterNumber;
     private boolean uiVisible = true;
     private int scrollPosition;
 
+    // image loading state
+    private boolean firstImageLoaded = false;
+    private boolean firstImageFailed = false;
+    private Runnable imageTimeoutRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chapter_page);
+
         if (getSupportActionBar() != null) getSupportActionBar().hide();
+
         db = AppDatabase.getInstance(this);
+
         initViews();
         setupRecyclerView();
         handleBackPress();
@@ -75,6 +93,8 @@ public class ChapterPage extends AppCompatActivity {
         setData(chapterId, chapterUrl, chapterTitle);
 
         String chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, chapterId, chapterUrl);
+
+        showLoadingOverlay("Loading chapter...");
         GetChapterPages(chapterUrlOrIdFinal);
 
         ChapterRefresh();
@@ -88,7 +108,7 @@ public class ChapterPage extends AppCompatActivity {
         setupRecyclerScrollListener();
     }
 
-    private int GetChapterNumber(String chapterTitle){
+    private int GetChapterNumber(String chapterTitle) {
         Pattern pattern = Pattern.compile("\\d+");
         Matcher matcher = pattern.matcher(chapterTitle);
 
@@ -96,17 +116,15 @@ public class ChapterPage extends AppCompatActivity {
             return Integer.parseInt(matcher.group());
         }
 
-        return 0; // fallback dacă nu găsește număr
+        return 0;
     }
 
-
-    private void setData(String chapterId, String chapterUrl, String chapterTitle){
+    private void setData(String chapterId, String chapterUrl, String chapterTitle) {
         setCurrentChapterId(chapterId);
         setCurrentChapterUrl(chapterUrl);
         setCurrentChapterTitle(chapterTitle);
         tvChapterNumber.setText(chapterTitle);
     }
-
 
     private void getIntentData() {
         Intent intent = getIntent();
@@ -116,7 +134,6 @@ public class ChapterPage extends AppCompatActivity {
             return;
         }
 
-
         mangaId = intent.getStringExtra("mangaId");
         source = intent.getStringExtra("source");
         mangaUrl = intent.getStringExtra("mangaUrl");
@@ -125,13 +142,13 @@ public class ChapterPage extends AppCompatActivity {
         chapterUrl = intent.getStringExtra("chapterUrl");
         chapterNumber = intent.getStringExtra("chapterNumber");
 
-
         if (chapterId == null || chapterUrl == null) {
             Toast.makeText(this, "Chapter data incomplete", Toast.LENGTH_SHORT).show();
             finish();
+            return;
         }
 
-        Log.d("ChapterPage", "Loaded Intent → MangaId: " + mangaId + " | ChapterId: " + chapterId);
+        Log.d(TAG, "Loaded Intent → MangaId: " + mangaId + " | ChapterId: " + chapterId);
     }
 
     private void initViews() {
@@ -148,11 +165,38 @@ public class ChapterPage extends AppCompatActivity {
         overlayRefreshContainer = findViewById(R.id.overlay_refresh_container);
         overlayRefreshButton = findViewById(R.id.btn_overlay_refresh);
         overlayRefreshText = findViewById(R.id.overlay_refresh_text);
+        overlayLoadingProgress = findViewById(R.id.overlay_loading_progress);
     }
 
     private void setupRecyclerView() {
         recycleViewPage.setLayoutManager(new LinearLayoutManager(this));
+
         chapterPageAdapter = new ChapterPageAdapter(chapters, this, "");
+        chapterPageAdapter.setOnImageStateListener(new ChapterPageAdapter.OnImageStateListener() {
+            @Override
+            public void onFirstImageLoadSuccess() {
+                runOnUiThread(() -> {
+                    firstImageLoaded = true;
+                    firstImageFailed = false;
+                    cancelImageLoadingTimeout();
+                    hideOverlay();
+                    Log.d(TAG, "First image loaded successfully");
+                });
+            }
+
+            @Override
+            public void onFirstImageLoadFailed(String failedUrl) {
+                runOnUiThread(() -> {
+                    if (!firstImageLoaded) {
+                        firstImageFailed = true;
+                        cancelImageLoadingTimeout();
+                        showRetryOverlay("Failed to load chapter image.\nTap below to retry.");
+                        Log.e(TAG, "First image failed: " + failedUrl);
+                    }
+                });
+            }
+        });
+
         recycleViewPage.setAdapter(chapterPageAdapter);
     }
 
@@ -173,40 +217,87 @@ public class ChapterPage extends AppCompatActivity {
         }
     }
 
-    private void GetChapterPages(String chapterUrlOrId) {
-        Log.d("ChapterPage", "Fetching pages for: " + chapterUrlOrId);
+    private void resetImageLoadingFlags() {
+        firstImageLoaded = false;
+        firstImageFailed = false;
+        chapterPageAdapter.resetLoadingState();
+        cancelImageLoadingTimeout();
+    }
 
-        // Show a temporary loading overlay if you want
-        overlayRefreshContainer.setVisibility(View.GONE); // hide initially
+    private void startImageLoadingTimeout() {
+        cancelImageLoadingTimeout();
+
+        imageTimeoutRunnable = () -> {
+            if (!firstImageLoaded && !isDestroyed() && !isFinishing()) {
+                showRetryOverlay("Loading took too long.\nTap below to retry.");
+                Log.e(TAG, "Image loading timeout");
+            }
+        };
+
+        uiHandler.postDelayed(imageTimeoutRunnable, IMAGE_LOADING_TIMEOUT_MS);
+    }
+
+    private void cancelImageLoadingTimeout() {
+        if (imageTimeoutRunnable != null) {
+            uiHandler.removeCallbacks(imageTimeoutRunnable);
+            imageTimeoutRunnable = null;
+        }
+    }
+
+    private boolean isSupportedImageUrl(String url) {
+        if (url == null || url.trim().isEmpty()) return false;
+        String lower = url.toLowerCase();
+        return lower.endsWith(".jpg")
+                || lower.endsWith(".jpeg")
+                || lower.endsWith(".png")
+                || lower.endsWith(".webp")
+                || lower.endsWith(".gif")
+                || lower.contains(".jpg?")
+                || lower.contains(".jpeg?")
+                || lower.contains(".png?")
+                || lower.contains(".webp?")
+                || lower.contains(".gif?");
+    }
+
+    private void reloadCurrentChapter() {
+        String idOrUrl = ServiceController.getChapterIdOrChapterUrl(source, currentChapterId, currentChapterUrl);
+        showLoadingOverlay("Reloading chapter...");
+        GetChapterPages(idOrUrl);
+    }
+
+    private void GetChapterPages(String chapterUrlOrId) {
+        Log.d(TAG, "Fetching pages for: " + chapterUrlOrId);
+
+        resetImageLoadingFlags();
+        showLoadingOverlay("Loading chapter pages...");
 
         ServiceController.getChapterPages(this, source, chapterUrlOrId, new ServiceController.PagesCallback() {
             @Override
             public void onSuccess(List<String> pages) {
                 runOnUiThread(() -> {
                     if (isDestroyed() || isFinishing()) return;
+
                     chapters.clear();
+
                     if (pages != null && !pages.isEmpty()) {
                         for (String url : pages) {
-                            if (url != null && !url.trim().isEmpty() &&
-                                    (url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".webp")) || url.contains(".jpg?")) {
+                            if (isSupportedImageUrl(url)) {
                                 chapters.add(url);
                             }
                         }
-
-                        if (chapters.isEmpty()) {
-                            overlayRefreshContainer.setVisibility(View.VISIBLE);
-                        } else {
-                            overlayRefreshContainer.setVisibility(View.GONE);
-                        }
-
-                        Log.e("CountPages", "Count: " + chapters.size());
-                    } else {
-                        overlayRefreshContainer.setVisibility(View.VISIBLE);
                     }
 
+                    if (chapters.isEmpty()) {
+                        showRetryOverlay("No valid chapter images found.\nTap below to retry.");
+                        Log.e(TAG, "No valid image URLs after filtering");
+                        return;
+                    }
 
                     chapterPageAdapter.notifyDataSetChanged();
+                    startImageLoadingTimeout();
                     InsertChapterIntoHistory(chapterUrlOrId);
+
+                    Log.d(TAG, "Valid image URLs count: " + chapters.size());
                 });
             }
 
@@ -215,8 +306,8 @@ public class ChapterPage extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (isDestroyed() || isFinishing()) return;
                     Toast.makeText(ChapterPage.this, "Failed to load pages", Toast.LENGTH_SHORT).show();
-                    overlayRefreshContainer.setVisibility(View.VISIBLE); // show overlay on error
-                    Log.e("ChapterPage", "Error fetching pages: " + message);
+                    showRetryOverlay("Failed to fetch chapter pages.\nTap below to retry.");
+                    Log.e(TAG, "Error fetching pages: " + message);
                 });
             }
         });
@@ -224,103 +315,110 @@ public class ChapterPage extends AppCompatActivity {
 
     private void InsertChapterIntoHistory(String chapterUrlOrId) {
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
-        ServiceController.fetchMangaDetails(this,source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
+        ServiceController.fetchMangaDetails(this, source, mangaIdOrUrlFinal, new ServiceController.MangaCallback() {
             @Override
             public void onSuccess(MangaItemModel manga) {
                 int scrollY = recycleViewPage.getScrollY();
-                if (!executor.isShutdown() && !executor.isTerminated()) {
-                    executor.execute(() -> {
-                        HistoryEntity historyItem = new HistoryEntity(
-                                manga.getMangaId(),
-                                getCurrentChapterId(),
-                                getCurrentChapterTitle(),
-                                manga.getCoverImageUrl(),
-                                manga.getDescription(),
-                                System.currentTimeMillis(),
-                                manga.getTitle(),
-                                manga.getMangaUrl(),
-                                chapterUrlOrId,
-                                manga.getSource(),
-                                scrollY
-                        );
-                        db.historyDao().insertHistoryItem(historyItem);
-                    });
-                }
+                safeExecute(() -> {
+                    HistoryEntity historyItem = new HistoryEntity(
+                            manga.getMangaId(),
+                            getCurrentChapterId(),
+                            getCurrentChapterTitle(),
+                            manga.getCoverImageUrl(),
+                            manga.getDescription(),
+                            System.currentTimeMillis(),
+                            manga.getTitle(),
+                            manga.getMangaUrl(),
+                            chapterUrlOrId,
+                            manga.getSource(),
+                            scrollY
+                    );
+                    db.historyDao().insertHistoryItem(historyItem);
+                });
             }
 
             @Override
             public void onError(String errorMessage) {
-                Log.e("ChapterPage", "Failed to fetch manga for history: " + errorMessage);
+                Log.e(TAG, "Failed to fetch manga for history: " + errorMessage);
             }
         });
     }
 
+    private void showLoadingOverlay(String text) {
+        overlayRefreshContainer.setVisibility(View.VISIBLE);
+        overlayLoadingProgress.setVisibility(View.VISIBLE);
+        overlayRefreshButton.setVisibility(View.GONE);
+        overlayRefreshText.setText(text);
+    }
+
+    private void showRetryOverlay(String text) {
+        overlayRefreshContainer.setVisibility(View.VISIBLE);
+        overlayLoadingProgress.setVisibility(View.GONE);
+        overlayRefreshButton.setVisibility(View.VISIBLE);
+        overlayRefreshText.setText(text);
+    }
+
+    private void hideOverlay() {
+        overlayRefreshContainer.setVisibility(View.GONE);
+    }
+
     private void OverlayRefreshedButton() {
-        // Set refresh button click
         overlayRefreshButton.setOnClickListener(v -> {
             Toast.makeText(this, "Refreshing chapter...", Toast.LENGTH_SHORT).show();
-            String idOrUrl = ServiceController.getChapterIdOrChapterUrl(source, currentChapterId, currentChapterUrl);
-            GetChapterPages(idOrUrl);
-            overlayRefreshContainer.setVisibility(View.GONE);
+            reloadCurrentChapter();
         });
     }
 
     private void ChapterRefresh() {
         btnRefresh.setOnClickListener(v -> {
             Toast.makeText(this, "Refreshing chapter...", Toast.LENGTH_SHORT).show();
-            String idOrUrl = ServiceController.getChapterIdOrChapterUrl(source, currentChapterId, currentChapterUrl);
-            GetChapterPages(idOrUrl);
+            reloadCurrentChapter();
         });
     }
 
     private void NextChapter() {
         btnNext.setOnClickListener(v -> {
             final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
-            if (!executor.isShutdown() && !executor.isTerminated()) {
-                executor.execute(() -> {
-                    ChapterItemEntity next = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, currentChapterId);
-                    runOnUiThread(() -> {
-                        if (next != null) {
-                            chapterId = next.chapterId;
-                            chapterUrl = next.chapterUrl;
-                            chapterTitle = next.title;
-                            loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl(),next.getMangaId(), next.getSource(), mangaUrl);
-
-                            Toast.makeText(this, "Next: " + next.getTitle(), Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(this, "This is the latest chapter", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            safeExecute(() -> {
+                ChapterItemEntity next = db.chapterDao().getNextChapter(mangaIdOrUrlFinal, currentChapterId);
+                runOnUiThread(() -> {
+                    if (next != null) {
+                        chapterId = next.chapterId;
+                        chapterUrl = next.chapterUrl;
+                        chapterTitle = next.title;
+                        loadChapter(next.getChapterId(), next.getTitle(), next.getChapterUrl(), next.getMangaId(), next.getSource(), mangaUrl);
+                        Toast.makeText(this, "Next: " + next.getTitle(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "This is the latest chapter", Toast.LENGTH_SHORT).show();
+                    }
                 });
-            }
+            });
         });
     }
 
     private void PrevChapter() {
         btnPrevious.setOnClickListener(v -> {
             final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
-            if (!executor.isShutdown() && !executor.isTerminated()) {
-                executor.execute(() -> {
-                    ChapterItemEntity prev = db.chapterDao().getPrevChapter(mangaIdOrUrlFinal, currentChapterId);
-                    runOnUiThread(() -> {
-                        if (prev != null) {
-                            loadChapter(prev.getChapterId(), prev.getTitle(), prev.getChapterUrl(),prev.getMangaId(), prev.getSource(), mangaUrl);
-                            chapterId = prev.chapterId;
-                            chapterUrl = prev.chapterUrl;
-                            chapterTitle = prev.title;
-                            Toast.makeText(this, "Previous: " + prev.getTitle(), Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(this, "This is the first chapter", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            safeExecute(() -> {
+                ChapterItemEntity prev = db.chapterDao().getPrevChapter(mangaIdOrUrlFinal, currentChapterId);
+                runOnUiThread(() -> {
+                    if (prev != null) {
+                        loadChapter(prev.getChapterId(), prev.getTitle(), prev.getChapterUrl(), prev.getMangaId(), prev.getSource(), mangaUrl);
+                        chapterId = prev.chapterId;
+                        chapterUrl = prev.chapterUrl;
+                        chapterTitle = prev.title;
+                        Toast.makeText(this, "Previous: " + prev.getTitle(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "This is the first chapter", Toast.LENGTH_SHORT).show();
+                    }
                 });
-            }
+            });
         });
     }
 
-    private void loadChapter(String chapterId, String chapterTitle, String chapterUrl,String _mangaId,String _source,String _mangaUrl) {
-        // Hide UI immediately
+    private void loadChapter(String chapterId, String chapterTitle, String chapterUrl, String _mangaId, String _source, String _mangaUrl) {
         hideUI();
+        showLoadingOverlay("Loading chapter...");
 
         setCurrentChapterId(chapterId);
         setCurrentChapterTitle(chapterTitle);
@@ -344,30 +442,25 @@ public class ChapterPage extends AppCompatActivity {
             chapterPageAdapter.notifyDataSetChanged();
         });
 
-        // Fetch new pages
         String chapterUrlOrIdFinal = ServiceController.getChapterIdOrChapterUrl(source, chapterId, chapterUrl);
         GetChapterPages(chapterUrlOrIdFinal);
     }
 
     private void SetMangaTitle(String mangaId) {
-        if (!executor.isShutdown() && !executor.isTerminated()) {
-            executor.execute(() -> {
-                MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
+        safeExecute(() -> {
+            MangaItemEntity manga = db.mangaItemDao().getMangaById(mangaId);
 
-                if (manga == null) {
-                    Log.e("MangaPage", "Manga not found in DB for mangaId: " + mangaId);
-                    return;
-                }
+            if (manga == null) {
+                Log.e(TAG, "Manga not found in DB for mangaId: " + mangaId);
+                return;
+            }
 
-                Log.e("MangaPage", "manga.getTitle(): " + manga.getTitle());
-
-                runOnUiThread(() -> {
-                    if (isDestroyed() || isFinishing()) return;
-                    tvMangaTitle.setText(manga.getTitle());
-                    tvMangaTitle.setOnClickListener(v -> GoToMangaItem(mangaId));
-                });
+            runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
+                tvMangaTitle.setText(manga.getTitle());
+                tvMangaTitle.setOnClickListener(v -> GoToMangaItem(mangaId));
             });
-        }
+        });
     }
 
     private void GoToMangaItem(String mangaId) {
@@ -386,28 +479,27 @@ public class ChapterPage extends AppCompatActivity {
         String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source, mangaId, mangaUrl);
         int LIMIT = 100;
 
-        ServiceController.fetchChapterListController(this,source, mangaIdOrUrlFinal, offset, LIMIT, "desc",
+        ServiceController.fetchChapterListController(this, source, mangaIdOrUrlFinal, offset, LIMIT, "desc",
                 new ServiceController.ChapterListCallback() {
                     @Override
                     public void onSuccess(List<ChapterModel> chapterList) {
                         if (chapterList.isEmpty()) return;
-                        if (!executor.isShutdown() && !executor.isTerminated()) {
-                            executor.execute(() -> {
-                                List<ChapterItemEntity> entities = new ArrayList<>();
-                                for (ChapterModel c : chapterList) {
-                                    entities.add(new ChapterItemEntity(
-                                            c.getChapterId(),
-                                            mangaIdOrUrlFinal,
-                                            c.getTitle(),
-                                            c.getNumber(),
-                                            c.getChapterUrl(),
-                                            c.getSource()
-                                    ));
-                                }
-                                db.chapterDao().insertChapters(entities);
-                                Log.d("ChapterPage", "Inserted " + entities.size() + " chapters");
-                            });
-                        }
+
+                        safeExecute(() -> {
+                            List<ChapterItemEntity> entities = new ArrayList<>();
+                            for (ChapterModel c : chapterList) {
+                                entities.add(new ChapterItemEntity(
+                                        c.getChapterId(),
+                                        mangaIdOrUrlFinal,
+                                        c.getTitle(),
+                                        c.getNumber(),
+                                        c.getChapterUrl(),
+                                        c.getSource()
+                                ));
+                            }
+                            db.chapterDao().insertChapters(entities);
+                            Log.d(TAG, "Inserted " + entities.size() + " chapters");
+                        });
 
                         if (chapterList.size() == LIMIT) updateLoadChapterList(offset + LIMIT);
                     }
@@ -432,9 +524,9 @@ public class ChapterPage extends AppCompatActivity {
         });
     }
 
-
     private void setupRecyclerScroll() {
         btnToggleUI.setOnClickListener(v -> toggleUiVisibility());
+
         GestureDetector gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
@@ -442,17 +534,20 @@ public class ChapterPage extends AppCompatActivity {
                 return true;
             }
         });
+
         recycleViewPage.setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
             return false;
         });
+
         recycleViewPage.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrolled(RecyclerView rv, int dx, int dy) {
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
                 super.onScrolled(rv, dx, dy);
                 if (dy > 0 && !rv.canScrollVertically(1)) setUiVisibility(true);
             }
         });
+
         setUiVisibility(false);
     }
 
@@ -465,7 +560,7 @@ public class ChapterPage extends AppCompatActivity {
         upperPartLayout.setVisibility(visibility);
         lowerPartLayout.setVisibility(visibility);
         btnToggleUI.setImageResource(visible ? R.drawable.ic_visibility_on : R.drawable.ic_visibility_off);
-        Log.e("testUI","TEST");
+        uiVisible = visible;
     }
 
     private void hideUI() {
@@ -479,55 +574,38 @@ public class ChapterPage extends AppCompatActivity {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (layoutManager == null) {
-                    return;
-                }
-                // Save scroll position
+                if (layoutManager == null) return;
+
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
                 View firstVisibleItemView = layoutManager.findViewByPosition(firstVisibleItemPosition);
+
                 int offset = 0;
                 if (firstVisibleItemView != null) {
                     offset = -firstVisibleItemView.getTop();
-
                 }
             }
         });
     }
 
-
-
     @Override
     protected void onDestroy() {
+        cancelImageLoadingTimeout();
+
         try {
             if (executor != null && !executor.isShutdown()) {
                 executor.shutdownNow();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
-        super.onDestroy(); // TREBUIE să fie ultimul și să fie apelat întotdeauna
+        super.onDestroy();
     }
 
-    /**
-     * Executes a task on the executor service safely.
-     *
-     * This method ensures that the Runnable task is only submitted if:
-     * 1. The activity is not destroyed (`!isDestroyed()`) – prevents tasks from running after the activity is gone.
-     * 2. The activity is not finishing (`!isFinishing()`) – avoids running tasks during activity teardown.
-     * 3. The executor is still running (`!executor.isShutdown()` and `!executor.isTerminated()`) – prevents
-     *    RejectedExecutionException that happens when tasks are submitted to a shutdown executor.
-     *
-     * Usage:
-     * safeExecute(() -> {
-     *     // your background task here
-     * });
-     */
     private void safeExecute(Runnable task) {
         if (!isDestroyed() && !isFinishing() && !executor.isShutdown() && !executor.isTerminated()) {
             executor.execute(task);
         }
     }
-
-
 
     private void setCurrentChapterUrl(String url) {
         this.currentChapterUrl = url;
@@ -548,5 +626,4 @@ public class ChapterPage extends AppCompatActivity {
     private void setCurrentChapterTitle(String title) {
         this.currentChapterTitle = title;
     }
-
 }
