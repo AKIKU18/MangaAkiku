@@ -133,7 +133,7 @@ public class AsuraScansFeedService {
     }
 
     public static void getAsuraScansMangaFeed(int pageNumber, MangaListCallback callback) {
-        String mangaUrl = "https://asurascans.com/?page=" + pageNumber;
+        String mangaUrl = "https://asurascans.com/browse?page=" + pageNumber;
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -142,51 +142,53 @@ public class AsuraScansFeedService {
 
             try {
                 Document doc = Jsoup.connect(mangaUrl)
-                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
+                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
                         .timeout(15000)
                         .get();
 
-                Elements mangaEntries = doc.select("div.grid.grid-cols-12");
+                Log.d(TAG, "Requested URL: " + mangaUrl);
+                Log.d(TAG, "Final URL: " + doc.location());
+                Log.d(TAG, "HTML hash: " + doc.outerHtml().hashCode());
+
+                Elements mangaEntries = doc.select("#series-grid .series-card");
+                Log.d(TAG, "series-card count = " + mangaEntries.size());
+
                 for (Element entry : mangaEntries) {
+                    try {
+                        Element titleLink = entry.selectFirst("a[href^=/comics/]");
+                        Element img = entry.selectFirst("img");
+                        Element titleElement = entry.selectFirst("h3");
 
-                    // Main manga link (title)
-                    Element titleLink = entry.selectFirst("a[href^=/comics/]");
+                        if (titleLink == null || titleElement == null) continue;
 
-                    // Cover image
-                    Element img = entry.selectFirst("img");
-
-                    // Latest chapter link
-                    Element chapter = entry.selectFirst("a[href*=/chapter/]");
-
-                    Elements grids = doc.select("div.grid.grid-cols-12");
-                    Log.d(TAG, "Total grid containers: " + grids.size());
-
-                    for (int i = 0; i < grids.size(); i++) {
-                        Element grid = grids.get(i);
-                        Elements links = grid.select("a[href^=/comics/]");
-                        Log.d(TAG, "GRID #" + i + " comics links count = " + links.size());
-
-                        for (int j = 0; j < Math.min(5, links.size()); j++) {
-                            Log.d(TAG, "GRID #" + i + " link " + j + " = " + links.get(j).text() + " -> " + links.get(j).attr("href"));
+                        String href = titleLink.absUrl("href");
+                        if (href.isEmpty()) {
+                            href = "https://asurascans.com" + titleLink.attr("href");
                         }
-                    }
 
-                    if (titleLink != null) {
+                        String title = titleElement.text().trim();
+                        if (title.isEmpty() && img != null) {
+                            title = img.attr("alt").trim();
+                        }
 
-                        String href = "https://asurascans.com" + titleLink.attr("href");
+                        if (title.isEmpty() || href.isEmpty()) continue;
 
-                        // Extract title (alt attribute)
-                        String title = entry.selectFirst("img").attr("alt");
+                        String coverUrl = "";
+                        if (img != null) {
+                            coverUrl = img.absUrl("src");
+                            if (coverUrl.isEmpty()) {
+                                coverUrl = img.absUrl("data-src");
+                            }
+                        }
 
-                        String coverUrl = img != null ? img.absUrl("src") : "";
+                        String mangaId = href.substring(href.lastIndexOf("-") + 1);
 
-                        // Extract ID (last part after "-")
-                        String[] parts = href.split("-");
-                        String lastPart = href.substring(href.lastIndexOf("-") + 1);
-                        String mangaId = lastPart;
-
-                        // Extract chapter text (if available)
-                        String chapterText = chapter != null ? chapter.text().trim() : "";
+                        // chapters text
+                        String chapterText = "";
+                        Elements infoSpans = entry.select("div.p-3 div.flex.items-center.gap-2.mt-2 span");
+                        if (infoSpans.size() > 0) {
+                            chapterText = infoSpans.get(0).text().trim(); // ex: 85 Chapters
+                        }
 
                         MangaItemModel manga = new MangaItemModel(
                                 mangaId,
@@ -201,25 +203,23 @@ public class AsuraScansFeedService {
 
                         mangaList.add(manga);
 
-
+                    } catch (Exception inner) {
+                        Log.e(TAG, "Error parsing series card", inner);
                     }
                 }
 
-                for (MangaItemModel mangas : mangaList){
-                    Log.d(TAG, "onSuccess: " + "Page: " + pageNumber);
-                    Log.d(TAG, "onSuccess: " + mangas.getTitle());
-
+                Log.d(TAG, "Parsed items for page " + pageNumber + ": " + mangaList.size());
+                for (MangaItemModel manga : mangaList) {
+                    Log.d(TAG, "Page " + pageNumber + " -> " + manga.getTitle());
                 }
-
-                Log.d(TAG, "Requested URL: " + mangaUrl);
-                Log.d(TAG, "Final URL: " + doc.location());
-                Log.d(TAG, "HTML hash: " + doc.outerHtml().hashCode());
 
                 mainHandler.post(() -> callback.onSuccess(mangaList));
 
             } catch (IOException e) {
                 Log.e(TAG, "Error scraping Asura feed: ", e);
                 mainHandler.post(() -> callback.onError(e.getMessage()));
+            } finally {
+                executor.shutdown();
             }
         });
     }
