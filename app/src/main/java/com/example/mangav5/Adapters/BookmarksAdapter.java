@@ -253,7 +253,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
 
 
-//TO DO: MAKE A NEW METHOD WHERE YOU CHECK FOR THE LAST CHAPTER ONE IN A WHILE AND NOT EVERYTIME IT ENTERS THE BOOKMARK PAGE
+//TO DO: MAKE A NEW METHOD WHERE YOU CHECK FOR THE LAST CHAPTER IN A WHILE AND NOT EVERYTIME IT ENTERS THE BOOKMARK PAGE
             // --- B. GET LATEST CHAPTER (Network) ---
             ServiceController.fetchChapterListController(context,
                     mangaItem.getSource(),

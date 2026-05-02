@@ -40,6 +40,13 @@ public interface ChapterDao {
     @Query("DELETE FROM chapterItem")
     void deleteChapters();
 
+    //Get first chapter
+    @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId ORDER BY CAST(number AS REAL) ASC LIMIT 1")
+    ChapterItemEntity getFirstChapter(String mangaId);
+
+    //Get last chapter
+    @Query("SELECT * FROM chapterItem WHERE mangaId = :mangaId ORDER BY CAST(number AS REAL) DESC LIMIT 1")
+    ChapterItemEntity getLastChapter(String mangaId);
 
 
 }

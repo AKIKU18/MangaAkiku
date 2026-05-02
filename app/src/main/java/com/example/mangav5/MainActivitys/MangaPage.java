@@ -151,37 +151,87 @@ public class MangaPage extends AppCompatActivity {
         lastChapterButtonPage.setOnClickListener(v -> GetFirstOrLastChapter("desc"));
     }
 
-    private void GetFirstOrLastChapter(String descAsc){
+    private void GetFirstOrLastChapter(String descAsc) {
         String mangaUrl = getIntent().getStringExtra("mangaUrl");
         String source = getIntent().getStringExtra("source");
+
         Log.e("SourceManga", source);
 
-        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(source,getMangaId, mangaUrl); // create final copy
+        AppDatabase db = AppDatabase.getInstance(MangaPage.this);
+        final String mangaIdOrUrlFinal =
+                ServiceController.getMangaIdOrMangaUrl(source, getMangaId, mangaUrl);
 
-        ServiceController.fetchChapterListController(this,source,mangaIdOrUrlFinal, 0, 1, descAsc, new ServiceController.ChapterListCallback() {
-            @Override
-            public void onSuccess(List<ChapterModel> fetchedChapters) {
-                if (fetchedChapters.isEmpty()) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
 
-                ChapterModel firstChapter = fetchedChapters.get(0);
+            ChapterItemEntity firstChapter = db.chapterDao().getFirstChapter(mangaIdOrUrlFinal);
+            ChapterItemEntity lastChapter = db.chapterDao().getLastChapter(mangaIdOrUrlFinal);
 
-                // Safely pass mangaUrl
-                String mangaUrl = getIntent().getStringExtra("mangaUrl");
-                if (mangaUrl == null) mangaUrl = "";
+            if (firstChapter != null && descAsc.equals("asc")) {
 
-                Intent intent = new Intent(MangaPage.this, ChapterPage.class);
-                intent.putExtra("chapterId", firstChapter.getChapterId());
-                intent.putExtra("chapterTitle", firstChapter.getTitle());
-                intent.putExtra("mangaId", getMangaId);
-                intent.putExtra("mangaUrl", mangaUrl);
-                intent.putExtra("chapterUrl", firstChapter.getChapterUrl());
-                intent.putExtra("source", source);
-                startActivity(intent);
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(MangaPage.this, ChapterPage.class);
+                    intent.putExtra("chapterId", firstChapter.getChapterId());
+                    intent.putExtra("chapterTitle", firstChapter.getTitle());
+                    intent.putExtra("mangaId", getMangaId);
+                    intent.putExtra("mangaUrl", mangaUrl); // ← direct, fără safe
+                    intent.putExtra("chapterUrl", firstChapter.getChapterUrl());
+                    intent.putExtra("source", source);
+                    startActivity(intent);
+                });
+
             }
 
-            @Override
-            public void onError(String message) {
-                runOnUiThread(() -> Toast.makeText(MangaPage.this, "Error: " + message, Toast.LENGTH_SHORT).show());
+            if (lastChapter != null && descAsc.equals("desc")) {
+
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(MangaPage.this, ChapterPage.class);
+                    intent.putExtra("chapterId", lastChapter.getChapterId());
+                    intent.putExtra("chapterTitle", lastChapter.getTitle());
+                    intent.putExtra("mangaId", getMangaId);
+                    intent.putExtra("mangaUrl", mangaUrl); // ← direct, fără safe
+                    intent.putExtra("chapterUrl", lastChapter.getChapterUrl());
+                    intent.putExtra("source", source);
+                    startActivity(intent);
+                });
+
+            }
+
+            if(firstChapter == null && lastChapter == null){
+                ServiceController.fetchChapterListController(
+                        MangaPage.this,
+                        source,
+                        mangaIdOrUrlFinal,
+                        0,
+                        1,
+                        descAsc,
+                        new ServiceController.ChapterListCallback() {
+
+                            @Override
+                            public void onSuccess(List<ChapterModel> fetchedChapters) {
+                                if (fetchedChapters.isEmpty()) return;
+
+                                ChapterModel firstChapter = fetchedChapters.get(0);
+
+                                runOnUiThread(() -> {
+                                    Intent intent = new Intent(MangaPage.this, ChapterPage.class);
+                                    intent.putExtra("chapterId", firstChapter.getChapterId());
+                                    intent.putExtra("chapterTitle", firstChapter.getTitle());
+                                    intent.putExtra("mangaId", getMangaId);
+                                    intent.putExtra("mangaUrl", mangaUrl); // ← direct
+                                    intent.putExtra("chapterUrl", firstChapter.getChapterUrl());
+                                    intent.putExtra("source", source);
+                                    startActivity(intent);
+                                });
+                            }
+
+                            @Override
+                            public void onError(String message) {
+                                runOnUiThread(() ->
+                                        Toast.makeText(MangaPage.this, "Error: " + message, Toast.LENGTH_SHORT).show()
+                                );
+                            }
+                        }
+                );
             }
         });
     }
