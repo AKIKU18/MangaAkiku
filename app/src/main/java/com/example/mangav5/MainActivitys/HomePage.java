@@ -29,14 +29,19 @@ import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.SourceEntity;
+import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansChaptersService;
+import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansFeedService;
+import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansSearchService;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -60,7 +65,6 @@ public class HomePage extends AppCompatActivity {
     private Button bookmarkPageButton;
     private Button historyPageButton;
     private Button button_mangadex;
-    private Button button_comix;
     private Button button_asurascans;
     private Button button_manhuaus;
     private Button button_manhuaPlus;
@@ -69,6 +73,10 @@ public class HomePage extends AppCompatActivity {
     private Button button_flameComics;
     private Button button_rizzfables;
     private Button button_mgeko;
+    private Button button_comix;
+
+    private Button button_vortexScans;
+
     private ImageButton set_main_mangadex;
     private ImageButton set_main_asurascans;
     private ImageButton set_main_manhuaus;
@@ -79,6 +87,7 @@ public class HomePage extends AppCompatActivity {
     private ImageButton set_main_rizzfables;
     private ImageButton set_main_mgeko;
     private ImageButton set_main_comix;
+    private ImageButton set_main_vortexScans;
 
     private ImageButton settingsPageButton;
     private TextView loadingText;
@@ -99,6 +108,7 @@ public class HomePage extends AppCompatActivity {
     private int manhuaFastOffset = 1;
     private int mgekoOffset = 1;
     private int comixOffset = 1;
+    private int vortexScansOffset = 1;
 
     private ActivityResultLauncher<Intent> bookmarkLauncher;
     private ActivityResultLauncher<Intent> mangaPageLauncher;
@@ -132,6 +142,7 @@ public class HomePage extends AppCompatActivity {
         ShowNotifications();
         checkSourcesAndDisableButtons();
         setMainUpdateSourceIcon(serviceFeed);
+
     }
 
     private void ShowNotifications() {
@@ -214,6 +225,7 @@ public class HomePage extends AppCompatActivity {
         button_rizzfables = findViewById(R.id.source_rizzfables);
         button_mgeko = findViewById(R.id.source_mgeko);
         button_comix = findViewById(R.id.source_comix);
+        button_vortexScans = findViewById(R.id.source_vortexScans);
 
         set_main_mangadex = findViewById(R.id.set_main_mangadex);
         set_main_asurascans = findViewById(R.id.set_main_asurascans);
@@ -225,6 +237,7 @@ public class HomePage extends AppCompatActivity {
         set_main_rizzfables = findViewById(R.id.set_main_rizzfables);
         set_main_mgeko = findViewById(R.id.set_main_mgeko);
         set_main_comix = findViewById(R.id.set_main_comix);
+        set_main_vortexScans = findViewById(R.id.set_main_vortexScans);
     }
 
     private void setupRecyclerViews() {
@@ -253,18 +266,19 @@ public class HomePage extends AppCompatActivity {
             drawerLayout.openDrawer(GravityCompat.START);
         });
 
-        Map<Button, String> sourceButtons = Map.of(
-                button_mangadex, "MangaDex",
-                button_asurascans, "AsuraScans",
-                button_manhuaus, "Manhuaus",
-                button_manhuaPlus, "ManhuaPlus",
-                button_demonicScans, "DemonicScans",
-                button_manhuaFast, "ManhuaFast",
-                button_flameComics, "FlameComics",
-                button_rizzfables, "Rizzfables",
-                button_mgeko, "Mgeko",
-                button_comix, "Comix"
-        );
+        Map<Button, String> sourceButtons = new HashMap<>();
+
+        sourceButtons.put(button_mangadex, "MangaDex");
+        sourceButtons.put(button_asurascans, "AsuraScans");
+        sourceButtons.put(button_manhuaus, "Manhuaus");
+        sourceButtons.put(button_manhuaPlus, "ManhuaPlus");
+        sourceButtons.put(button_demonicScans, "DemonicScans");
+        sourceButtons.put(button_manhuaFast, "ManhuaFast");
+        sourceButtons.put(button_flameComics, "FlameComics");
+        sourceButtons.put(button_rizzfables, "Rizzfables");
+        sourceButtons.put(button_mgeko, "Mgeko");
+        sourceButtons.put(button_comix, "Comix");
+        sourceButtons.put(button_vortexScans, "VortexScans");
 
         for (Map.Entry<Button, String> entry : sourceButtons.entrySet()) {
             entry.getKey().setOnClickListener(v -> {
@@ -274,18 +288,19 @@ public class HomePage extends AppCompatActivity {
             });
         }
 
-        Map<ImageButton, String> mainSourceButtons = Map.of(
-                set_main_mangadex, "MangaDex",
-                set_main_asurascans, "AsuraScans",
-                set_main_manhuaus, "Manhuaus",
-                set_main_manhuaPlus, "ManhuaPlus",
-                set_main_demonicScans, "DemonicScans",
-                set_main_manhuaFast, "ManhuaFast",
-                set_main_flameComics, "FlameComics",
-                set_main_rizzfables, "Rizzfables",
-                set_main_mgeko, "Mgeko",
-                set_main_comix, "Comix"
-        );
+        Map<ImageButton, String> mainSourceButtons = new HashMap<>();
+
+        mainSourceButtons.put(set_main_mangadex, "MangaDex");
+        mainSourceButtons.put(set_main_asurascans, "AsuraScans");
+        mainSourceButtons.put(set_main_manhuaus, "Manhuaus");
+        mainSourceButtons.put(set_main_manhuaPlus, "ManhuaPlus");
+        mainSourceButtons.put(set_main_demonicScans, "DemonicScans");
+        mainSourceButtons.put(set_main_manhuaFast, "ManhuaFast");
+        mainSourceButtons.put(set_main_flameComics, "FlameComics");
+        mainSourceButtons.put(set_main_rizzfables, "Rizzfables");
+        mainSourceButtons.put(set_main_mgeko, "Mgeko");
+        mainSourceButtons.put(set_main_comix, "Comix");
+        mainSourceButtons.put(set_main_vortexScans, "VortexScans");
 
         for (Map.Entry<ImageButton, String> entry : mainSourceButtons.entrySet()) {
             entry.getKey().setOnClickListener(v -> {
@@ -331,6 +346,8 @@ public class HomePage extends AppCompatActivity {
             mgekoOffset = 1;
         } else if (source.equals("Comix")) {
             comixOffset = 1;
+        }else if (source.equals("VortexScans")) {
+            vortexScansOffset = 1;
         }
     }
 
@@ -349,24 +366,27 @@ public class HomePage extends AppCompatActivity {
             loadFeed(mgekoOffset, LIMIT);
         } else if (serviceFeed.equals("Comix")) {
             loadFeed(comixOffset, LIMIT);
+        } else if (serviceFeed.equals("VortexScans")) {
+            loadFeed(vortexScansOffset, LIMIT);
         } else {
             loadFeed(offset, LIMIT);
         }
     }
 
     private void updateSourceGlow() {
-        Map<String, Integer> glowMap = Map.of(
-                "AsuraScans", R.id.drawer_asurascans_glow,
-                "MangaDex", R.id.drawer_mangadex_glow,
-                "Manhuaus", R.id.drawer_manhuaus_glow,
-                "ManhuaPlus", R.id.drawer_manhuaPlus_glow,
-                "DemonicScans", R.id.drawer_demonicScans_glow,
-                "ManhuaFast", R.id.drawer_manhuaFast_glow,
-                "FlameComics", R.id.drawer_flameComics_glow,
-                "Rizzfables", R.id.drawer_rizzfables_glow,
-                "Mgeko", R.id.drawer_mgeko_glow,
-                "Comix", R.id.drawer_comix_glow
-        );
+        Map<String, Integer> glowMap = new HashMap<>();
+
+        glowMap.put("AsuraScans", R.id.drawer_asurascans_glow);
+        glowMap.put("MangaDex", R.id.drawer_mangadex_glow);
+        glowMap.put("Manhuaus", R.id.drawer_manhuaus_glow);
+        glowMap.put("ManhuaPlus", R.id.drawer_manhuaPlus_glow);
+        glowMap.put("DemonicScans", R.id.drawer_demonicScans_glow);
+        glowMap.put("ManhuaFast", R.id.drawer_manhuaFast_glow);
+        glowMap.put("FlameComics", R.id.drawer_flameComics_glow);
+        glowMap.put("Rizzfables", R.id.drawer_rizzfables_glow);
+        glowMap.put("Mgeko", R.id.drawer_mgeko_glow);
+        glowMap.put("Comix", R.id.drawer_comix_glow);
+        glowMap.put("VortexScans", R.id.drawer_vortexScans_glow);
 
         for (int id : glowMap.values()) {
             View glow = findViewById(id);
@@ -390,18 +410,19 @@ public class HomePage extends AppCompatActivity {
     }
 
     private void setMainUpdateSourceIcon(String setMainButton) {
-        Map<String, ImageButton> setMainChangeIcon = Map.of(
-                "MangaDex", set_main_mangadex,
-                "AsuraScans", set_main_asurascans,
-                "Manhuaus", set_main_manhuaus,
-                "ManhuaPlus", set_main_manhuaPlus,
-                "DemonicScans", set_main_demonicScans,
-                "ManhuaFast", set_main_manhuaFast,
-                "FlameComics", set_main_flameComics,
-                "Rizzfables", set_main_rizzfables,
-                "Mgeko", set_main_mgeko,
-                "Comix", set_main_comix
-        );
+        Map<String, ImageButton> setMainChangeIcon = new HashMap<>();
+
+        setMainChangeIcon.put("MangaDex", set_main_mangadex);
+        setMainChangeIcon.put("AsuraScans", set_main_asurascans);
+        setMainChangeIcon.put("Manhuaus", set_main_manhuaus);
+        setMainChangeIcon.put("ManhuaPlus", set_main_manhuaPlus);
+        setMainChangeIcon.put("DemonicScans", set_main_demonicScans);
+        setMainChangeIcon.put("ManhuaFast", set_main_manhuaFast);
+        setMainChangeIcon.put("FlameComics", set_main_flameComics);
+        setMainChangeIcon.put("Rizzfables", set_main_rizzfables);
+        setMainChangeIcon.put("Mgeko", set_main_mgeko);
+        setMainChangeIcon.put("Comix", set_main_comix);
+        setMainChangeIcon.put("VortexScans", set_main_vortexScans);
 
         for (ImageButton button : setMainChangeIcon.values()) {
             button.setImageResource(R.drawable.ic_sharingan_dark);
@@ -554,6 +575,8 @@ public class HomePage extends AppCompatActivity {
                         loadFeed(mgekoOffset, LIMIT);
                     } else if (serviceFeed.equals("Comix")) {
                         loadFeed(comixOffset, LIMIT);
+                    }else if (serviceFeed.equals("VortexScans")) {
+                        loadFeed(vortexScansOffset, LIMIT);
                     }
                 }
             }
@@ -577,7 +600,9 @@ public class HomePage extends AppCompatActivity {
                                     (serviceFeed.equals("DemonicScans") && pageOrOffset == 1 && mangaList.isEmpty()) ||
                                     (serviceFeed.equals("ManhuaFast") && pageOrOffset == 1 && mangaList.isEmpty()) ||
                                     (serviceFeed.equals("Mgeko") && pageOrOffset == 1 && mangaList.isEmpty()) ||
-                                    (serviceFeed.equals("Comix") && pageOrOffset == 1 && mangaList.isEmpty());
+                                    (serviceFeed.equals("Comix") && pageOrOffset == 1 && mangaList.isEmpty())||
+                                    (serviceFeed.equals("VortexScans") && pageOrOffset == 1 && mangaList.isEmpty());
+
 
                     if (isFirstLoadForCurrentSource) {
                         mangaList.clear();
@@ -606,6 +631,8 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.mgekoOffset = pageOrOffset + 1;
                     } else if (serviceFeed.equals("Comix")) {
                         HomePage.this.comixOffset = pageOrOffset + 1;
+                    }else if (serviceFeed.equals("VortexScans")) {
+                        HomePage.this.vortexScansOffset = pageOrOffset + 1;
                     }
 
                     Log.d("HomePage", "loadFeed success -> source=" + serviceFeed +
@@ -617,7 +644,8 @@ public class HomePage extends AppCompatActivity {
                             " nextDemonic=" + demonicScansOffset +
                             " nextManhuaFast=" + manhuaFastOffset +
                             " nextMgeko=" + mgekoOffset +
-                            " nextComix=" + comixOffset);
+                            " nextComix=" + comixOffset +
+                            " nextVortex=" + vortexScansOffset);
                 });
             }
 
@@ -666,18 +694,19 @@ public class HomePage extends AppCompatActivity {
     }
 
     private void checkSourcesAndDisableButtons() {
-        Map<Button, String> sourceButtons = Map.of(
-                button_mangadex, "https://mangadex.org/",
-                button_asurascans, "https://asuracomic.net",
-                button_manhuaus, "https://manhuaus.com",
-                button_manhuaPlus, "https://manhuaplus.org/",
-                button_demonicScans, "https://demonicscans.org/",
-                button_manhuaFast, "https://manhuafast.com/",
-                button_flameComics, "https://flamecomics.xyz/",
-                button_rizzfables, "https://rizzfables.com/",
-                button_mgeko, "https://mgeko.cc/",
-                button_comix, "https://comix.to/"
-        );
+        Map<Button, String> sourceButtons = new HashMap<>();
+
+        sourceButtons.put(button_mangadex, "https://mangadex.org/");
+        sourceButtons.put(button_asurascans, "https://asuracomic.net");
+        sourceButtons.put(button_manhuaus, "https://manhuaus.com");
+        sourceButtons.put(button_manhuaPlus, "https://manhuaplus.org/");
+        sourceButtons.put(button_demonicScans, "https://demonicscans.org/");
+        sourceButtons.put(button_manhuaFast, "https://manhuafast.com/");
+        sourceButtons.put(button_flameComics, "https://flamecomics.xyz/");
+        sourceButtons.put(button_rizzfables, "https://rizzfables.com/");
+        sourceButtons.put(button_mgeko, "https://mgeko.cc/");
+        sourceButtons.put(button_comix, "https://comix.to/");
+        sourceButtons.put(button_vortexScans, "https://vortexscans.org/");
 
         Executors.newSingleThreadExecutor().execute(() -> {
             for (Map.Entry<Button, String> entry : sourceButtons.entrySet()) {

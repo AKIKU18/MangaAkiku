@@ -146,12 +146,7 @@ public class AsuraScansFeedService {
                         .timeout(15000)
                         .get();
 
-                Log.d(TAG, "Requested URL: " + mangaUrl);
-                Log.d(TAG, "Final URL: " + doc.location());
-                Log.d(TAG, "HTML hash: " + doc.outerHtml().hashCode());
-
                 Elements mangaEntries = doc.select("#series-grid .series-card");
-                Log.d(TAG, "series-card count = " + mangaEntries.size());
 
                 for (Element entry : mangaEntries) {
                     try {
@@ -208,10 +203,6 @@ public class AsuraScansFeedService {
                     }
                 }
 
-                Log.d(TAG, "Parsed items for page " + pageNumber + ": " + mangaList.size());
-                for (MangaItemModel manga : mangaList) {
-                    Log.d(TAG, "Page " + pageNumber + " -> " + manga.getTitle());
-                }
 
                 mainHandler.post(() -> callback.onSuccess(mangaList));
 

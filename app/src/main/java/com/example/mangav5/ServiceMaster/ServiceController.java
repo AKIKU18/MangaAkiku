@@ -39,6 +39,9 @@ import com.example.mangav5.ServicesMangaWebsites.ServicesAsuraScans.AsuraScansSe
 import com.example.mangav5.ServicesMangaWebsites.ServicesMangaDex.MangaDexChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.ServicesMangaDex.MangaDexFeedManga;
 import com.example.mangav5.ServicesMangaWebsites.ServicesMangaDex.MangaDexSearchService;
+import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansChaptersService;
+import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansFeedService;
+import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansSearchService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -250,6 +253,19 @@ public class ServiceController {
                         callback.onError(message);
                     }
                 });
+            case "VortexScans":
+                VortexScansFeedService.getMangaFeedVortexScans(offsetOrPage, new VortexScansFeedService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> mangas) {
+                        callback.onSuccess(mangas);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchMangaListController:VortexScans] Error fetching manga list: " + message);
+                        callback.onError(message);
+                    }
+                });
         }
     }
 
@@ -401,6 +417,19 @@ public class ServiceController {
                     }
                 });
                 break;
+                case "VortexScans":
+                    VortexScansFeedService.getMangaDetailsVortexScans(mangaUrlOrId, new VortexScansFeedService.MangaCallback() {
+                        @Override
+                        public void onSuccess(MangaItemModel manga) {
+                            callback.onSuccess(manga);
+                        }
+                        @Override
+                        public void onError(String errorMessage) {
+                            Log.e(TAG, "[fetchMangaDetails:VortexScans] Error fetching manga URL " + mangaUrlOrId + ": " + errorMessage);
+                            callback.onError(errorMessage);
+                        }
+                    });
+                    break;
             default:
                 Log.e(TAG, "[fetchMangaDetails] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed: fetchMangaDetail " + serviceFeed);
@@ -570,6 +599,20 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "VortexScans":
+                VortexScansFeedService.getMangaDetailsVortexScans(mangaUrl, new VortexScansFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga.getDescription());
+                    }
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[mangaGetDescription:VortexScans] Error fetching description for manga URL " + mangaUrl + ": " + errorMessage);
+                        Log.e(TAG, "[MangaSourceFeed]: " + serviceFeed + " -> " + mangaUrl + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[mangaGetDescription] Unknown service feed: " + serviceFeed);
                 callback.onError("Unknown service feed:MangaGetDescription " + serviceFeed);
@@ -599,6 +642,8 @@ public class ServiceController {
                 return mangaUrl;
             case "Comix":
                 return mangaUrl;
+            case "VortexScans":
+                    return mangaUrl;
             default:
                 Log.e(TAG, "[getMangaIdOrMangaUrl] Unknown source:getMangaIdOrUrl " + source);
                 return "";
@@ -626,7 +671,9 @@ public class ServiceController {
                 return chapterUrl;
             case "Mgeko":
                 return chapterUrl;
-                case "Comix":
+            case "Comix":
+                return chapterUrl;
+            case "VortexScans":
                 return chapterUrl;
             default:
                 Log.e(TAG, "[getChapterIdOrChapterUrl] Unknown source:getChapterIdOrUrl " + source);
@@ -795,6 +842,20 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "VortexScans":
+                VortexScansChaptersService.getChaptersVortexScans(mangaUrlOrId, new VortexScansChaptersService.ChapterListCallback() {
+                    @Override
+                    public void onSuccess(List<ChapterModel> chapters) {
+                        if ("asc".equalsIgnoreCase(descAsc)) Collections.reverse(chapters);
+                        callback.onSuccess(chapters);
+                    }
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[fetchChapterListController:VortexScans] Error fetching chapters for manga URL " + mangaUrlOrId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
             default:
                 Log.e(TAG, "[fetchChapterListController] Unknown service feed:getChapters " + serviceFeed);
                 callback.onError("Unknown service feed: " + serviceFeed);
@@ -947,6 +1008,19 @@ public class ServiceController {
                     @Override
                     public void onError(String errorMessage) {
                         Log.e(TAG, "[getMangaItem:Comix] Error for manga URL " + mangaUrlId + ": " + errorMessage);
+                        callback.onError(errorMessage);
+                    }
+                });
+                break;
+            case "VortexScans":
+                VortexScansFeedService.getMangaDetailsVortexScans(mangaUrlId, new VortexScansFeedService.MangaCallback() {
+                    @Override
+                    public void onSuccess(MangaItemModel manga) {
+                        callback.onSuccess(manga);
+                    }
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, "[getMangaItem:VortexScans] Error for manga URL " + mangaUrlId + ": " + errorMessage);
                         callback.onError(errorMessage);
                     }
                 });
@@ -1115,6 +1189,19 @@ public class ServiceController {
                     }
                 });
                 break;
+            case "VortexScans":
+                VortexScansChaptersService.getChapterVortexScans(chapterUrlId, new VortexScansChaptersService.ChapterCallback() {
+                    @Override
+                    public void onSuccess(List<String> chapter) {
+                        callback.onSuccess(chapter);
+                    }
+                    @Override
+                    public void onError(String message) {
+                        Log.e(TAG, "[getChapterPages:VortexScans] Error fetching pages for chapter " + chapterUrlId + ": " + message);
+                        callback.onError(message);
+                    }
+                });
+                break;
 
             default:
                 Log.e(TAG, "[getChapterPages] Unknown source:getChapterPages " + source);
@@ -1124,7 +1211,7 @@ public class ServiceController {
     }
 
     public static void searchThroughAllSources(String query, MangaListCallback callback) {
-        List<String> sources = List.of("AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko","Comix");
+        List<String> sources = List.of("AsuraScans", "Manhuaus", "ManhuaPlus", "DemonicScans", "ManhuaFast", "FlameComics", "Rizzfables", "Mgeko","Comix","VortexScans");
         List<MangaItemModel> allResults = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger completed = new AtomicInteger(0);
         int totalSources = sources.size();
@@ -1321,6 +1408,18 @@ public class ServiceController {
                     @Override
                     public void onError(String error) {
                         Log.e(TAG, "[fetchSearchMangas:Comix] Error searching query '" + query + "': " + error);
+                    }
+                });
+                break;
+            case "VortexScans":
+                VortexScansSearchService.search(query, new VortexScansSearchService.MangaListCallback() {
+                    @Override
+                    public void onSuccess(List<MangaItemModel> results) {
+                        callback.onSuccess(results);
+                    }
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "[fetchSearchMangas:VortexScans] Error searching query '" + query + "': " + error);
                     }
                 });
                 break;

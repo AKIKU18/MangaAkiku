@@ -38,46 +38,43 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class ComixFeedService {
+
+    //Still Need somework here in the getMangaDetails
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .followRedirects(true)
             .followSslRedirects(true)
             .build();
+
     public static void getMangaFeedComix(int page, MangaListCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
-        HttpUrl url = HttpUrl.parse("https://comix.to/api/v2/manga/")
+
+        HttpUrl url = HttpUrl.parse("https://comix.to/api/v1/manga")
                 .newBuilder()
-                .addQueryParameter("order[views_30d]", "desc")
-                .addQueryParameter("genres_mode", "and")
-                .addQueryParameter("limit", "28")
+                .addQueryParameter("order[chapter_updated_at]", "desc")
                 .addQueryParameter("page", String.valueOf(page))
+                .addQueryParameter("limit", "28")
                 .build();
 
         Request request = new Request.Builder()
                 .url(url)
-                .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 OPR/128.0.0.0")
-                .header("Accept", "application/json, text/plain, */*")
+                .header("User-Agent", "Mozilla/5.0")
+                .header("Accept", "application/json")
                 .header("Referer", "https://comix.to/")
-                .header("Origin", "https://comix.to")
-                .header("Accept-Language", "en-GB,en;q=0.9")
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
                 mainHandler.post(() -> callback.onError(e.getMessage()));
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
                 String body = response.body() != null ? response.body().string() : "";
 
-                Log.e("COMIX_HTTP", "code=" + response.code());
-                Log.e("COMIX_HTTP", body);
-
                 if (!response.isSuccessful()) {
-                    mainHandler.post(() -> callback.onError(
-                            "Comix blocked the request. HTTP " + response.code()
-                    ));
+                    mainHandler.post(() ->
+                            callback.onError("HTTP error: " + response.code()));
                     return;
                 }
 
@@ -86,29 +83,29 @@ public class ComixFeedService {
 
                     JSONObject obj = new JSONObject(body);
                     JSONObject result = obj.getJSONObject("result");
-                    JSONArray itemsArray = result.getJSONArray("items");
+                    JSONArray items = result.getJSONArray("items");
 
-                    for (int i = 0; i < itemsArray.length(); i++) {
-                        JSONObject item = itemsArray.getJSONObject(i);
+                    for (int i = 0; i < items.length(); i++) {
+                        JSONObject item = items.getJSONObject(i);
 
-                        String titleEl = item.optString("title");
+                        String title = item.optString("title");
+                        String synopsis = item.optString("synopsis");
+
                         JSONObject poster = item.optJSONObject("poster");
-                        String imageCover = poster != null ? poster.optString("large") : "";
+                        String image = poster != null ? poster.optString("large") : "";
 
-                        String hash_id = item.optString("hash_id");
-                        String slug = item.optString("slug");
-                        String mangaUrl = "https://comix.to/title/" + hash_id + "-" + slug;
-                        String description = item.optString("synopsis");
-                        String mangaId = generateUuidHex(mangaUrl);
-                        String lastChapter = item.optString("latest_chapter");
+                        String urlManga = item.optString("url"); // ✅ FIX IMPORTANT
+                        String latestChapter = item.optString("latestChapter"); // ✅ FIX
+
+                        String mangaId = generateUuidHex(urlManga);
 
                         MangaItemModel m = new MangaItemModel();
                         m.setMangaId(mangaId);
-                        m.setTitle(titleEl);
-                        m.setCoverImageUrl(imageCover);
-                        m.setMangaUrl(mangaUrl);
-                        m.setDescription(description);
-                        m.setLastChapter(lastChapter);
+                        m.setTitle(title);
+                        m.setDescription(synopsis);
+                        m.setCoverImageUrl(image);
+                        m.setMangaUrl(urlManga);
+                        m.setLastChapter(String.valueOf(latestChapter));
                         m.setSource("Comix");
 
                         mangaList.add(m);
@@ -117,7 +114,8 @@ public class ComixFeedService {
                     mainHandler.post(() -> callback.onSuccess(mangaList));
 
                 } catch (Exception e) {
-                    mainHandler.post(() -> callback.onError("Parse error: " + e.getMessage()));
+                    mainHandler.post(() ->
+                            callback.onError("Parse error: " + e.getMessage()));
                 }
             }
         });
