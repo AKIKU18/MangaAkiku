@@ -49,6 +49,8 @@ public class HomePageAdapter extends RecyclerView.Adapter<HomePageAdapter.MangaV
         this.bookmarkDao = db.bookmarkDao();
     }
 
+
+
     @NonNull
     @Override
     public MangaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

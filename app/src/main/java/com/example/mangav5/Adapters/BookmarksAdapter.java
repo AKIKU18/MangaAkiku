@@ -292,6 +292,12 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         return (now - last) > ONE_DAY;
     }
 
+    public void updateList(List<BookmarkEntity> newList) {
+        this.bookmarkList.clear();
+        this.bookmarkList.addAll(newList);
+        notifyDataSetChanged();
+    }
+
     private void GetLatestChapterAndUpdateUIDB(MangaItemModel mangaItem,TextView currentItemView, TextView viewedChapterView,TextView showNotificationBookmark){
         Executors.newSingleThreadExecutor().execute(() -> {
 
@@ -344,7 +350,6 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             }
         });
     }
-
 
     private void GetLatestChapterAndUpdateUINetwork(MangaItemModel mangaItem,TextView currentItemView, TextView viewedChapterView,TextView showNotificationBookmark){
         //TO DO: MAKE A NEW METHOD WHERE YOU CHECK FOR THE LAST CHAPTER  IN A WHILE AND NOT EVERYTIME IT ENTERS THE BOOKMARK PAGE

@@ -25,9 +25,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mangav5.Adapters.BookmarksAdapter;
 import com.example.mangav5.Adapters.HomePageAdapter;
 import com.example.mangav5.Dao.BookmarkDao;
 import com.example.mangav5.Database.AppDatabase;
+import com.example.mangav5.Entity.BookmarkEntity;
+import com.example.mangav5.Entity.ChapterItemEntity;
+import com.example.mangav5.Entity.HistoryEntity;
 import com.example.mangav5.Entity.SourceEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
@@ -51,17 +55,12 @@ public class HomePage extends AppCompatActivity {
     private static final int LIMIT = 10;
     public static String serviceFeed = "DemonicScans";
 
-    FrameLayout notificationDropdown;
-    RecyclerView recyclerNotifications;
 
     private RecyclerView searchResultView;
     private RecyclerView mangaListView;
     private HomePageAdapter searchResultAdapter;
-    private HomePageAdapter notificationResultAdapter;
     private HomePageAdapter homeListAdapter;
-    private FrameLayout notification_dropdown;
     private SearchView searchView;
-    private ImageButton button_notifications;
     private Button bookmarkPageButton;
     private Button historyPageButton;
     private Button button_mangadex;
@@ -139,27 +138,10 @@ public class HomePage extends AppCompatActivity {
         setupNavigationButtons();
         setupSourceSelectionDrawer();
         showInitialSourceGlow();
-        ShowNotifications();
         checkSourcesAndDisableButtons();
         setMainUpdateSourceIcon(serviceFeed);
 
     }
-
-    private void ShowNotifications() {
-        button_notifications.setOnClickListener(v -> {
-            if (recyclerNotifications.getAdapter() != null &&
-                    recyclerNotifications.getAdapter().getItemCount() > 0) {
-                if (notification_dropdown.getVisibility() != View.VISIBLE) {
-                    notification_dropdown.setVisibility(View.VISIBLE);
-                } else {
-                    notification_dropdown.setVisibility(View.GONE);
-                }
-            } else {
-                Toast.makeText(this, "No notifications to show *(-_-)*", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
     private void GetTheme() {
         AppDatabase db = AppDatabase.getInstance(this);
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -218,10 +200,6 @@ public class HomePage extends AppCompatActivity {
         button_manhuaFast = findViewById(R.id.source_manhuaFast);
         button_flameComics = findViewById(R.id.source_flameComics);
         loadingText = findViewById(R.id.loading_text);
-        button_notifications = findViewById(R.id.button_notifications);
-        notification_dropdown = findViewById(R.id.notification_dropdown);
-        notificationDropdown = findViewById(R.id.notification_dropdown);
-        recyclerNotifications = findViewById(R.id.recycler_notifications);
         button_rizzfables = findViewById(R.id.source_rizzfables);
         button_mgeko = findViewById(R.id.source_mgeko);
         button_comix = findViewById(R.id.source_comix);
@@ -241,22 +219,19 @@ public class HomePage extends AppCompatActivity {
     }
 
     private void setupRecyclerViews() {
-        searchResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
-        notificationResultAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
-        homeListAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
 
-        searchResultView.setAdapter(searchResultAdapter);
-        mangaListView.setAdapter(homeListAdapter);
-        recyclerNotifications.setAdapter(notificationResultAdapter);
+        searchResultAdapter = new HomePageAdapter(searchMangaList, this, mangaPageLauncher);
+        homeListAdapter = new HomePageAdapter(mangaList, this, mangaPageLauncher);
 
         searchResultView.setLayoutManager(new LinearLayoutManager(this));
         mangaListView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerNotifications.setLayoutManager(new LinearLayoutManager(this));
+
+        searchResultView.setAdapter(searchResultAdapter);
+        mangaListView.setAdapter(homeListAdapter);
 
         searchView.setQueryHint("Search...");
         searchView.setIconifiedByDefault(false);
     }
-
     private void setupSourceSelectionDrawer() {
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         ImageButton menuButton = findViewById(R.id.button_menu);
