@@ -2,6 +2,7 @@ package com.example.mangav5.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.os.Build;
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.mangav5.Dao.BookmarkDao;
+import com.example.mangav5.Dao.MangaItemDao;
 import com.example.mangav5.Database.AppDatabase;
 import com.example.mangav5.Entity.BookmarkEntity;
 import com.example.mangav5.Entity.ChapterItemEntity;
@@ -31,6 +33,7 @@ import com.example.mangav5.MainActivitys.ChapterPage;
 import com.example.mangav5.MainActivitys.MangaPage;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.Models.NotificationModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServiceMaster.BookmarkService;
@@ -43,7 +46,8 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     private final List<BookmarkEntity> bookmarkList;
     private final Context context;
     private BookmarkDao bookmarkDao;
-
+    public List<NotificationModel> notificationBookmarkList;
+    private Boolean isListFullyLoaded;
     public BookmarksAdapter(List<BookmarkEntity> bookmarkList, Context context) {
         this.bookmarkList = bookmarkList;
         this.context = context;
@@ -193,13 +197,13 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
 
             List<ChapterItemEntity> chapterItemEntity = db.chapterDao().getChaptersByMangaIdAsc(mangaIdOrUrlFinal);
             Intent intent = new Intent(context, ChapterPage.class);
-            intent.putExtra("chapterId", chapterItemEntity.getLast().getChapterId());
-            intent.putExtra("chapterTitle", chapterItemEntity.getLast().getTitle());
+            intent.putExtra("chapterId", chapterItemEntity.get(chapterItemEntity.size() - 1).getChapterId());
+            intent.putExtra("chapterTitle", chapterItemEntity.get(chapterItemEntity.size() - 1).getTitle());
             intent.putExtra("mangaId", mangaItem.getMangaId());
             intent.putExtra("mangaUrl", mangaItem.getMangaUrl());
-            intent.putExtra("chapterUrl", chapterItemEntity.getLast().getChapterUrl());
+            intent.putExtra("chapterUrl", chapterItemEntity.get(chapterItemEntity.size() - 1).getChapterUrl());
             intent.putExtra("source", mangaItem.getSource());
-            intent.putExtra("chapterNumber", chapterItemEntity.getLast().chapterId);
+            intent.putExtra("chapterNumber", chapterItemEntity.get(chapterItemEntity.size() - 1).chapterId);
             context.startActivity(intent);
         });
 
@@ -222,10 +226,7 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
         viewedChapterView.setText("Loading...");
         showNotificationBookmark.setVisibility(View.GONE);
 
-        // 3. Prepare ID for network call
-        final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(
-                mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
-        );
+
 
         // 4. Start Background Work
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -251,10 +252,116 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
             // Update "Viewed" Text
             updateViewedUI(viewedChapterView, mangaId, viewedTitle);
 
+            GetLatestChapterAndUpdateUIDB(
+                    mangaItem,
+                    currentItemView,
+                    viewedChapterView,
+                    showNotificationBookmark
+            );
+
+            if (canSync(mangaItem.getMangaId())) {
+
+                GetLatestChapterAndUpdateUINetwork(
+                        mangaItem,
+                        currentItemView,
+                        viewedChapterView,
+                        showNotificationBookmark
+                );
+
+                saveLastSync(mangaItem.getMangaId());
+            }
+
+        });
+    }
+
+    private void saveLastSync(String mangaId) {
+        SharedPreferences prefs = context.getSharedPreferences("sync", Context.MODE_PRIVATE);
+        prefs.edit()
+                .putLong(mangaId, System.currentTimeMillis())
+                .apply();
+    }
+
+    private boolean canSync(String mangaId) {
+        SharedPreferences prefs = context.getSharedPreferences("sync", Context.MODE_PRIVATE);
+
+        long last = prefs.getLong(mangaId, 0);
+        long now = System.currentTimeMillis();
+
+        long ONE_DAY = 24 * 60 * 60 * 1000L;
+
+        return (now - last) > ONE_DAY;
+    }
+
+    private void GetLatestChapterAndUpdateUIDB(MangaItemModel mangaItem,TextView currentItemView, TextView viewedChapterView,TextView showNotificationBookmark){
+        Executors.newSingleThreadExecutor().execute(() -> {
+
+            AppDatabase db = AppDatabase.getInstance(context);
+
+            // 1. Get last read chapter from history (DB only)
+            HistoryEntity history =
+                    db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
+
+            String viewedTitle = (history != null && history.getChapterTitle() != null)
+                    ? history.getChapterTitle()
+                    : "-";
+
+            // 2. Get latest chapter from chapter table (DB only)
+            ChapterItemEntity latestChapter =
+                    db.chapterDao().getLastChapter(mangaItem.getMangaId());
+
+            String validLatestTitle = (latestChapter != null)
+                    ? latestChapter.getTitle()
+                    : mangaItem.getLastChapter();
+
+            if (validLatestTitle == null || validLatestTitle.isEmpty()) {
+                validLatestTitle = viewedTitle;
+            }
+
+            // 3. Update UI safely
+            String mangaId = mangaItem.getMangaId();
+
+            currentItemView.setTag(mangaId);
+            viewedChapterView.setTag(mangaId);
+
+            updateLatestUI(
+                    mangaItem,
+                    currentItemView,
+                    showNotificationBookmark,
+                    mangaId,
+                    validLatestTitle,
+                    viewedTitle
+            );
+
+            // 4. Update local model + DB (NO NETWORK)
+            if (!validLatestTitle.equals(mangaItem.getLastChapter())) {
+
+                mangaItem.setLastChapter(validLatestTitle);
+
+                db.bookmarkDao().updateLastChapter(
+                        mangaId,
+                        validLatestTitle
+                );
+            }
+        });
+    }
 
 
-//TO DO: MAKE A NEW METHOD WHERE YOU CHECK FOR THE LAST CHAPTER  IN A WHILE AND NOT EVERYTIME IT ENTERS THE BOOKMARK PAGE
-            // --- B. GET LATEST CHAPTER (Network) ---
+    private void GetLatestChapterAndUpdateUINetwork(MangaItemModel mangaItem,TextView currentItemView, TextView viewedChapterView,TextView showNotificationBookmark){
+        //TO DO: MAKE A NEW METHOD WHERE YOU CHECK FOR THE LAST CHAPTER  IN A WHILE AND NOT EVERYTIME IT ENTERS THE BOOKMARK PAGE
+        // --- B. GET LATEST CHAPTER (Network) ---
+        Executors.newSingleThreadExecutor().execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(context);
+            HistoryEntity history = db.historyDao().getHistoryItemInOrder(mangaItem.getMangaId());
+
+            String viewedTitle = (history != null && history.chapterTitle != null) ? history.chapterTitle : "-";
+
+// 3. Prepare ID for network call
+            final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(
+                    mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
+            );
+            // 1. Tag views immediately
+            currentItemView.setTag(mangaItem.getMangaId());
+            viewedChapterView.setTag(mangaItem.getMangaId());
             ServiceController.fetchChapterListController(context,
                     mangaItem.getSource(),
                     mangaIdOrUrlFinal,
@@ -269,25 +376,37 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
                             if (chapters != null && !chapters.isEmpty()) {
                                 validLatestTitle = chapters.get(0).getTitle();
                                 mangaItem.setLastChapter(validLatestTitle);
+                                for (BookmarkEntity bookmark: bookmarkList)
+                                {
+                                    if(bookmark.getMangaId().equals(mangaItem.getMangaId())){
+                                        Executors.newSingleThreadExecutor().execute(() -> {
+                                            if(!db.bookmarkDao().getLastChapter(mangaItem.getMangaId()).equals(validLatestTitle)){
+                                                db.bookmarkDao().updateLastChapter(mangaItem.getMangaId(), validLatestTitle);
+                                            }else{
+                                            }
+                                        });
+                                    }
+                                }
                             } else {
                                 validLatestTitle = (mangaItem.getLastChapter() != null && !mangaItem.getLastChapter().isEmpty())
                                         ? mangaItem.getLastChapter()
                                         : viewedTitle;
                             }
 
-                            updateLatestUI(currentItemView, showNotificationBookmark, mangaId, validLatestTitle, viewedTitle);
-                        }
+
+
+                            updateLatestUI(mangaItem,currentItemView, showNotificationBookmark, mangaItem.getMangaId(), validLatestTitle, viewedTitle);
+                            ;                        }
 
                         @Override
                         public void onError(String message) {
                             String fallbackLatest = (mangaItem.getLastChapter() != null) ? mangaItem.getLastChapter() : "-";
-                            updateLatestUI(currentItemView, showNotificationBookmark, mangaId, fallbackLatest, viewedTitle);
+                            updateLatestUI(mangaItem,currentItemView, showNotificationBookmark, mangaItem.getMangaId(), fallbackLatest, viewedTitle);
                         }
                     });
         });
+
     }
-
-
     // Helper to safely update the "Viewed" text on Main Thread
     private void updateViewedUI(TextView view, String tagId, String text) {
         view.post(() -> {
@@ -298,23 +417,26 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     }
 
     // Helper to safely update "Current" text and Notification Dot
-    private void updateLatestUI(TextView currentView, TextView dotView, String tagId, String latestTitle, String viewedTitle) {
+    private void updateLatestUI(
+            MangaItemModel manga,
+            TextView currentView,
+            TextView dotView,
+            String tagId,
+            String latestId,
+            String readId
+    ) {
         currentView.post(() -> {
-            if (tagId.equals(currentView.getTag())) {
-                currentView.setText("Current: " + latestTitle);
 
-                // Compare logic for notification
-                boolean hasNewChapters = false;
+            if (!tagId.equals(currentView.getTag())) return;
 
-                // Only show notification if we have valid titles and they are different
-                if (!viewedTitle.equals("-") && !latestTitle.equals("-")) {
-                    if (!viewedTitle.equals(latestTitle)) {
-                        hasNewChapters = true;
-                    }
-                }
+            currentView.setText("Current: " + latestId);
 
-                dotView.setVisibility(hasNewChapters ? View.VISIBLE : View.GONE);
-            }
+            boolean hasNewChapters =
+                    latestId != null &&
+                            readId != null &&
+                            !latestId.equals(readId);
+
+            dotView.setVisibility(hasNewChapters ? View.VISIBLE : View.GONE);
         });
     }
 

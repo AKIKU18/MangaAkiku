@@ -20,6 +20,42 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/updateButtonCard"
+        android:layout_width="110dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toTopOf="@id/tv_page_title"
+        app:layout_constraintBottom_toBottomOf="@id/tv_page_title"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Glass background -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="24dp"
+            app:cardBackgroundColor="@android:color/transparent">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/glass_bg" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Button -->
+        <Button
+            android:id="@+id/btn_update"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:text="UPDATE"
+            android:textAllCaps="false"
+            android:textSize="12sp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:gravity="center"/>
+    </FrameLayout>
     <!-- Search Bar -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/search_bookmarks"

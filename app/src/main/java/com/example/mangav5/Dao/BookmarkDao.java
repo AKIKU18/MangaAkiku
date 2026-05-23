@@ -26,5 +26,18 @@ public interface BookmarkDao {
     @Query("SELECT EXISTS(SELECT 1 FROM bookmarks WHERE mangaId = :id)")
     boolean isBookmarked(String id);
 
+    @Query("UPDATE bookmarks SET lastChapter = :lastChapter WHERE mangaId = :mangaId")
+    void updateLastChapter(String mangaId, String lastChapter);
+
+
+
+    @Query("SELECT lastChapter FROM bookmarks WHERE mangaId = :mangaId LIMIT 1")
+    String getLastChapter(String mangaId);
+
+
+
+    @Query("SELECT * FROM bookmarks WHERE mangaId = :mangaId LIMIT 1")
+    BookmarkEntity getBookmarkByMangaId (String mangaId);
+
 
 }

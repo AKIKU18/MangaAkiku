@@ -236,10 +236,7 @@ public class ServiceController {
                     }
                 });
                 break;
-            default:
-                Log.e(TAG, "[fetchMangaListController] Unknown service feed: " + serviceFeed);
-                callback.onError("Unknown service feed: FetchMangaList " + serviceFeed);
-                break;
+
             case "Comix":
                 ComixFeedService.getMangaFeedComix(offsetOrPage, new ComixFeedService.MangaListCallback() {
                     @Override
@@ -253,6 +250,7 @@ public class ServiceController {
                         callback.onError(message);
                     }
                 });
+                break;
             case "VortexScans":
                 VortexScansFeedService.getMangaFeedVortexScans(offsetOrPage, new VortexScansFeedService.MangaListCallback() {
                     @Override
@@ -266,6 +264,11 @@ public class ServiceController {
                         callback.onError(message);
                     }
                 });
+                break;
+            default:
+                Log.e(TAG, "[fetchMangaListController] Unknown service feed: " + serviceFeed);
+                callback.onError("Unknown service feed: FetchMangaList " + serviceFeed);
+                break;
         }
     }
 

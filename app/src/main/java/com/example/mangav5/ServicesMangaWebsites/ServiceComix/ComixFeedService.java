@@ -132,29 +132,41 @@ public class ComixFeedService {
                         .header("Accept-Language", "en-GB,en;q=0.9")
                         .timeout(60000)
                         .get();
-
+                Log.e(TAG, "getMangaDetailsComix: " + doc);
                 String mangaId = generateUuidHex(mangaUrl);
 
-                Element titleElement = doc.selectFirst("h1.title");
-                String title = titleElement != null ? titleElement.text().trim() : "";
+                // TITLE
+                Element titleElement = doc.selectFirst("h1.mpage__title");
+                String title = titleElement != null
+                        ? titleElement.text().trim()
+                        : "";
 
-                Element descriptionElement = doc.selectFirst("div.description div.content");
-                String descText = descriptionElement != null ? descriptionElement.text().trim() : "";
+                // DESCRIPTION
+                Element descriptionElement = doc.selectFirst("p.mpage__desc");
+                String descText = descriptionElement != null
+                        ? descriptionElement.text().trim()
+                        : "";
 
+                // COVER
                 String cover = "";
-                Element coverElement = doc.selectFirst("section.comic-info .poster img");
+                Element coverElement = doc.selectFirst(".mpage__poster img");
+
                 if (coverElement != null) {
                     cover = coverElement.absUrl("src");
+
                     if (cover == null || cover.isEmpty()) {
                         cover = coverElement.attr("src").trim();
                     }
                 }
 
+                // LAST CHAPTER
+                String lastChapter = "";
 
+                Element chapterElement = doc.selectFirst(".chapter-list-item");
 
-
-                Element lastChapterElement = doc.selectFirst(".chap-list");
-                String lastChapter = lastChapterElement != null ? lastChapterElement.text().trim() : "";
+                if (chapterElement != null) {
+                    lastChapter = chapterElement.text().trim();
+                }
 
                 MangaItemModel manga = new MangaItemModel(
                         mangaId,
@@ -174,19 +186,24 @@ public class ComixFeedService {
                 Log.e(TAG, "getMangaUrl: " + manga.getMangaUrl());
                 Log.e(TAG, "getLastChapter: " + manga.getLastChapter());
 
-
-
-
                 mainHandler.post(() -> callback.onSuccess(manga));
 
             } catch (IOException e) {
+
                 mainHandler.post(() -> callback.onError(
-                        e.getMessage() != null ? e.getMessage() : "IO Error"
+                        e.getMessage() != null
+                                ? e.getMessage()
+                                : "IO Error"
                 ));
+
             } catch (Exception e) {
+
                 mainHandler.post(() -> callback.onError(
-                        e.getMessage() != null ? e.getMessage() : "Unknown Error"
+                        e.getMessage() != null
+                                ? e.getMessage()
+                                : "Unknown Error"
                 ));
+
             } finally {
                 executor.shutdown();
             }

@@ -49,4 +49,5 @@ public interface ChapterDao {
     ChapterItemEntity getLastChapter(String mangaId);
 
 
+
 }

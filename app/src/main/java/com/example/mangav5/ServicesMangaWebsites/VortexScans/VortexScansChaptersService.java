@@ -115,7 +115,7 @@ public class VortexScansChaptersService {
                     String chapterId = generateChapterId(chapterUrl, cleanTitle);
                     String chapterNumber = i + "";
 
-                    Log.e("VortexScansChaptersService", "Found chapter: " + chapterUrl);
+                    //Log.e("VortexScansChaptersService", "Found chapter: " + chapterUrl);
                     chapters.add(new ChapterModel(
                             chapterId,
                             cleanTitle,
