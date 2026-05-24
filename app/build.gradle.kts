@@ -15,8 +15,12 @@ android {
 
     signingConfigs {
         create("release") {
-            // Windows path to your keystore
-            storeFile = file("C:/Users/akiku/Downloads/DebugKey/debug.keystore")
+            val isWindows = System.getProperty("os.name").lowercase().contains("win")
+            storeFile = if (isWindows) {
+                file("C:/Users/akiku/Downloads/DebugKey/debug.keystore")
+            } else {
+                file("/home/akiku/Desktop/DebugKey/debug.keystore")
+            }
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
