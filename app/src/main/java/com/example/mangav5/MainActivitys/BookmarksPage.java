@@ -322,15 +322,15 @@ public class BookmarksPage extends AppCompatActivity {
                 String latest = bookmark.getLastChapter();
 
                 String read = null;
-
-
                 if (history != null) {
                     read = history.getChapterTitle();
                 }
-                boolean hasUnread =
-                        latest != null &&
-                                read != null &&
-                                !latest.equals(read);
+
+                // A manga is unread if:
+                // 1. We have a latest chapter string
+                // 2. AND (We have never read it OR the read title is "-" OR it doesn't match the latest)
+                boolean hasUnread = latest != null && !latest.isEmpty() && !latest.equals("-") &&
+                        (read == null || read.equals("-") || !latest.equals(read));
 
                 if (hasUnread) {
                     unreadList.add(bookmark);

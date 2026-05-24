@@ -161,19 +161,6 @@ public class BookmarksAdapter extends RecyclerView.Adapter<BookmarksAdapter.Book
     }
 
 
-    private void ShowNotificationForNewChapter(String viewedChapter, String latestChapter, TextView showNotificationBookmark) {
-        if (latestChapter != null) {
-            showNotificationBookmark.post(() -> {
-                if (!viewedChapter.equals(latestChapter)) {
-                    showNotificationBookmark.setVisibility(View.VISIBLE);
-                } else {
-                    showNotificationBookmark.setVisibility(View.GONE);
-                }
-            });
-        }
-    }
-
-
     private void GoToLastChapter(MangaItemModel mangaItem) {
         final String mangaIdOrUrlFinal = ServiceController.getMangaIdOrMangaUrl(
                 mangaItem.getSource(), mangaItem.getMangaId(), mangaItem.getMangaUrl()
