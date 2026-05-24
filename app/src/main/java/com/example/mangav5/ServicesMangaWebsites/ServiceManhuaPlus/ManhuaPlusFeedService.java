@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.Network.NetworkHelper;
 import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
@@ -33,10 +34,7 @@ public class ManhuaPlusFeedService {
         executor.execute(() -> {
             List<MangaItemModel> mangaList = new ArrayList<>();
             try {
-                Document doc = Jsoup.connect(websiteManga + offsetOrPage + "/")
-                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
-                        .timeout(TIMEOUT_MS)
-                        .get();
+                Document doc = NetworkHelper.getJsoupConnection(websiteManga + offsetOrPage + "/").get();
 
                 // Each manga block in homepage
                 Elements items = doc.select("div.grid.gtc-f141a.gg-20.p-13.mh-77vh > div"); // Update selector if site changes
@@ -105,10 +103,7 @@ public class ManhuaPlusFeedService {
 
         executor.execute(() -> {
             try {
-                Document doc = Jsoup.connect(mangaUrl)
-                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
-                        .timeout(TIMEOUT_MS)
-                        .get();
+                Document doc = NetworkHelper.getJsoupConnection(mangaUrl).get();
 
                 // Manga ID from URL
                 String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
@@ -118,10 +113,7 @@ public class ManhuaPlusFeedService {
                 String title = titleEl != null ? titleEl.text() : "No title";
 
                 // Description
-                Document docDescription = Jsoup.connect("https://manhuaplus.top/manga/"+mangaId)
-                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
-                        .timeout(TIMEOUT_MS)
-                        .get();
+                Document docDescription = NetworkHelper.getJsoupConnection("https://manhuaplus.top/manga/"+mangaId).get();
 
                 Element descEl = docDescription.selectFirst("#item-detail > div.detail-content > p"); // Update selector if needed
                 String desc = descEl != null ? descEl.text().trim() : "";

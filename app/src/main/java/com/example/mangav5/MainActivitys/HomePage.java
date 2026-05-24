@@ -39,6 +39,8 @@ import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
 import com.example.mangav5.ScriptHelper.RecreateMangaId;
 import com.example.mangav5.ServiceMaster.ServiceController;
+import com.example.mangav5.Sources.MangaSource;
+import com.example.mangav5.UI.SourceDrawerHandler;
 import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansSearchService;
@@ -65,30 +67,6 @@ public class HomePage extends AppCompatActivity {
     private SearchView searchView;
     private Button bookmarkPageButton;
     private Button historyPageButton;
-    private Button button_mangadex;
-    private Button button_asurascans;
-    private Button button_manhuaus;
-    private Button button_manhuaPlus;
-    private Button button_demonicScans;
-    private Button button_manhuaFast;
-    private Button button_flameComics;
-    private Button button_rizzfables;
-    private Button button_mgeko;
-    private Button button_comix;
-
-    private Button button_vortexScans;
-
-    private ImageButton set_main_mangadex;
-    private ImageButton set_main_asurascans;
-    private ImageButton set_main_manhuaus;
-    private ImageButton set_main_manhuaPlus;
-    private ImageButton set_main_demonicScans;
-    private ImageButton set_main_manhuaFast;
-    private ImageButton set_main_flameComics;
-    private ImageButton set_main_rizzfables;
-    private ImageButton set_main_mgeko;
-    private ImageButton set_main_comix;
-    private ImageButton set_main_vortexScans;
 
     private ImageButton settingsPageButton;
     private TextView loadingText;
@@ -114,6 +92,7 @@ public class HomePage extends AppCompatActivity {
     private ActivityResultLauncher<Intent> bookmarkLauncher;
     private ActivityResultLauncher<Intent> mangaPageLauncher;
     private BookmarkDao bookmarkDao;
+    private SourceDrawerHandler drawerHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,7 +120,7 @@ public class HomePage extends AppCompatActivity {
         setupSourceSelectionDrawer();
         showInitialSourceGlow();
         checkSourcesAndDisableButtons();
-        setMainUpdateSourceIcon(serviceFeed);
+        drawerHandler.updateMainSourceIcon(serviceFeed);
 
         // Run migration for manga IDs to new Hex UUID format
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
@@ -200,30 +179,7 @@ public class HomePage extends AppCompatActivity {
         historyPageButton = findViewById(R.id.button_history);
         settingsPageButton = findViewById(R.id.button_settings_button);
         recycler_bg_blur = findViewById(R.id.recycler_bg_blur);
-        button_mangadex = findViewById(R.id.source_mangadex);
-        button_asurascans = findViewById(R.id.source_asurascans);
-        button_manhuaus = findViewById(R.id.source_manhuaus);
-        button_manhuaPlus = findViewById(R.id.source_manhuaPlus);
-        button_demonicScans = findViewById(R.id.source_demonicScans);
-        button_manhuaFast = findViewById(R.id.source_manhuaFast);
-        button_flameComics = findViewById(R.id.source_flameComics);
         loadingText = findViewById(R.id.loading_text);
-        button_rizzfables = findViewById(R.id.source_rizzfables);
-        button_mgeko = findViewById(R.id.source_mgeko);
-        button_comix = findViewById(R.id.source_comix);
-        button_vortexScans = findViewById(R.id.source_vortexScans);
-
-        set_main_mangadex = findViewById(R.id.set_main_mangadex);
-        set_main_asurascans = findViewById(R.id.set_main_asurascans);
-        set_main_manhuaus = findViewById(R.id.set_main_manhuaus);
-        set_main_manhuaPlus = findViewById(R.id.set_main_manhuaPlus);
-        set_main_demonicScans = findViewById(R.id.set_main_demonicScans);
-        set_main_manhuaFast = findViewById(R.id.set_main_manhuaFast);
-        set_main_flameComics = findViewById(R.id.set_main_flameComics);
-        set_main_rizzfables = findViewById(R.id.set_main_rizzfables);
-        set_main_mgeko = findViewById(R.id.set_main_mgeko);
-        set_main_comix = findViewById(R.id.set_main_comix);
-        set_main_vortexScans = findViewById(R.id.set_main_vortexScans);
     }
 
     private void setupRecyclerViews() {
@@ -242,63 +198,22 @@ public class HomePage extends AppCompatActivity {
     }
     private void setupSourceSelectionDrawer() {
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
-        ImageButton menuButton = findViewById(R.id.button_menu);
+        drawerHandler = new SourceDrawerHandler(this, drawerLayout, this::switchSource);
+        
+        // One line per source! 
+        drawerHandler.addSource("MangaDex", R.id.source_mangadex, R.id.set_main_mangadex, R.id.drawer_mangadex_glow);
+        drawerHandler.addSource("AsuraScans", R.id.source_asurascans, R.id.set_main_asurascans, R.id.drawer_asurascans_glow);
+        drawerHandler.addSource("Manhuaus", R.id.source_manhuaus, R.id.set_main_manhuaus, R.id.drawer_manhuaus_glow);
+        drawerHandler.addSource("ManhuaPlus", R.id.source_manhuaPlus, R.id.set_main_manhuaPlus, R.id.drawer_manhuaPlus_glow);
+        drawerHandler.addSource("DemonicScans", R.id.source_demonicScans, R.id.set_main_demonicScans, R.id.drawer_demonicScans_glow);
+        drawerHandler.addSource("ManhuaFast", R.id.source_manhuaFast, R.id.set_main_manhuaFast, R.id.drawer_manhuaFast_glow);
+        drawerHandler.addSource("FlameComics", R.id.source_flameComics, R.id.set_main_flameComics, R.id.drawer_flameComics_glow);
+        drawerHandler.addSource("Rizzfables", R.id.source_rizzfables, R.id.set_main_rizzfables, R.id.drawer_rizzfables_glow);
+        drawerHandler.addSource("Mgeko", R.id.source_mgeko, R.id.set_main_mgeko, R.id.drawer_mgeko_glow);
+        drawerHandler.addSource("Comix", R.id.source_comix, R.id.set_main_comix, R.id.drawer_comix_glow);
+        drawerHandler.addSource("VortexScans", R.id.source_vortexScans, R.id.set_main_vortexScans, R.id.drawer_vortexScans_glow);
 
-        menuButton.setOnClickListener(v -> {
-            checkSourcesAndDisableButtons();
-            drawerLayout.openDrawer(GravityCompat.START);
-        });
-
-        Map<Button, String> sourceButtons = new HashMap<>();
-
-        sourceButtons.put(button_mangadex, "MangaDex");
-        sourceButtons.put(button_asurascans, "AsuraScans");
-        sourceButtons.put(button_manhuaus, "Manhuaus");
-        sourceButtons.put(button_manhuaPlus, "ManhuaPlus");
-        sourceButtons.put(button_demonicScans, "DemonicScans");
-        sourceButtons.put(button_manhuaFast, "ManhuaFast");
-        sourceButtons.put(button_flameComics, "FlameComics");
-        sourceButtons.put(button_rizzfables, "Rizzfables");
-        sourceButtons.put(button_mgeko, "Mgeko");
-        sourceButtons.put(button_comix, "Comix");
-        sourceButtons.put(button_vortexScans, "VortexScans");
-
-        for (Map.Entry<Button, String> entry : sourceButtons.entrySet()) {
-            entry.getKey().setOnClickListener(v -> {
-                switchSource(entry.getValue());
-                serviceFeed = entry.getValue();
-                drawerLayout.closeDrawer(GravityCompat.START);
-            });
-        }
-
-        Map<ImageButton, String> mainSourceButtons = new HashMap<>();
-
-        mainSourceButtons.put(set_main_mangadex, "MangaDex");
-        mainSourceButtons.put(set_main_asurascans, "AsuraScans");
-        mainSourceButtons.put(set_main_manhuaus, "Manhuaus");
-        mainSourceButtons.put(set_main_manhuaPlus, "ManhuaPlus");
-        mainSourceButtons.put(set_main_demonicScans, "DemonicScans");
-        mainSourceButtons.put(set_main_manhuaFast, "ManhuaFast");
-        mainSourceButtons.put(set_main_flameComics, "FlameComics");
-        mainSourceButtons.put(set_main_rizzfables, "Rizzfables");
-        mainSourceButtons.put(set_main_mgeko, "Mgeko");
-        mainSourceButtons.put(set_main_comix, "Comix");
-        mainSourceButtons.put(set_main_vortexScans, "VortexScans");
-
-        for (Map.Entry<ImageButton, String> entry : mainSourceButtons.entrySet()) {
-            entry.getKey().setOnClickListener(v -> {
-                String sourceToSetAsMain = entry.getValue();
-                setMainUpdateSourceIcon(entry.getValue());
-
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    AppDatabase db = AppDatabase.getInstance(HomePage.this);
-                    SourceEntity source = new SourceEntity(entry.getValue());
-                    db.sourceDao().addSource(source);
-                });
-
-                Toast.makeText(this, sourceToSetAsMain + " set as main source.", Toast.LENGTH_SHORT).show();
-            });
-        }
+        drawerHandler.setup();
     }
 
     private void switchSource(String newSource) {
@@ -311,7 +226,7 @@ public class HomePage extends AppCompatActivity {
 
         resetOffsetsForSource(newSource);
         loadCurrentSourceFirstPage();
-        updateSourceGlow();
+        drawerHandler.updateSourceGlow(newSource);
     }
 
     private void resetOffsetsForSource(String source) {
@@ -335,90 +250,24 @@ public class HomePage extends AppCompatActivity {
     }
 
     private void loadCurrentSourceFirstPage() {
-        if (serviceFeed.equals("MangaDex")) {
-            loadFeed(offset, LIMIT);
-        } else if (serviceFeed.equals("AsuraScans")) {
-            loadFeed(asuraScansOffset, LIMIT);
-        } else if (serviceFeed.equals("ManhuaPlus")) {
-            loadFeed(manhuaPlusOffset, LIMIT);
-        } else if (serviceFeed.equals("DemonicScans")) {
-            loadFeed(demonicScansOffset, LIMIT);
-        } else if (serviceFeed.equals("ManhuaFast")) {
-            loadFeed(manhuaFastOffset, LIMIT);
-        } else if (serviceFeed.equals("Mgeko")) {
-            loadFeed(mgekoOffset, LIMIT);
-        } else if (serviceFeed.equals("Comix")) {
-            loadFeed(comixOffset, LIMIT);
-        } else if (serviceFeed.equals("VortexScans")) {
-            loadFeed(vortexScansOffset, LIMIT);
-        } else {
-            loadFeed(offset, LIMIT);
-        }
-    }
+        MangaSource source = com.example.mangav5.Sources.SourceManager.getInstance().getSource(serviceFeed);
+        int startPage = (source != null) ? source.getStartingPage() : 1;
+        
+        // Custom overrides if needed (though getStartingPage should handle it)
+        if (serviceFeed.equals("MangaDex")) startPage = offset;
+        else if (serviceFeed.equals("AsuraScans")) startPage = asuraScansOffset;
+        else if (serviceFeed.equals("ManhuaPlus")) startPage = manhuaPlusOffset;
+        else if (serviceFeed.equals("DemonicScans")) startPage = demonicScansOffset;
+        else if (serviceFeed.equals("ManhuaFast")) startPage = manhuaFastOffset;
+        else if (serviceFeed.equals("Mgeko")) startPage = mgekoOffset;
+        else if (serviceFeed.equals("Comix")) startPage = comixOffset;
+        else if (serviceFeed.equals("VortexScans")) startPage = vortexScansOffset;
 
-    private void updateSourceGlow() {
-        Map<String, Integer> glowMap = new HashMap<>();
-
-        glowMap.put("AsuraScans", R.id.drawer_asurascans_glow);
-        glowMap.put("MangaDex", R.id.drawer_mangadex_glow);
-        glowMap.put("Manhuaus", R.id.drawer_manhuaus_glow);
-        glowMap.put("ManhuaPlus", R.id.drawer_manhuaPlus_glow);
-        glowMap.put("DemonicScans", R.id.drawer_demonicScans_glow);
-        glowMap.put("ManhuaFast", R.id.drawer_manhuaFast_glow);
-        glowMap.put("FlameComics", R.id.drawer_flameComics_glow);
-        glowMap.put("Rizzfables", R.id.drawer_rizzfables_glow);
-        glowMap.put("Mgeko", R.id.drawer_mgeko_glow);
-        glowMap.put("Comix", R.id.drawer_comix_glow);
-        glowMap.put("VortexScans", R.id.drawer_vortexScans_glow);
-
-        for (int id : glowMap.values()) {
-            View glow = findViewById(id);
-            glow.clearAnimation();
-            glow.setVisibility(View.GONE);
-        }
-
-        Integer glowId = glowMap.get(serviceFeed);
-        if (glowId == null) return;
-
-        View targetGlow = findViewById(glowId);
-        if (targetGlow != null) {
-            targetGlow.setVisibility(View.VISIBLE);
-
-            AlphaAnimation pulse = new AlphaAnimation(0.3f, 1f);
-            pulse.setDuration(1000);
-            pulse.setRepeatMode(Animation.REVERSE);
-            pulse.setRepeatCount(Animation.INFINITE);
-            targetGlow.startAnimation(pulse);
-        }
-    }
-
-    private void setMainUpdateSourceIcon(String setMainButton) {
-        Map<String, ImageButton> setMainChangeIcon = new HashMap<>();
-
-        setMainChangeIcon.put("MangaDex", set_main_mangadex);
-        setMainChangeIcon.put("AsuraScans", set_main_asurascans);
-        setMainChangeIcon.put("Manhuaus", set_main_manhuaus);
-        setMainChangeIcon.put("ManhuaPlus", set_main_manhuaPlus);
-        setMainChangeIcon.put("DemonicScans", set_main_demonicScans);
-        setMainChangeIcon.put("ManhuaFast", set_main_manhuaFast);
-        setMainChangeIcon.put("FlameComics", set_main_flameComics);
-        setMainChangeIcon.put("Rizzfables", set_main_rizzfables);
-        setMainChangeIcon.put("Mgeko", set_main_mgeko);
-        setMainChangeIcon.put("Comix", set_main_comix);
-        setMainChangeIcon.put("VortexScans", set_main_vortexScans);
-
-        for (ImageButton button : setMainChangeIcon.values()) {
-            button.setImageResource(R.drawable.ic_sharingan_dark);
-        }
-
-        ImageButton activeButton = setMainChangeIcon.get(setMainButton);
-        if (activeButton != null) {
-            activeButton.setImageResource(R.drawable.ic_sharingan_light);
-        }
+        loadFeed(startPage, LIMIT);
     }
 
     private void showInitialSourceGlow() {
-        updateSourceGlow();
+        drawerHandler.updateSourceGlow(serviceFeed);
     }
 
     private void setupResultLaunchers() {
@@ -544,23 +393,16 @@ public class HomePage extends AppCompatActivity {
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
                 if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5 && totalItemCount > 0) {
-                    if (serviceFeed.equals("MangaDex")) {
-                        loadFeed(offset, LIMIT);
-                    } else if (serviceFeed.equals("AsuraScans")) {
-                        loadFeed(asuraScansOffset, LIMIT);
-                    } else if (serviceFeed.equals("ManhuaPlus")) {
-                        loadFeed(manhuaPlusOffset, LIMIT);
-                    } else if (serviceFeed.equals("DemonicScans")) {
-                        loadFeed(demonicScansOffset, LIMIT);
-                    } else if (serviceFeed.equals("ManhuaFast")) {
-                        loadFeed(manhuaFastOffset, LIMIT);
-                    } else if (serviceFeed.equals("Mgeko")) {
-                        loadFeed(mgekoOffset, LIMIT);
-                    } else if (serviceFeed.equals("Comix")) {
-                        loadFeed(comixOffset, LIMIT);
-                    }else if (serviceFeed.equals("VortexScans")) {
-                        loadFeed(vortexScansOffset, LIMIT);
-                    }
+                    int currentOffset = offset; // fallback
+                    if (serviceFeed.equals("AsuraScans")) currentOffset = asuraScansOffset;
+                    else if (serviceFeed.equals("ManhuaPlus")) currentOffset = manhuaPlusOffset;
+                    else if (serviceFeed.equals("DemonicScans")) currentOffset = demonicScansOffset;
+                    else if (serviceFeed.equals("ManhuaFast")) currentOffset = manhuaFastOffset;
+                    else if (serviceFeed.equals("Mgeko")) currentOffset = mgekoOffset;
+                    else if (serviceFeed.equals("Comix")) currentOffset = comixOffset;
+                    else if (serviceFeed.equals("VortexScans")) currentOffset = vortexScansOffset;
+                    
+                    loadFeed(currentOffset, LIMIT);
                 }
             }
         });
@@ -576,18 +418,11 @@ public class HomePage extends AppCompatActivity {
             @Override
             public void onSuccess(List<MangaItemModel> mangas) {
                 runOnUiThread(() -> {
-                    boolean isFirstLoadForCurrentSource =
-                            (serviceFeed.equals("MangaDex") && pageOrOffset == 0) ||
-                                    (serviceFeed.equals("AsuraScans") && pageOrOffset == 1 && mangaList.isEmpty()) ||
-                                    (serviceFeed.equals("ManhuaPlus") && pageOrOffset == 1 && mangaList.isEmpty()) ||
-                                    (serviceFeed.equals("DemonicScans") && pageOrOffset == 1 && mangaList.isEmpty()) ||
-                                    (serviceFeed.equals("ManhuaFast") && pageOrOffset == 1 && mangaList.isEmpty()) ||
-                                    (serviceFeed.equals("Mgeko") && pageOrOffset == 1 && mangaList.isEmpty()) ||
-                                    (serviceFeed.equals("Comix") && pageOrOffset == 1 && mangaList.isEmpty())||
-                                    (serviceFeed.equals("VortexScans") && pageOrOffset == 1 && mangaList.isEmpty());
+                    MangaSource source = com.example.mangav5.Sources.SourceManager.getInstance().getSource(serviceFeed);
+                    boolean isFirstLoad = (source != null && pageOrOffset == source.getStartingPage() && mangaList.isEmpty())
+                            || (serviceFeed.equals("MangaDex") && pageOrOffset == 0);
 
-
-                    if (isFirstLoadForCurrentSource) {
+                    if (isFirstLoad) {
                         mangaList.clear();
                         mangaList.addAll(mangas);
                         homeListAdapter.notifyDataSetChanged();
@@ -600,6 +435,7 @@ public class HomePage extends AppCompatActivity {
                     homeListAdapter.refreshBookmarkStates();
                     isLoading = false;
 
+                    // Update offsets
                     if (serviceFeed.equals("MangaDex")) {
                         HomePage.this.offset = pageOrOffset + limit;
                     } else if (serviceFeed.equals("AsuraScans")) {
@@ -614,21 +450,11 @@ public class HomePage extends AppCompatActivity {
                         HomePage.this.mgekoOffset = pageOrOffset + 1;
                     } else if (serviceFeed.equals("Comix")) {
                         HomePage.this.comixOffset = pageOrOffset + 1;
-                    }else if (serviceFeed.equals("VortexScans")) {
+                    } else if (serviceFeed.equals("VortexScans")) {
                         HomePage.this.vortexScansOffset = pageOrOffset + 1;
                     }
 
-                    Log.d("HomePage", "loadFeed success -> source=" + serviceFeed +
-                            " requested=" + pageOrOffset +
-                            " returned=" + mangas.size() +
-                            " nextOffset(MD)=" + offset +
-                            " nextAsura=" + asuraScansOffset +
-                            " nextManhuaPlus=" + manhuaPlusOffset +
-                            " nextDemonic=" + demonicScansOffset +
-                            " nextManhuaFast=" + manhuaFastOffset +
-                            " nextMgeko=" + mgekoOffset +
-                            " nextComix=" + comixOffset +
-                            " nextVortex=" + vortexScansOffset);
+                    Log.d("HomePage", "loadFeed success -> source=" + serviceFeed + " returned=" + mangas.size());
                 });
             }
 
@@ -677,22 +503,23 @@ public class HomePage extends AppCompatActivity {
     }
 
     private void checkSourcesAndDisableButtons() {
-        Map<Button, String> sourceButtons = new HashMap<>();
+        Map<Button, String> sourceUrls = new HashMap<>();
 
-        sourceButtons.put(button_mangadex, "https://mangadex.org/");
-        sourceButtons.put(button_asurascans, "https://asuracomic.net");
-        sourceButtons.put(button_manhuaus, "https://manhuaus.com");
-        sourceButtons.put(button_manhuaPlus, "https://manhuaplus.org/");
-        sourceButtons.put(button_demonicScans, "https://demonicscans.org/");
-        sourceButtons.put(button_manhuaFast, "https://manhuafast.com/");
-        sourceButtons.put(button_flameComics, "https://flamecomics.xyz/");
-        sourceButtons.put(button_rizzfables, "https://rizzfables.com/");
-        sourceButtons.put(button_mgeko, "https://mgeko.cc/");
-        sourceButtons.put(button_comix, "https://comix.to/");
-        sourceButtons.put(button_vortexScans, "https://vortexscans.org/");
+        sourceUrls.put(findViewById(R.id.source_mangadex), "https://mangadex.org/");
+        sourceUrls.put(findViewById(R.id.source_asurascans), "https://asuracomic.net");
+        sourceUrls.put(findViewById(R.id.source_manhuaus), "https://manhuaus.com");
+        sourceUrls.put(findViewById(R.id.source_manhuaPlus), "https://manhuaplus.org/");
+        sourceUrls.put(findViewById(R.id.source_demonicScans), "https://demonicscans.org/");
+        sourceUrls.put(findViewById(R.id.source_manhuaFast), "https://manhuafast.com/");
+        sourceUrls.put(findViewById(R.id.source_flameComics), "https://flamecomics.xyz/");
+        sourceUrls.put(findViewById(R.id.source_rizzfables), "https://rizzfables.com/");
+        sourceUrls.put(findViewById(R.id.source_mgeko), "https://mgeko.cc/");
+        sourceUrls.put(findViewById(R.id.source_comix), "https://comix.to/");
+        sourceUrls.put(findViewById(R.id.source_vortexScans), "https://vortexscans.org/");
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            for (Map.Entry<Button, String> entry : sourceButtons.entrySet()) {
+            for (Map.Entry<Button, String> entry : sourceUrls.entrySet()) {
+                if (entry.getKey() == null) continue;
                 boolean accessible = isSourceAccessible(entry.getValue());
                 runOnUiThread(() -> {
                     if (!accessible) {

@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.Network.NetworkHelper;
 import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
@@ -41,14 +42,12 @@ import okhttp3.Response;
 public class ComixFeedService {
 
     //Still Need somework here in the getMangaDetails
-    private static final OkHttpClient client = new OkHttpClient.Builder()
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .build();
+    private static final OkHttpClient client = NetworkHelper.getOkHttpClient();
 
     public static void getMangaFeedComix(int page, MangaListCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
+        // Try API v1 first as it was previously working
         HttpUrl url = HttpUrl.parse("https://comix.to/api/v1/manga")
                 .newBuilder()
                 .addQueryParameter("order[chapter_updated_at]", "desc")
@@ -58,8 +57,8 @@ public class ComixFeedService {
 
         Request request = new Request.Builder()
                 .url(url)
-                .header("User-Agent", "Mozilla/5.0")
-                .header("Accept", "application/json")
+                .header("User-Agent", NetworkHelper.USER_AGENT)
+                .header("Accept", "application/json, text/plain, */*")
                 .header("Referer", "https://comix.to/")
                 .build();
 
@@ -82,34 +81,58 @@ public class ComixFeedService {
                 try {
                     List<MangaItemModel> mangaList = new ArrayList<>();
 
-                    JSONObject obj = new JSONObject(body);
-                    JSONObject result = obj.getJSONObject("result");
-                    JSONArray items = result.getJSONArray("items");
+                    JSONObject root = new JSONObject(body);
+                    JSONArray itemsArray = null;
 
-                    for (int i = 0; i < items.length(); i++) {
-                        JSONObject item = items.getJSONObject(i);
+                    if (root.has("result")) {
+                        JSONObject resultObj = root.optJSONObject("result");
+                        if (resultObj != null) {
+                            itemsArray = resultObj.optJSONArray("items");
+                        }
+                    }
 
-                        String title = item.optString("title");
-                        String synopsis = item.optString("synopsis");
+                    if (itemsArray == null && root.has("data")) {
+                        itemsArray = root.optJSONArray("data");
+                    }
 
+                    if (itemsArray == null) {
+                        mainHandler.post(() -> callback.onError("No items found."));
+                        return;
+                    }
+
+                    for (int i = 0; i < itemsArray.length(); i++) {
+                        JSONObject item = itemsArray.getJSONObject(i);
+
+                        String hashId = item.optString("hash_id", item.optString("id", ""));
+                        String slug = item.optString("slug", "");
+                        String title = item.optString("title", "");
+                        String description = item.optString("synopsis", item.optString("description", ""));
+                        String lastChapter = item.optString("latest_chapter", "");
+
+                        String cover = "";
                         JSONObject poster = item.optJSONObject("poster");
-                        String image = poster != null ? poster.optString("large") : "";
+                        if (poster != null) {
+                            cover = poster.optString("large", poster.optString("medium", ""));
+                        }
 
-                        String urlManga = item.optString("url"); // ✅ FIX IMPORTANT
-                        String latestChapter = item.optString("latestChapter"); // ✅ FIX
+                        String urlManga = "";
+                        if (!hashId.isEmpty() && !slug.isEmpty()) {
+                            urlManga = "https://comix.to/title/" + hashId + "-" + slug;
+                        } else if (!slug.isEmpty()) {
+                            urlManga = "https://comix.to/title/" + slug;
+                        }
 
-                        String mangaId = GenerateMangaIDHex.generateUuidHex(urlManga);
-
-                        MangaItemModel m = new MangaItemModel();
-                        m.setMangaId(mangaId);
-                        m.setTitle(title);
-                        m.setDescription(synopsis);
-                        m.setCoverImageUrl(image);
-                        m.setMangaUrl(urlManga);
-                        m.setLastChapter(String.valueOf(latestChapter));
-                        m.setSource("Comix");
-
-                        mangaList.add(m);
+                        if (!title.isEmpty() && !urlManga.isEmpty()) {
+                            MangaItemModel m = new MangaItemModel();
+                            m.setMangaId(GenerateMangaIDHex.generateUuidHex(urlManga));
+                            m.setTitle(title);
+                            m.setDescription(description);
+                            m.setCoverImageUrl(cover);
+                            m.setMangaUrl(urlManga);
+                            m.setLastChapter(lastChapter);
+                            m.setSource("Comix");
+                            mangaList.add(m);
+                        }
                     }
 
                     mainHandler.post(() -> callback.onSuccess(mangaList));
@@ -128,83 +151,97 @@ public class ComixFeedService {
 
         executor.execute(() -> {
             try {
-                Document doc = Jsoup.connect(mangaUrl)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-                        .header("Accept-Language", "en-GB,en;q=0.9")
-                        .timeout(60000)
-                        .get();
-                Log.e(TAG, "getMangaDetailsComix: " + doc);
-                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
+                // Comix detail pages are often JS-rendered. 
+                // Let's try to extract the ID from the URL and use the API v2 if possible.
+                // URL format: https://comix.to/title/hashId-slug
+                
+                String slugPart = mangaUrl.substring(mangaUrl.lastIndexOf("/") + 1);
+                String hashId = slugPart.contains("-") ? slugPart.split("-")[0] : slugPart;
 
-                // TITLE
-                Element titleElement = doc.selectFirst("h1.mpage__title");
-                String title = titleElement != null
-                        ? titleElement.text().trim()
-                        : "";
+                String apiUrl = "https://comix.to/api/v2/manga/" + hashId;
+                
+                Request request = new Request.Builder()
+                        .url(apiUrl)
+                        .header("User-Agent", NetworkHelper.USER_AGENT)
+                        .header("Accept", "application/json")
+                        .header("Referer", mangaUrl)
+                        .build();
 
-                // DESCRIPTION
-                Element descriptionElement = doc.selectFirst("p.mpage__desc");
-                String descText = descriptionElement != null
-                        ? descriptionElement.text().trim()
-                        : "";
-
-                // COVER
-                String cover = "";
-                Element coverElement = doc.selectFirst(".mpage__poster img");
-
-                if (coverElement != null) {
-                    cover = coverElement.absUrl("src");
-
-                    if (cover == null || cover.isEmpty()) {
-                        cover = coverElement.attr("src").trim();
-                    }
+                Response response = client.newCall(request).execute();
+                if (!response.isSuccessful() || response.code() == 404) {
+                    // Try v1 as fallback
+                    apiUrl = "https://comix.to/api/v1/manga/" + hashId;
+                    request = new Request.Builder()
+                            .url(apiUrl)
+                            .header("User-Agent", NetworkHelper.USER_AGENT)
+                            .header("Accept", "application/json")
+                            .header("Referer", mangaUrl)
+                            .build();
+                    response = client.newCall(request).execute();
                 }
 
-                // LAST CHAPTER
+                if (response.isSuccessful() && response.body() != null) {
+                    JSONObject root = new JSONObject(response.body().string());
+                    JSONObject item = root.optJSONObject("result");
+                    if (item == null) item = root.optJSONObject("data");
+                    
+                    if (item != null) {
+                        String title = item.optString("title", "");
+                        String description = item.optString("synopsis", item.optString("description", ""));
+                        String lastChapter = item.optString("latest_chapter", "");
+                        
+                        String cover = "";
+                        JSONObject poster = item.optJSONObject("poster");
+                        if (poster != null) {
+                            cover = poster.optString("large", poster.optString("medium", ""));
+                        }
+
+                        MangaItemModel manga = new MangaItemModel();
+                        manga.setMangaId(GenerateMangaIDHex.generateUuidHex(mangaUrl));
+                        manga.setTitle(title);
+                        manga.setDescription(description);
+                        manga.setCoverImageUrl(cover);
+                        manga.setMangaUrl(mangaUrl);
+                        manga.setLastChapter(lastChapter);
+                        manga.setSource("Comix");
+
+                        mainHandler.post(() -> callback.onSuccess(manga));
+                        return;
+                    }
+                }
+                
+                // Fallback to Jsoup if API fails
+                Document doc = NetworkHelper.getJsoupConnection(mangaUrl).get();
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
+
+                Element titleElement = doc.selectFirst("h1.mpage__title, .mpage__title");
+                String title = titleElement != null ? titleElement.text().trim() : "";
+
+                Element descriptionElement = doc.selectFirst("p.mpage__desc, .mpage__desc");
+                String descText = descriptionElement != null ? descriptionElement.text().trim() : "";
+
+                String cover = "";
+                Element coverElement = doc.selectFirst(".mpage__poster img, img.mpage__poster");
+                if (coverElement != null) {
+                    cover = coverElement.absUrl("src");
+                    if (cover.isEmpty()) cover = coverElement.attr("src").trim();
+                }
+
                 String lastChapter = "";
-
-                Element chapterElement = doc.selectFirst(".chapter-list-item");
-
+                Element chapterElement = doc.selectFirst(".chapter-list-item, .mchap-row__ch");
                 if (chapterElement != null) {
                     lastChapter = chapterElement.text().trim();
                 }
 
                 MangaItemModel manga = new MangaItemModel(
-                        mangaId,
-                        title,
-                        descText,
-                        cover,
-                        false,
-                        mangaUrl,
-                        lastChapter,
-                        "Comix"
+                        mangaId, title, descText, cover, false, mangaUrl, lastChapter, "Comix"
                 );
-
-                Log.e(TAG, "getMangaId: " + manga.getMangaId());
-                Log.e(TAG, "getMangaTitle: " + manga.getTitle());
-                Log.e(TAG, "getMangaDescription: " + manga.getDescription());
-                Log.e(TAG, "getMangaCoverImageUrl: " + manga.getCoverImageUrl());
-                Log.e(TAG, "getMangaUrl: " + manga.getMangaUrl());
-                Log.e(TAG, "getLastChapter: " + manga.getLastChapter());
 
                 mainHandler.post(() -> callback.onSuccess(manga));
 
-            } catch (IOException e) {
-
-                mainHandler.post(() -> callback.onError(
-                        e.getMessage() != null
-                                ? e.getMessage()
-                                : "IO Error"
-                ));
-
             } catch (Exception e) {
-
-                mainHandler.post(() -> callback.onError(
-                        e.getMessage() != null
-                                ? e.getMessage()
-                                : "Unknown Error"
-                ));
-
+                Log.e(TAG, "getMangaDetailsComix error: " + e.getMessage(), e);
+                mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Unknown Error"));
             } finally {
                 executor.shutdown();
             }

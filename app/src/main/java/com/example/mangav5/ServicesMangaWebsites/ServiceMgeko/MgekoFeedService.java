@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.Network.NetworkHelper;
 import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusFeedService;
 
@@ -36,7 +37,7 @@ public class MgekoFeedService {
      */
     public static void getMangaFeedMgeko(int page, MangaListCallback callback) {
 
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = NetworkHelper.getOkHttpClient();
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
         String url = "https://www.mgeko.cc/browse-comics/data/?page=" + page;
@@ -108,10 +109,7 @@ public class MgekoFeedService {
 
         executor.execute(() -> {
             try {
-                Document doc = Jsoup.connect(mangaUrl)
-                        .userAgent("Mozilla/5.0")
-                        .timeout(TIMEOUT_MS)
-                        .get();
+                Document doc = NetworkHelper.getJsoupConnection(mangaUrl).get();
 
                 // ✅ MAIN CONTAINER
                 Element container = doc.selectFirst("div.header-body");

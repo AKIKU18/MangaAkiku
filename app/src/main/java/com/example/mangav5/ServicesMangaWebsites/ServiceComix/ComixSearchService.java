@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.Network.NetworkHelper;
 import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.json.JSONArray;
@@ -25,10 +26,7 @@ import okhttp3.Response;
 public class ComixSearchService {
     private static final String TAG = "ComixSearch";
 
-    private static final OkHttpClient client = new OkHttpClient.Builder()
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .build();
+    private static final OkHttpClient client = NetworkHelper.getOkHttpClient();
 
     public static void search(String query, MangaListCallback callback) {
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -43,7 +41,7 @@ public class ComixSearchService {
 
                 String encodedQuery = URLEncoder.encode(trimmedQuery, StandardCharsets.UTF_8.toString());
 
-                String searchUrl = "https://comix.to/api/v2/manga" +
+                String searchUrl = "https://comix.to/api/v1/manga" +
                         "?order[relevance]=desc" +
                         "&keyword=" + encodedQuery +
                         "&genres_mode=and";

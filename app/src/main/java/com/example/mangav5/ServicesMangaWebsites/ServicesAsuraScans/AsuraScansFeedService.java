@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.Network.NetworkHelper;
 import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
@@ -42,10 +43,7 @@ public class AsuraScansFeedService {
             int attempts = 0;
             while (attempts < MAX_RETRIES) {
                 try {
-                    Document doc = Jsoup.connect(mangaUrl)
-                            .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
-                            .timeout(TIMEOUT_MS)
-                            .get();
+                    Document doc = NetworkHelper.getJsoupConnection(mangaUrl).get();
 
 
                     String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
@@ -98,10 +96,7 @@ public class AsuraScansFeedService {
 
         executor.execute(() -> {
             try {
-                Document doc = Jsoup.connect(mangaUrl)
-                        .userAgent("Mozilla/5.0 (Android App; +https://myapp.example)")
-                        .timeout(15000)
-                        .get();
+                Document doc = NetworkHelper.getJsoupConnection(mangaUrl).get();
 
                 Element chapterContainer = doc.selectFirst(
                         "div.divide-y:nth-child(1)"
@@ -143,10 +138,7 @@ public class AsuraScansFeedService {
             List<MangaItemModel> mangaList = new ArrayList<>();
 
             try {
-                Document doc = Jsoup.connect(mangaUrl)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
-                        .timeout(15000)
-                        .get();
+                Document doc = NetworkHelper.getJsoupConnection(mangaUrl).get();
 
                 Elements mangaEntries = doc.select("#series-grid .series-card");
 
