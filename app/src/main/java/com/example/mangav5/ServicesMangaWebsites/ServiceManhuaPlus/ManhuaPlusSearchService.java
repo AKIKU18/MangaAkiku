@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -55,7 +56,7 @@ public class ManhuaPlusSearchService {
                         }
 
                         // ✅ Manga ID (last part of URL)
-                        String mangaId = url.replace("https://manhuaplus.org/manga/", "").trim();
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(url);
 
                         // ✅ Cover image
                         Element img = item.selectFirst("img");

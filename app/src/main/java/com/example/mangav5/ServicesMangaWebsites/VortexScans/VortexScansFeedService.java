@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServicesAsuraScans.AsuraScansFeedService;
 
 import org.jsoup.Jsoup;
@@ -80,7 +81,7 @@ public class VortexScansFeedService {
 
 
                 // MANGA ID
-                String mangaId = generateMangaId(mangaUrl, title);
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                 MangaItemModel manga = new MangaItemModel(
                         mangaId,
@@ -149,7 +150,7 @@ public class VortexScansFeedService {
                             imageCover = imageElement.attr("src");
                         }
 
-                        String mangaId = generateMangaId(mangaUrl, mangaTitle);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
 
                         MangaItemModel manga = new MangaItemModel(
@@ -179,13 +180,6 @@ public class VortexScansFeedService {
                 executor.shutdown();
             }
         });
-    }
-
-    public static String generateMangaId(String url, String title) {
-        String siteName = url.replaceAll("https?://(www\\.)?", "").split("/")[0];
-        String hash = String.valueOf((url + title).hashCode());
-        String id = siteName + "-" + hash;
-        return id;
     }
 
     public interface MangaCallback {

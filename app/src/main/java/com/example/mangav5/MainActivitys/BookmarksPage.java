@@ -100,6 +100,7 @@ public class BookmarksPage extends AppCompatActivity {
         SearchThroughBookmarks();
         UpdateBookmarkList();
     }
+
     private void SearchThroughBookmarks() {
         search_bookmarks.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
             @Override
@@ -154,222 +155,222 @@ public class BookmarksPage extends AppCompatActivity {
         });
     }
 
-        /**
-         * Registers an ActivityResultLauncher to listen for results from the MangaPage.
-         * If the result indicates that a bookmark status has changed, it reloads the bookmark list.
-         */
-        private void CheckIfStillBookmarked () {
-            mangaPageLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        // Check if the result is successful.
-                        if (result.getResultCode() == RESULT_OK) {
-                            Intent data = result.getData();
-                            if (data != null) {
-                                // Check the "bookmarkChanged" extra to see if a refresh is needed.
-                                boolean bookmarkChanged = data.getBooleanExtra("bookmarkChanged", false);
-                                if (bookmarkChanged) {
-                                    loadBookmarks(); // Reload the data.
-                                }
+    /**
+     * Registers an ActivityResultLauncher to listen for results from the MangaPage.
+     * If the result indicates that a bookmark status has changed, it reloads the bookmark list.
+     */
+    private void CheckIfStillBookmarked() {
+        mangaPageLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    // Check if the result is successful.
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            // Check the "bookmarkChanged" extra to see if a refresh is needed.
+                            boolean bookmarkChanged = data.getBooleanExtra("bookmarkChanged", false);
+                            if (bookmarkChanged) {
+                                loadBookmarks(); // Reload the data.
                             }
                         }
                     }
-            );
-        }
-
-        /**
-         * Sets up the click listener for the "Home" button to navigate back to the HomePage.
-         */
-        private void OnClickGoToHomePage () {
-            homePageButton.setOnClickListener(v -> {
-                Intent intent = new Intent(BookmarksPage.this, HomePage.class);
-                setResult(RESULT_OK, intent); // Set result to OK.
-                finish(); // Close this activity.
-            });
-        }
-
-        /**
-         * Overrides the default behavior of the system back button.
-         * Ensures a proper result is sent back to the calling activity before finishing.
-         */
-        private void IntentHandleGoBack () {
-            getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-                @Override
-                public void handleOnBackPressed() {
-                    Intent resultIntent = new Intent();
-                    setResult(RESULT_OK, resultIntent);
-                    Log.d("BookmarksPage", "Back button pressed, finishing with RESULT_OK.");
-                    finish(); // Finish the activity.
                 }
-            });
-        }
+        );
+    }
 
-        private void UpdateBookmarkList(){
-            btn_update.setOnClickListener(v -> {
+    /**
+     * Sets up the click listener for the "Home" button to navigate back to the HomePage.
+     */
+    private void OnClickGoToHomePage() {
+        homePageButton.setOnClickListener(v -> {
+            Intent intent = new Intent(BookmarksPage.this, HomePage.class);
+            setResult(RESULT_OK, intent); // Set result to OK.
+            finish(); // Close this activity.
+        });
+    }
 
-                Log.d(TAG, "UPDATE BUTTON CLICKED");
+    /**
+     * Overrides the default behavior of the system back button.
+     * Ensures a proper result is sent back to the calling activity before finishing.
+     */
+    private void IntentHandleGoBack() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent resultIntent = new Intent();
+                setResult(RESULT_OK, resultIntent);
+                Log.d("BookmarksPage", "Back button pressed, finishing with RESULT_OK.");
+                finish(); // Finish the activity.
+            }
+        });
+    }
 
-                Executors.newSingleThreadExecutor().execute(() -> {
+    private void UpdateBookmarkList() {
+        btn_update.setOnClickListener(v -> {
 
-                    Log.d(TAG, "Starting bookmark sync. Total: " + bookmarkList.size());
-
-                    for (BookmarkEntity bookmark : bookmarkList) {
-
-                        Log.d(TAG, "Processing manga: " + bookmark.getTitle()
-                                + " | ID: " + bookmark.getMangaId());
-
-                        String mangaIdOrUrl = ServiceController.getMangaIdOrMangaUrl(
-                                bookmark.getSource(),
-                                bookmark.getMangaId(),
-                                bookmark.getMangaUrl()
-                        );
-
-                        Log.d(TAG, "Fetching network chapters for: " + mangaIdOrUrl);
-
-                        ServiceController.fetchChapterListController(
-                                this,
-                                bookmark.getSource(),
-                                mangaIdOrUrl,
-                                0,
-                                1,
-                                "desc",
-                                new ServiceController.ChapterListCallback() {
-
-                                    @Override
-                                    public void onSuccess(List<ChapterModel> chapters) {
-
-                                        if (chapters != null && !chapters.isEmpty()) {
-
-                                            String latest = chapters.get(0).getTitle();
-
-                                            Log.d(TAG, "LATEST FOUND: " + bookmark.getTitle()
-                                                    + " => " + latest);
-
-                                            Executors.newSingleThreadExecutor().execute(() -> {
-
-                                                BookmarkEntity dbItem =
-                                                        bookmarkDao.getBookmarkByMangaId(bookmark.getMangaId());
-
-                                                if (dbItem != null) {
-
-                                                    Log.d(TAG, "DB BEFORE UPDATE: "
-                                                            + dbItem.getLastChapter());
-
-                                                    if (!latest.equals(dbItem.getLastChapter())) {
-
-                                                        bookmarkDao.updateLastChapter(
-                                                                bookmark.getMangaId(),
-                                                                latest
-                                                        );
-
-                                                        Log.d(TAG, "DB UPDATED: "
-                                                                + bookmark.getTitle()
-                                                                + " => " + latest);
-                                                    } else {
-                                                        Log.d(TAG, "NO CHANGE: " + bookmark.getTitle());
-                                                    }
-                                                } else {
-                                                    Log.e(TAG, "DB ITEM NULL: " + bookmark.getMangaId());
-                                                }
-                                            });
-
-                                        } else {
-                                            Log.e(TAG, "NO CHAPTERS FOUND for " + bookmark.getTitle());
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onError(String message) {
-                                        Log.e(TAG, "NETWORK ERROR for "
-                                                + bookmark.getTitle()
-                                                + " => " + message);
-                                    }
-                                });
-                    }
-
-                    runOnUiThread(() -> {
-                        Log.d(TAG, "UI REFRESH TRIGGERED");
-                        bookmarkAdapter.notifyDataSetChanged();
-                    });
-                });
-            });
-        }
-
-        /**
-         * Fetches all bookmarks from the database on a background thread.
-         * Updates the RecyclerView and UI on the main thread once the data is loaded.
-         */
-        private void loadBookmarks() {
+            Log.d(TAG, "UPDATE BUTTON CLICKED");
 
             Executors.newSingleThreadExecutor().execute(() -> {
 
-                List<BookmarkEntity> bookmarks = bookmarkDao.getAllBookmarks();
+                Log.d(TAG, "Starting bookmark sync. Total: " + bookmarkList.size());
 
-                List<BookmarkEntity> unreadList = new ArrayList<>();
-                List<BookmarkEntity> readList = new ArrayList<>();
+                for (BookmarkEntity bookmark : bookmarkList) {
 
-                for (BookmarkEntity bookmark : bookmarks) {
+                    Log.d(TAG, "Processing manga: " + bookmark.getTitle()
+                            + " | ID: " + bookmark.getMangaId());
 
-                    HistoryEntity history =
-                            db.historyDao().getHistoryItemInOrder(bookmark.getMangaId());
-
-                    if (history == null) {
-                        history =
-                                db.historyDao().getHistoryByTitle(bookmark.getTitle());
-                    }
-
-                    String latest = bookmark.getLastChapter();
-
-                    String read = null;
-
-
-                    if (history != null) {
-                        read = history.getChapterTitle();
-                    }
-                    boolean hasUnread =
-                            latest != null &&
-                                    read != null &&
-                                    !latest.equals(read);
-
-                    if (hasUnread) {
-                        unreadList.add(bookmark);
-                    } else {
-                        readList.add(bookmark);
-                    }
-                }
-
-                // final ordered list
-                List<BookmarkEntity> finalList = new ArrayList<>();
-                finalList.addAll(unreadList);
-                finalList.addAll(readList);
-
-                runOnUiThread(() -> {
-
-                    bookmarkList.clear();
-                    bookmarkList.addAll(finalList);
-
-                    Log.d("BookmarksPage",
-                            "Loaded " + finalList.size() + " bookmarks.");
-
-                    emptyText.setVisibility(
-                            finalList.isEmpty()
-                                    ? View.VISIBLE
-                                    : View.GONE
+                    String mangaIdOrUrl = ServiceController.getMangaIdOrMangaUrl(
+                            bookmark.getSource(),
+                            bookmark.getMangaId(),
+                            bookmark.getMangaUrl()
                     );
 
+                    Log.d(TAG, "Fetching network chapters for: " + mangaIdOrUrl);
+
+                    ServiceController.fetchChapterListController(
+                            this,
+                            bookmark.getSource(),
+                            mangaIdOrUrl,
+                            0,
+                            1,
+                            "desc",
+                            new ServiceController.ChapterListCallback() {
+
+                                @Override
+                                public void onSuccess(List<ChapterModel> chapters) {
+
+                                    if (chapters != null && !chapters.isEmpty()) {
+
+                                        String latest = chapters.get(0).getTitle();
+
+                                        Log.d(TAG, "LATEST FOUND: " + bookmark.getTitle()
+                                                + " => " + latest);
+
+                                        Executors.newSingleThreadExecutor().execute(() -> {
+
+                                            BookmarkEntity dbItem =
+                                                    bookmarkDao.getBookmarkByMangaId(bookmark.getMangaId());
+
+                                            if (dbItem != null) {
+
+                                                Log.d(TAG, "DB BEFORE UPDATE: "
+                                                        + dbItem.getLastChapter());
+
+                                                if (!latest.equals(dbItem.getLastChapter())) {
+
+                                                    bookmarkDao.updateLastChapter(
+                                                            bookmark.getMangaId(),
+                                                            latest
+                                                    );
+
+                                                    Log.d(TAG, "DB UPDATED: "
+                                                            + bookmark.getTitle()
+                                                            + " => " + latest);
+                                                } else {
+                                                    Log.d(TAG, "NO CHANGE: " + bookmark.getTitle());
+                                                }
+                                            } else {
+                                                Log.e(TAG, "DB ITEM NULL: " + bookmark.getMangaId());
+                                            }
+                                        });
+
+                                    } else {
+                                        Log.e(TAG, "NO CHAPTERS FOUND for " + bookmark.getTitle());
+                                    }
+                                }
+
+                                @Override
+                                public void onError(String message) {
+                                    Log.e(TAG, "NETWORK ERROR for "
+                                            + bookmark.getTitle()
+                                            + " => " + message);
+                                }
+                            });
+                }
+
+                runOnUiThread(() -> {
+                    Log.d(TAG, "UI REFRESH TRIGGERED");
                     bookmarkAdapter.notifyDataSetChanged();
                 });
             });
-        }
-
-        /**
-         * Activity lifecycle method called when the activity is becoming visible to the user.
-         * It's a good place to refresh data that might have changed while the activity was paused.
-         */
-        @Override
-        protected void onResume () {
-            super.onResume();
-            // Reload bookmarks every time the user returns to this page.
-            loadBookmarks();
-        }
+        });
     }
+
+    /**
+     * Fetches all bookmarks from the database on a background thread.
+     * Updates the RecyclerView and UI on the main thread once the data is loaded.
+     */
+    private void loadBookmarks() {
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+
+            List<BookmarkEntity> bookmarks = bookmarkDao.getAllBookmarks();
+
+            List<BookmarkEntity> unreadList = new ArrayList<>();
+            List<BookmarkEntity> readList = new ArrayList<>();
+
+            for (BookmarkEntity bookmark : bookmarks) {
+
+                HistoryEntity history =
+                        db.historyDao().getHistoryItemInOrder(bookmark.getMangaId());
+
+                if (history == null) {
+                    history =
+                            db.historyDao().getHistoryByTitle(bookmark.getTitle());
+                }
+
+                String latest = bookmark.getLastChapter();
+
+                String read = null;
+
+
+                if (history != null) {
+                    read = history.getChapterTitle();
+                }
+                boolean hasUnread =
+                        latest != null &&
+                                read != null &&
+                                !latest.equals(read);
+
+                if (hasUnread) {
+                    unreadList.add(bookmark);
+                } else {
+                    readList.add(bookmark);
+                }
+            }
+
+            // final ordered list
+            List<BookmarkEntity> finalList = new ArrayList<>();
+            finalList.addAll(unreadList);
+            finalList.addAll(readList);
+
+            runOnUiThread(() -> {
+
+                bookmarkList.clear();
+                bookmarkList.addAll(finalList);
+
+                Log.d("BookmarksPage",
+                        "Loaded " + finalList.size() + " bookmarks.");
+
+                emptyText.setVisibility(
+                        finalList.isEmpty()
+                                ? View.VISIBLE
+                                : View.GONE
+                );
+
+                bookmarkAdapter.notifyDataSetChanged();
+            });
+        });
+    }
+
+    /**
+     * Activity lifecycle method called when the activity is becoming visible to the user.
+     * It's a good place to refresh data that might have changed while the activity was paused.
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload bookmarks every time the user returns to this page.
+        loadBookmarks();
+    }
+}

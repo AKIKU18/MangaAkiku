@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusFeedService;
 
 import org.json.JSONException;
@@ -73,7 +74,7 @@ public class MgekoFeedService {
                         String imageCover = item.selectFirst(".comic-card__cover img").attr("src");
                         String mangaUrl ="https://www.mgeko.cc" + item.selectFirst(".comic-card__title a").attr("href");
                         String description = item.selectFirst(".comic-card__description").text();
-                        String mangaId = generateMangaId(mangaUrl,titleEl);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                         MangaItemModel m = new MangaItemModel();
 
@@ -126,7 +127,7 @@ public class MgekoFeedService {
                 if (titleEl != null) title = titleEl.text().trim();
 
                 // ✅ ID
-                String mangaId = generateMangaId(mangaUrl,title);
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                 // ✅ Description
                 Element descEl = doc.selectFirst("p.description");
@@ -174,13 +175,6 @@ public class MgekoFeedService {
         });
     }
 
-
-    public static String generateMangaId(String url, String title) {
-        String siteName = url.replaceAll("https?://(www\\.)?", "").split("/")[0];
-        String hash = String.valueOf((url + title).hashCode());
-        String id = siteName + "-" + hash;
-        return id;
-    }
 
     public interface MangaListCallback {
         void onSuccess(List<MangaItemModel> mangas);

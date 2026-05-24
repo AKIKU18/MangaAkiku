@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -48,7 +49,7 @@ public class ManhuaPlusFeedService {
                         String url = titleA != null ? titleA.attr("href").trim() : "";
 
                         // Manga ID from URL
-                        String mangaId = url.replace("https://manhuaplus.org/manga/", "").trim();
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(url);
 
                         // Cover image
                         Element img = item.selectFirst("img");
@@ -110,7 +111,7 @@ public class ManhuaPlusFeedService {
                         .get();
 
                 // Manga ID from URL
-                String mangaId = mangaUrl.replace("https://manhuaplus.org/manga/", "").trim();
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                 // Title
                 Element titleEl = doc.selectFirst("div.fs-15.s1.p-20.bc-fff.r2 > header > h1");

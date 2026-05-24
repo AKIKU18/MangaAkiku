@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -130,7 +131,7 @@ public class ComixSearchService {
 
                         if (!title.isEmpty() && !mangaUrl.isEmpty()) {
                             results.add(new MangaItemModel(
-                                    generateUuidHex(mangaUrl),
+                                    GenerateMangaIDHex.generateUuidHex(mangaUrl),
                                     title,
                                     description,
                                     cover,
@@ -187,33 +188,6 @@ public class ComixSearchService {
                 .replaceAll("[^a-z0-9\\s]", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
-    }
-
-    public static String extractSlug(String url) {
-        String[] parts = url.replaceAll("/+$", "").split("/");
-        return parts[parts.length - 1];
-    }
-
-    public static String normalizeSlug(String slug) {
-        return slug.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
-    public static String generateUuidHex(String url) {
-        String slug = normalizeSlug(extractSlug(url));
-        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
-        return Long.toHexString(msb) + Long.toHexString(lsb);
     }
 
     public interface MangaListCallback {

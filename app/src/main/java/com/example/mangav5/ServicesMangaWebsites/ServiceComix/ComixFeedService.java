@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceDemonicScans.DemonicScansFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceMgeko.MgekoFeedService;
@@ -97,7 +98,7 @@ public class ComixFeedService {
                         String urlManga = item.optString("url"); // ✅ FIX IMPORTANT
                         String latestChapter = item.optString("latestChapter"); // ✅ FIX
 
-                        String mangaId = generateUuidHex(urlManga);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(urlManga);
 
                         MangaItemModel m = new MangaItemModel();
                         m.setMangaId(mangaId);
@@ -133,7 +134,7 @@ public class ComixFeedService {
                         .timeout(60000)
                         .get();
                 Log.e(TAG, "getMangaDetailsComix: " + doc);
-                String mangaId = generateUuidHex(mangaUrl);
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                 // TITLE
                 Element titleElement = doc.selectFirst("h1.mpage__title");
@@ -209,35 +210,6 @@ public class ComixFeedService {
             }
         });
     }
-    public static String extractSlug(String url) {
-        String[] parts = url.replaceAll("/+$", "").split("/");
-        return parts[parts.length - 1];
-    }
-
-    public static String normalizeSlug(String slug) {
-        return slug.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
-
-    public static String generateUuidHex(String url) {
-        String slug = normalizeSlug(extractSlug(url));
-        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
-        return Long.toHexString(msb) + Long.toHexString(lsb);
-    }
-
-
     public interface MangaListCallback {
         void onSuccess(List<MangaItemModel> mangas);
         void onError(String message);

@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,8 +14,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,8 +48,7 @@ public class AsuraScansFeedService {
                             .get();
 
 
-                    String[] parts = mangaUrl.split("-");
-                    String mangaId = parts[parts.length - 1];
+                    String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                     Element titleElement = doc.selectFirst("h1");
 
@@ -176,7 +178,7 @@ public class AsuraScansFeedService {
                             }
                         }
 
-                        String mangaId = href.substring(href.lastIndexOf("-") + 1);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(href);
 
                         // chapters text
                         String chapterText = "";
@@ -213,13 +215,6 @@ public class AsuraScansFeedService {
                 executor.shutdown();
             }
         });
-    }
-
-    public static String generateMangaId(String url, String title) {
-        String siteName = url.replaceAll("https?://(www\\.)?", "").split("/")[0];
-        String hash = String.valueOf((url + title).hashCode());
-        String id = siteName + "-" + hash;
-        return id;
     }
 
     public static String generateChapterId(String url, String title) {

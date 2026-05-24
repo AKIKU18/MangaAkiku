@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusSearchService;
 
 import org.jsoup.Jsoup;
@@ -55,10 +56,7 @@ public class MgekoSearchService {
                         String mangaUrl = "https://www.mgeko.cc" + link.attr("href");
 
                         // ✅ Manga ID
-                        String mangaId = link.attr("href")
-                                .replace("/manga/", "")
-                                .replace("/", "")
-                                .trim();
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                         // Cover
                         Element img = item.selectFirst(".novel-cover img");

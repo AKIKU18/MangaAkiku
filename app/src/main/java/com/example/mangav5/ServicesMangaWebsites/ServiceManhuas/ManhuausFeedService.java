@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -49,9 +50,7 @@ public class ManhuausFeedService {
 
                         //GetMangaId
                         Element thumbDiv = item.selectFirst(".item-thumb");
-                        String mangaId = thumbDiv != null && thumbDiv.hasAttr("data-post-id")
-                                ? thumbDiv.attr("data-post-id").trim()
-                                : "";
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(url);
 
 
                         // Cover image
@@ -126,7 +125,7 @@ public class ManhuausFeedService {
 
                 // Manga ID from bookmark button
                 Element bookmarkEl = doc.selectFirst(".add-bookmark .wp-manga-action-button");
-                String mangaId = bookmarkEl != null ? bookmarkEl.attr("data-post").trim() : "";
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
                 // Title
                 Element titleElement = doc.selectFirst(".summary_image a img"); // the image alt can be used
                 String title = titleElement != null ? titleElement.attr("alt").trim() : "No title";

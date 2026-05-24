@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
 
 import org.jsoup.Jsoup;
@@ -44,7 +45,7 @@ public class ManhuaFastSearchService {
                         Element titleA = item.selectFirst(".post-title a");
                         String title = titleA != null ? titleA.text().trim() : "";
                         String url = titleA != null ? titleA.attr("href").trim() : "";
-                        String mangaId = generateUuidHex(url);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(url);
                         Element img = item.selectFirst(".tab-thumb img");
                         String cover = "";
                         if (img != null) {
@@ -111,34 +112,6 @@ public class ManhuaFastSearchService {
                         callback.onError("Failed to fetch results: " + e.getMessage()));
             }
         });
-    }
-
-    public static String extractSlug(String url) {
-        String[] parts = url.replaceAll("/+$", "").split("/");
-        return parts[parts.length - 1];
-    }
-
-    public static String normalizeSlug(String slug) {
-        return slug.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
-
-    public static String generateUuidHex(String url) {
-        String slug = normalizeSlug(extractSlug(url));
-        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
-        return Long.toHexString(msb) + Long.toHexString(lsb);
     }
 
     public interface MangaListCallBack {

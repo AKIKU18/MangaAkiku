@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -69,7 +70,6 @@ public class AsuraScansSearchService {
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject item = data.getJSONObject(i);
 
-                        String mangaId = String.valueOf(item.optInt("id", 0));
                         String title = item.optString("title", "Unknown");
                         String description = item.optString("description", "");
                         String coverUrl = item.optString("cover", "");
@@ -78,6 +78,8 @@ public class AsuraScansSearchService {
                         String mangaUrl = publicUrl.startsWith("http")
                                 ? publicUrl
                                 : BASE_SITE + publicUrl;
+
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                         String lastChapter = "";
                         JSONArray latestChapters = item.optJSONArray("latest_chapters");

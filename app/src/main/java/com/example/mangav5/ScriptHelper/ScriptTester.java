@@ -113,8 +113,7 @@ public class ScriptTester {
                                         String coverUrl = imgEl != null ? imgEl.absUrl("src") : "";
                                         String lastChapter = chapterEl != null ? chapterEl.text().trim() : "";
 
-                                        String[] parts = mangaUrl.split("-");
-                                        String mangaId = parts[parts.length - 1];
+                                        String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                                         MangaItemModel manga = new MangaItemModel(
                                                 mangaId,

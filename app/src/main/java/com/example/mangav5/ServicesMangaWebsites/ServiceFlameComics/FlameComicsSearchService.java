@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausSearchService;
 
@@ -79,7 +80,7 @@ public class FlameComicsSearchService {
                     // adaugi în listă
                     MangaItemModel item = new MangaItemModel();
                     item.setTitle(title);
-                    item.setMangaId(generateUuidHex(mangaUrl));
+                    item.setMangaId(GenerateMangaIDHex.generateUuidHex(mangaUrl));
                     item.setMangaUrl(mangaUrl);
                     item.setDescription("");
                     item.setCoverImageUrl(imageCover);
@@ -106,26 +107,6 @@ public class FlameComicsSearchService {
             }
         });
     }
-    public static String extractSlug(String url) {
-        String[] parts = url.replaceAll("/+$", "").split("/");
-        return parts[parts.length - 1];
-    }
-
-    public static String normalizeSlug(String slug) {
-        return slug.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-
-    public static String generateUuidHex(String url) {
-        String slug = normalizeSlug(extractSlug(url));
-        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
-        return Long.toHexString(msb) + Long.toHexString(lsb);
-    }
-
-
     public interface MangaListCallback {
         void onSuccess(List<MangaItemModel> results);
         void onError(String error);

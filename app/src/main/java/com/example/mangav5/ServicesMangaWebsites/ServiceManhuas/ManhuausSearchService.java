@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -91,6 +92,7 @@ public class ManhuausSearchService {
                         m.setLastChapter(lastChapter);
                         m.setDescription("");
                         m.setSource("Manhuaus");
+                        m.setMangaId(GenerateMangaIDHex.generateUuidHex(url));
                         tempResults.add(m);
 
                     } catch (Exception ex) {

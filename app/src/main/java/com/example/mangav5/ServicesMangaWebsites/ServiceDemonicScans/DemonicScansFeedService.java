@@ -8,6 +8,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -44,7 +45,7 @@ public class DemonicScansFeedService {
                         Element divthumb = item.selectFirst("div.thumb");
                         String title = divthumb.selectFirst("a").attr("title");
                         String mangaUrl = "https://demonicscans.org/" + divthumb.selectFirst("a").attr("href");
-                        String mangaId = generateUuidHex("https://demonicscans.org"+mangaUrl);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex("https://demonicscans.org" + mangaUrl);
                         String coverImg = divthumb.selectFirst("img").attr("src");
 
                         Element chapterlink = item.selectFirst("div.flex.flex-row.chap-date.justify-space-between");
@@ -102,7 +103,7 @@ public class DemonicScansFeedService {
                 Element descEle = doc.selectFirst("div.white-font");
                 Element lastChapterEle = doc.selectFirst("#chapters-list > li:nth-child(1) > a");
 
-                String mangaId = generateUuidHex(mangaUrl);
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
                 String title = img != null ? img.attr("alt") : "No title";
                 String coverImg = img != null ? img.attr("src") : "";
                 String description = descEle !=null ? descEle.text(): "No description";
@@ -133,35 +134,6 @@ public class DemonicScansFeedService {
             }
         });
     }
-
-    public static String extractSlug(String url) {
-        String[] parts = url.replaceAll("/+$", "").split("/");
-        return parts[parts.length - 1];
-    }
-
-    public static String normalizeSlug(String slug) {
-        return slug.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
-
-    public static String generateUuidHex(String url) {
-        String slug = normalizeSlug(extractSlug(url));
-        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
-        return Long.toHexString(msb) + Long.toHexString(lsb);
-    }
-
 
     public interface MangaListCallback {
         void onSuccess(List<MangaItemModel> mangas);

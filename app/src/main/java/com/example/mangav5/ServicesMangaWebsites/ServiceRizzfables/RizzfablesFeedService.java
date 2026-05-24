@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaPlus.ManhuaPlusFeedService;
 
 import org.jsoup.Jsoup;
@@ -49,7 +50,7 @@ public class RizzfablesFeedService {
                         String title = item.selectFirst("a").attr("title");
                         String mangaUrl = item.selectFirst("a").attr("href");
                         String imageUrl = item.selectFirst("a > div.limit > img").attr("src");
-                        String mangaId = generateUuidHex(mangaUrl);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
 
 
@@ -96,7 +97,7 @@ public class RizzfablesFeedService {
                         .timeout(TIMEOUT_MS)
                         .get();
 
-                String mangaId = generateUuidHex(mangaUrl);
+                String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
                 String title = doc.selectFirst("h1.entry-title").text().trim();
                 String imageUrl = doc.selectFirst("#post-69001 > div.main-info > div.info-left.desktop > div > div.thumb > img").attr("src");
                 Elements scripts = doc.select("script");
@@ -189,34 +190,6 @@ public class RizzfablesFeedService {
 
 
 
-
-    public static String extractSlug(String url) {
-        String[] parts = url.replaceAll("/+$", "").split("/");
-        return parts[parts.length - 1];
-    }
-
-    public static String normalizeSlug(String slug) {
-        return slug.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
-
-    public static String generateUuidHex(String url) {
-        String slug = normalizeSlug(extractSlug(url));
-        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
-        return Long.toHexString(msb) + Long.toHexString(lsb);
-    }
 
     public interface MangaListCallback {
         void onSuccess(List<MangaItemModel> mangas);

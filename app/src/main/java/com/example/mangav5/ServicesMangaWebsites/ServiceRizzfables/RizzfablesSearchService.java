@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mangav5.Models.MangaItemModel;
+import com.example.mangav5.ScriptHelper.GenerateMangaIDHex;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaFast.ManhuaFastFeedService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuaFast.ManhuaFastSearchService;
 import com.example.mangav5.ServicesMangaWebsites.ServiceManhuas.ManhuausFeedService;
@@ -52,7 +53,7 @@ public class RizzfablesSearchService {
                         String title = item.selectFirst("a").attr("title");
                         String mangaUrl = item.selectFirst("a").attr("href");
                         String imageUrl = item.selectFirst("a > div.limit > img").attr("src");
-                        String mangaId = generateUuidHex(mangaUrl);
+                        String mangaId = GenerateMangaIDHex.generateUuidHex(mangaUrl);
 
                         MangaItemModel m = new MangaItemModel();
                         m.setMangaId(mangaId);
@@ -91,35 +92,9 @@ public class RizzfablesSearchService {
     }
 
 
-    public static String extractSlug(String url) {
-        String[] parts = url.replaceAll("/+$", "").split("/");
-        return parts[parts.length - 1];
-    }
-
-    public static String normalizeSlug(String slug) {
-        return slug.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
     private static String normalizeTitle(String title) {
         return title.toLowerCase()
                 .replaceAll("[^a-z0-9]", "");
-    }
-    public static String generateUuidHex(String url) {
-        String slug = normalizeSlug(extractSlug(url));
-        UUID uuid = UUID.nameUUIDFromBytes(slug.getBytes(StandardCharsets.UTF_8));
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
-        return Long.toHexString(msb) + Long.toHexString(lsb);
     }
 
     public interface MangaListCallBack {

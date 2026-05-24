@@ -1,6 +1,7 @@
 package com.example.mangav5.MainActivitys;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -36,6 +37,7 @@ import com.example.mangav5.Entity.SourceEntity;
 import com.example.mangav5.Models.ChapterModel;
 import com.example.mangav5.Models.MangaItemModel;
 import com.example.mangav5.R;
+import com.example.mangav5.ScriptHelper.RecreateMangaId;
 import com.example.mangav5.ServiceMaster.ServiceController;
 import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansChaptersService;
 import com.example.mangav5.ServicesMangaWebsites.VortexScans.VortexScansFeedService;
@@ -141,6 +143,12 @@ public class HomePage extends AppCompatActivity {
         checkSourcesAndDisableButtons();
         setMainUpdateSourceIcon(serviceFeed);
 
+        // Run migration for manga IDs to new Hex UUID format
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        if (!prefs.getBoolean("manga_id_recreated", false)) {
+            RecreateMangaId.execute(this);
+            prefs.edit().putBoolean("manga_id_recreated", true).apply();
+        }
     }
     private void GetTheme() {
         AppDatabase db = AppDatabase.getInstance(this);
