@@ -508,7 +508,7 @@ public class HomePage extends AppCompatActivity {
         sourceUrls.put(findViewById(R.id.source_mangadex), "https://mangadex.org/");
         sourceUrls.put(findViewById(R.id.source_asurascans), "https://asuracomic.net");
         sourceUrls.put(findViewById(R.id.source_manhuaus), "https://manhuaus.com");
-        sourceUrls.put(findViewById(R.id.source_manhuaPlus), "https://manhuaplus.org/");
+        sourceUrls.put(findViewById(R.id.source_manhuaPlus), "https://manhuaplus.org/home");
         sourceUrls.put(findViewById(R.id.source_demonicScans), "https://demonicscans.org/");
         sourceUrls.put(findViewById(R.id.source_manhuaFast), "https://manhuafast.com/");
         sourceUrls.put(findViewById(R.id.source_flameComics), "https://flamecomics.xyz/");

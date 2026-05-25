@@ -113,7 +113,7 @@ public class ManhuaPlusFeedService {
                 String title = titleEl != null ? titleEl.text() : "No title";
 
                 // Description
-                Document docDescription = NetworkHelper.getJsoupConnection("https://manhuaplus.top/manga/"+mangaId).get();
+                Document docDescription = NetworkHelper.getJsoupConnection("https://manhuaplus.top/manga/"+extractSlugFromUrl(mangaUrl)).get();
 
                 Element descEl = docDescription.selectFirst("#item-detail > div.detail-content > p"); // Update selector if needed
                 String desc = descEl != null ? descEl.text().trim() : "";
@@ -142,6 +142,16 @@ public class ManhuaPlusFeedService {
                 mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Unknown Error"));
             }
         });
+    }
+
+    public static String extractSlugFromUrl(String url) {
+        if (url == null || url.isEmpty()) return "";
+
+        // Remove any trailing slashes and split by /
+        String[] parts = url.replaceAll("/+$", "").split("/");
+
+        // The slug is the last part of the path
+        return parts[parts.length - 1];
     }
 
     public interface MangaListCallback {
